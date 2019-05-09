@@ -1,0 +1,19 @@
+# generic
+*.swp
+.DS_Store
+.ipynb_checkpoints/
+__pycache__/
+
+# authentication files
+credentials/**
+.env
+
+# keras CNN files
+.h5
+
+# pytorch CNN files
+.pth
+
+# Darknet CNN weight files
+.weights
+
