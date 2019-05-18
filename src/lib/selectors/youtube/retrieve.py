@@ -12,10 +12,10 @@ def make_dir(fp):
         os.makedirs(fp)
 
 def get_folder_path(vid_id, folder):
-    return "{}/{}".format(folder, vid_id)
+    return f"{folder}/{vid_id}"
 
 def get_meta_path(vid_id, folder):
-    return "{}/{}/meta.json".format(folder, vid_id)
+    return f"{folder}/{vid_id}/meta.json"
 
 def id_from_url(url):
     id_search = re.search(

@@ -90,7 +90,7 @@ def youtube_search_all_pages(args, logs):
         s_res = youtube_search(args)
         count = 0
         while ("nextPageToken" in s_res) and (len(s_res.get("items", [])) != 0):
-            print_log("\tScraping page %s..." % count, logs)
+            print_log(f"\tScraping page {count}...", logs)
             count += 1
             csv_obj = add_to_csv_obj(csv_obj, s_res.get("items", []))
             s_res = youtube_search(args, pageToken=s_res["nextPageToken"])
@@ -100,7 +100,7 @@ def youtube_search_all_pages(args, logs):
             csv_obj = add_to_csv_obj(csv_obj, s_res.get("items", []))
         return csv_obj
     except HttpError as e:
-        print_log("An HTTP error %d occured:\n%s" % (e.resp.status, e.content), logs)
+        print_log(f"An HTTP error {e.resp.status} occured:\n{e.content}", logs)
         return "ERROR"
 
 
