@@ -16,7 +16,7 @@ class YoutubeSelector(Selector):
 
     def setup_retrieve(self):
         self.ydl = youtube_dl.YoutubeDL(
-            {"outtmpl": "{}/%(id)s/%(id)s.mp4".format(self.RETRIEVE_FOLDER), "format": "worstvideo[ext=mp4]"}
+            {"outtmpl": f"{self.RETRIEVE_FOLDER}/%(id)s/%(id)s.mp4", "format": "worstvideo[ext=mp4]"}
         )
 
     def retrieve_row(self, row):

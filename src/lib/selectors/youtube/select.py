@@ -52,7 +52,7 @@ def add_to_csv_obj(csv_obj, s_res):
         channelId = search_result["snippet"]["channelId"]
         desc = search_result["snippet"]["description"]
         publishedAt = search_result["snippet"]["publishedAt"]
-        url = "https://www.youtube.com/watch?v=%s" % videoId
+        url = f"https://www.youtube.com/watch?v={videoId}"
         csv_obj.append(
             {
                 "url": url,
@@ -83,8 +83,7 @@ def str2bool(v):
 def youtube_search_all_pages(args, logs):
     csv_obj = []
     print_log(
-        "Search terms: %s\n Start: %s\n End: %s"
-        % (args["q"], args["after"], args["before"]),
+        f"Search terms: {args["q"]}\n Start: {args["after"]}\n End: {args["before"]}",
         logs,
     )
     try:
@@ -128,15 +127,14 @@ def selector_run(config, output_path):
     logs = []
     results = []
 
-    print_log("Query: %s" % config["search_term"], logs)
-    print_log("Start: %s" % config["uploaded_after"], logs)
-    print_log("End: %s" % config["uploaded_after"], logs)
-    print_log("Output file: %s" % output_path, logs)
+    print_log(f"Query: {config["search_term"]}", logs)
+    print_log(f"Start: {config["uploaded_after"]}" , logs)
+    print_log(f"End: {config["uploaded_after"]}", logs)
+    print_log(f"Output file: {output_path}", logs)
 
     if config["daily"]:
         print_log(
-            "Scraping daily, from %s -- %s"
-            % (config["uploaded_after"], config["uploaded_before"]),
+            f"Scraping daily, from {config["uploaded_after"]} -- {config["uploaded_before"]}",
             logs,
         )
         print_log("-----------------", logs)
@@ -153,7 +151,6 @@ def selector_run(config, output_path):
 
     print_log("\n\n----------------", logs)
     print_log(
-        "Scrape successful, %d results in %s" % ((len(df) - 1), output_path), logs
-    )
+        f"Scrape successful, {len(df) - 1} results in {output_path}", logs)
 
     return df, logs
