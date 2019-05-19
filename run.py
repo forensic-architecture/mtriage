@@ -11,7 +11,7 @@ DOCKER = docker.from_env()
 
 def build():
     # TODO: port to docker py CLI.
-    print(f"Building {NAME} image in Docker...")
+    print("Building {} image in Docker...".format(NAME))
     print("This may take a few minutes...")
     try:
         call(
@@ -19,7 +19,7 @@ def build():
                 "docker",
                 "build",
                 "-t",
-                f"{NAME}:dev",
+                "{}:dev".format(NAME),
                 "-f",
                 "development.Dockerfile",
                 ".",
@@ -28,16 +28,16 @@ def build():
         print("Build successful, run with: \n\tpython run.py develop")
     except:
         print("Something went wrong. Run command directly to debug:")
-        print(f"\tdocker build -t {NAME}:dev -f development.Dockerfile .")
+        print("\tdocker build -t {}:dev -f development.Dockerfile .".format(NAME))
 
 
 def develop():
     # https://docker-py.readthedocs.io/en/stable/containers.html
-    cont_name = f"{NAME}"
+    cont_name = "{}".format(NAME)
     try:
         DOCKER.containers.get(cont_name)
     except docker.errors.NotFound:
-        print(f"Building container from {NAME}:dev...")
+        print("Building container from {}:dev...".format(NAME))
         # TODO: remake with docker py CLI.
         call(
             [
@@ -49,12 +49,12 @@ def develop():
                 "--rm",
                 "--privileged",
                 "-v",
-                f"{DIR_PATH}:/mediatriage",
+                "{}:/mediatriage".format(DIR_PATH),
                 "-v",
-                f"{HOME_PATH}/.config/gcloud:/root/.config/gcloud",
+                "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
                 "-p",
                 "5000:5000",
-                "{NAME}:dev",
+                "{}:dev".format(NAME),
             ]
         )
 
@@ -68,4 +68,3 @@ if __name__ == "__main__":
 
     cmd = COMMANDS[args.command]
     cmd()
-
