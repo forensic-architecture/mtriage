@@ -83,7 +83,7 @@ def str2bool(v):
 def youtube_search_all_pages(args, logs):
     csv_obj = []
     print_log(
-        f"Search terms: {args["q"]}\n Start: {args["after"]}\n End: {args["before"]}",
+        f"Search terms: {args['q']}\n Start: {args['after']}\n End: {args['before']}",
         logs,
     )
     try:
