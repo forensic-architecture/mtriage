@@ -127,14 +127,14 @@ def selector_run(config, output_path):
     logs = []
     results = []
 
-    print_log(f"Query: {config["search_term"]}", logs)
-    print_log(f"Start: {config["uploaded_after"]}" , logs)
-    print_log(f"End: {config["uploaded_after"]}", logs)
+    print_log(f"Query: {config['search_term']}", logs)
+    print_log(f"Start: {config['uploaded_after']}" , logs)
+    print_log(f"End: {config['uploaded_after']}", logs)
     print_log(f"Output file: {output_path}", logs)
 
     if config["daily"]:
         print_log(
-            f"Scraping daily, from {config["uploaded_after"]} -- {config["uploaded_before"]}",
+            f"Scraping daily, from {config['uploaded_after']} -- {config['uploaded_before']}",
             logs,
         )
         print_log("-----------------", logs)
