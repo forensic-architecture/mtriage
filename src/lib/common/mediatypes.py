@@ -11,7 +11,7 @@ EXT_TO_MTYPE = {
 class MType(ABC):
     """ MTypes are interchangeable with file extensions.
     """
-    __init__(self, filepath):
+    def __init__(self, filepath):
         filename, ext = os.path.splittext(filepath)
         self.EXT = ext
         self.FILENAME = filenmae

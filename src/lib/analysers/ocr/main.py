@@ -27,7 +27,7 @@ def paths_to_components(whitelist):
             all_cmps.append((cmps[0], cmps[1]))
         else:
             raise Exception(
-                f"The path {path} in whitelist needs to be of the form '{selector_name}/{analyser_name}'."
+                f"The path {path} in whitelist needs to be of the form '{{selector_name}}/{{analyser_name}}'."
             )
     return all_cmps
 
