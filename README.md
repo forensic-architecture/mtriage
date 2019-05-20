@@ -1,5 +1,7 @@
 # mtriage
 
+### NB: currently unstable, in active development, and should not be used in production
+
 ##### scrape and analyse media on the web
 
 mtriage is a command-line application that scrapes and analyses public domain media. mtriage is developed by [Forensic Architecture](https://forensic-architecture.org), and is intended for use by open source research agencies, journalists, and activists.
@@ -33,14 +35,31 @@ Follow the instructions relevant to your operating system to install Docker CE,
 and then install the python dependency with:
 
 ```bash
-python -m pip install docker
+python -m pip install -r requirements.txt
 ```
 
-mtriage should work on any version of Python on your local, 2 or 3.
+(Note that mtriage was developed using Python 3, but you should be able to run it with 2.x as well.)
+
+### configuration setup
+Selectors and analysers often rely on private credentials such as API keys. mtriage deals with these in two ways:
+
+* **`.env` file at the top level**: contains API keys and other environment variables, which are made available when
+    mtriage is running.
+* **`credentials` folder**: in some cases, components require JSON configs, such as for GCP service accounts. mtriage
+    currently deals with this by adding a path to the credentials file in `.env`, and adding the credential file itself
+    in the `credentials` folder.
+
+The specific configuration steps depend on which components you intend to use. For every component you wish to use, run
+through its setup:
+
+##### selectors
+* [youtube](docs/config/youtube.md)
+##### analysers
+* frames
+* ocr
 
 ### building
-mtriage runs inside a docker container. Build the image with the following
-command:
+mtriage runs inside a docker container. Once you have appropriately configured, you can build the image with the following command:
 ```bash
 python run.py build
 ```
