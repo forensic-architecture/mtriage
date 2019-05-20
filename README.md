@@ -27,8 +27,7 @@ It uses [Docker](https://www.docker.com/products/docker-desktop) to manage
 dependencies, and is written in Python.
 
 ### dependencies
-- [Docker Desktop](https://docs.docker.com/install/) (versions for Linux, Mac,
-    and Windows)
+- Docker Desktop (Mac installation [here](https://docs.docker.com/v17.12/docker-for-mac/install/), Ubuntu installation [here](https://docs.docker.com/v17.12/install/linux/docker-ce/ubuntu/)).
 - [docker](https://docs.docker.com/install/) (python library, v3.5.0)
 
 Follow the instructions relevant to your operating system to install Docker CE,
