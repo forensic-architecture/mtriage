@@ -3,7 +3,7 @@ import os
 import argparse
 from subprocess import call
 
-NAME = "mtriage_beta"
+NAME = "forensicarchitecture/mtriage"
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 ENV_FILE = "{}/.env".format(DIR_PATH)
 HOME_PATH = os.path.expanduser("~")
