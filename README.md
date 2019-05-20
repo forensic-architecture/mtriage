@@ -58,28 +58,22 @@ through its setup:
 * frames
 * ocr
 
-### building
-mtriage runs inside a docker container. Once you have appropriately configured, you can build the image with the following command:
-```bash
-python run.py build
-```
-
-Once this is successful, you can run the container with:
+### running
+You can run mtriage in a Docker container with:
 ```bash
 python run.py develop
 ```
 
-You should see a bash prompt with your docker id:
-```bash
-root@034ae4106367:/src#
-```
-
-You are now ready to start using mtriage.
-
-
-### running
 Selectors and analysers are currently specified as runtime arguments to the
 entrypoint script, "src/run.py". In "scripts" you can find a series of example
 bash scripts that construct appropriate arguments and execute them.
 
 A more robust interface for passing options is a work in progress.
+
+
+### building locally
+You can build the mtriage image locally via run.py as well:
+```bash
+python run.py build
+
+
