@@ -34,16 +34,21 @@ RUN pip install --upgrade pip && \
 	&& rm -r ~/.cache/pip
 
 # install darknet and move to /usr/lib
-RUN git clone https://github.com/pjreddie/darknet.git /darknet
-RUN cd /darknet && make
-RUN mv /darknet/darknet /usr/bin/darknet
-RUN rm -r /darknet
+# RUN git clone https://github.com/pjreddie/darknet.git /darknet
+# RUN cd /darknet && make
+# RUN mv /darknet/darknet /usr/bin/darknet
+# RUN rm -r /darknet
 
 # Install the Google Cloud SDK, which gives us `gcloud`, `gsutil`, `bq`.
 RUN curl -sSL https://sdk.cloud.google.com | bash
 ENV PATH="$PATH:/root/google-cloud-sdk/bin"
 
-COPY . /mediatriage
-WORKDIR /mediatriage
+# Copy necessary folders
+RUN mkdir -p /mtriage
+COPY ./scripts /mtriage/scripts
+COPY ./src /mtriage/src
+COPY ./temp /mtriage/temp
+COPY ./credentials /mtriage/credentials
+WORKDIR /mtriage
 
 CMD ["/bin/bash"]
