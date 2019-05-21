@@ -101,12 +101,8 @@ def youtube_search_all_pages(args, logs):
             csv_obj = add_to_csv_obj(csv_obj, s_res.get("items", []))
         return csv_obj
     except HttpError as e:
-<<<<<<< HEAD
-        print_log(f"An HTTP error {e.resp.status} occured:\n{e.content}", logs)
-=======
         print_log("An HTTP error %d occured." % e.resp.status, logs)
         print(e.content)
->>>>>>> master
         return "ERROR"
 
 

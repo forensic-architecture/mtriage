@@ -71,8 +71,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     cmd = COMMANDS[args.command]
-<<<<<<< HEAD
     cmd()
-=======
-    cmd()
->>>>>>> master
