@@ -1,0 +1,11 @@
+language: python
+
+services:
+  docker
+
+before_install:
+- pip install -r requirements.txt
+- python run.py build
+
+script:
+- python run.py test

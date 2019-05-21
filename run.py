@@ -62,9 +62,13 @@ def develop():
             ]
         )
 
+def test():
+    print("Running mtriage tests...")
+    print("All tests for mtriage done.")
+
 
 if __name__ == "__main__":
-    COMMANDS = {"build": build, "develop": develop}
+    COMMANDS = {"build": build, "develop": develop, "test": test}
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     parser.add_argument("command", choices=COMMANDS.keys())
 
