@@ -1,5 +1,7 @@
 # mtriage
 
+[![Build Status](https://travis-ci.com/forensic-architecture/mtriage.svg?branch=master)](https://travis-ci.com/forensic-architecture/mtriage)
+
 ### NB: currently unstable, in active development, and should not be used in production
 
 ##### scrape and analyse media on the web
