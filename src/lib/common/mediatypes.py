@@ -14,7 +14,7 @@ class MType(ABC):
     def __init__(self, filepath):
         filename, ext = os.path.splittext(filepath)
         self.EXT = ext
-        self.FILENAME = filenmae
+        self.FILENAME = filename
         self.FILEPATH = filepath
 
 class MTVideo(MType):
