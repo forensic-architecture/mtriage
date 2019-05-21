@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import docker
 import inspect
 import os
@@ -158,8 +159,15 @@ def develop():
         )
 
 
+<<<<<<< bd6984972bf04df1ebf4cfb9a80202b41e653491
 <<<<<<< ac4250493505e7fc7d5bbb56eedcc10845e79042
 =======
+=======
+def clean():
+    call(["docker", "rmi", NAME])
+
+
+>>>>>>> WIP: pytest in container
 def __run_cmd(cmd):
     res = DOCKER.containers.run(
         "{}:dev".format(NAME),
@@ -182,13 +190,13 @@ def __run_cmd(cmd):
 def test():
     print("Creating container to run tests...")
     print("----------------------------------")
-    __run_cmd("python src/test/all.py")
+    __run_cmd("pytest") # NB: doesn't work at the moment.
     print("----------------------------------")
     print("All tests for mtriage done.")
 
 
 if __name__ == "__main__":
-    COMMANDS = {"build": build, "develop": develop, "test": test}
+    COMMANDS = {"build": build, "develop": develop, "test": test, "clean": clean}
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     parser.add_argument("command", choices=COMMANDS.keys())
 
