@@ -11,14 +11,17 @@ Config:
 import argparse, os, sys
 from datetime import datetime, timedelta
 import pandas as pd
+import json
 
-from googleapiclient.discovery import build
+import googleapiclient.discovery
 from googleapiclient.errors import HttpError
+from google.oauth2 import service_account
 
-DEVELOPER_KEY = os.environ.get("GOOGLE_API_DEVELOPER_KEY")
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
-
+CREDENTIALS_FILE = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+BASE_DIR = os.environ.get("BASE_DIR")
+GOOGLE_CREDS = service_account.Credentials.from_service_account_file(f"{BASE_DIR}/{CREDENTIALS_FILE}")
 
 def print_log(msg, logs):
     logs.append(msg + "\n")
@@ -26,23 +29,21 @@ def print_log(msg, logs):
 
 
 def youtube_search(options, pageToken=None):
-    youtube = build(
-        YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=DEVELOPER_KEY
+    youtube = googleapiclient.discovery.build(
+        YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, credentials=GOOGLE_CREDS
     )
-    return (
-        youtube.search()
-        .list(
-            pageToken=pageToken,
-            q=options["q"],
-            publishedBefore=options["before"],
-            publishedAfter=options["after"],
-            part="id,snippet",
-            maxResults=50,
-            safeSearch="none",
-            type="video",
-        )
-        .execute()
+
+    request = youtube.search().list(
+        pageToken=pageToken,
+        q=options["q"],
+        publishedBefore=options["before"],
+        publishedAfter=options["after"],
+        part="id,snippet",
+        maxResults=50,
+        safeSearch="none",
+        type="video",
     )
+    return request.execute()
 
 
 def add_to_csv_obj(csv_obj, s_res):
@@ -100,7 +101,12 @@ def youtube_search_all_pages(args, logs):
             csv_obj = add_to_csv_obj(csv_obj, s_res.get("items", []))
         return csv_obj
     except HttpError as e:
+<<<<<<< HEAD
         print_log(f"An HTTP error {e.resp.status} occured:\n{e.content}", logs)
+=======
+        print_log("An HTTP error %d occured." % e.resp.status, logs)
+        print(e.content)
+>>>>>>> master
         return "ERROR"
 
 

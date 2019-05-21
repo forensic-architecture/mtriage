@@ -3,8 +3,9 @@ import os
 import argparse
 from subprocess import call
 
-NAME = "mtriage_beta"
+NAME = "forensicarchitecture/mtriage"
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+ENV_FILE = "{}/.env".format(DIR_PATH)
 HOME_PATH = os.path.expanduser("~")
 DOCKER = docker.from_env()
 
@@ -46,10 +47,13 @@ def develop():
                 "-it",
                 "--name",
                 cont_name,
+                "--env",
+                "BASE_DIR=/mtriage",
+                "--env-file={}".format(ENV_FILE),
                 "--rm",
                 "--privileged",
                 "-v",
-                "{}:/mediatriage".format(DIR_PATH),
+                "{}:/mtriage".format(DIR_PATH),
                 "-v",
                 "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
                 "-p",
@@ -67,4 +71,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     cmd = COMMANDS[args.command]
+<<<<<<< HEAD
     cmd()
+=======
+    cmd()
+>>>>>>> master
