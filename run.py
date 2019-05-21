@@ -34,7 +34,7 @@ def build():
 
 def develop():
     # https://docker-py.readthedocs.io/en/stable/containers.html
-    cont_name = "{}".format(NAME)
+    cont_name = NAME.replace("/", "_") # NB: no / allowed in container names
     try:
         DOCKER.containers.get(cont_name)
     except docker.errors.NotFound:
