@@ -8,7 +8,7 @@ def ffmpeg_frames(out_folder, fp, rate):
     # TODO: better logs for FFMPEG process
     FNULL = open(os.devnull, "w")
     out = call(
-        ["ffmpeg", "-i", fp, "-r", str(rate), "{}/%04d.bmp".format(out_folder)],
+        ["ffmpeg", "-i", fp, "-r", str(rate), f"{out_folder}/%04d.bmp"],
         stdout=FNULL,
         stderr=STDOUT,
     )

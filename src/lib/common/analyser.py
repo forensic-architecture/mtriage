@@ -65,7 +65,7 @@ class Analyser(ABC):
     def _run(self, config):
         all_media = {}
 
-        ## NOTE: run setup_run() lifecycle hook before anything else
+        # NOTE: run setup_run() lifecycle hook before anything else
         self.setup_run()
 
         # the results from each selector sits in a folder of its name
