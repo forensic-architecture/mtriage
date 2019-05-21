@@ -167,11 +167,16 @@ def clean():
     call(["docker", "rmi", NAME])
 
 
+<<<<<<< 526a4087111eed422ad47526f38fc2b517584023
 >>>>>>> WIP: pytest in container
 def __run_cmd(cmd):
+=======
+def __run_tests():
+>>>>>>> run tests from run.py
     res = DOCKER.containers.run(
         "{}:dev".format(NAME),
-        command=cmd,
+        command="python -m pytest",
+        working_dir="/mtriage/src",
         remove=True,
         privileged=True,
         volumes={
@@ -190,7 +195,7 @@ def __run_cmd(cmd):
 def test():
     print("Creating container to run tests...")
     print("----------------------------------")
-    __run_cmd("pytest") # NB: doesn't work at the moment.
+    __run_tests()
     print("----------------------------------")
     print("All tests for mtriage done.")
 
