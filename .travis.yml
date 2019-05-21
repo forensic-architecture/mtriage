@@ -8,4 +8,4 @@ before_install:
 - python run.py build
 
 script:
-- python run.py develop
+- python run.py test
