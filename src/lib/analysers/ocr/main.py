@@ -88,11 +88,9 @@ class OcrAnalyser(Analyser):
                     fp.write(serialized)
                 self.logger(f"Frame {r_idx} OCRed: {r_idx}.json written.")
 
-    def run(self, config):
+    def get_elements(self, config):
+        return paths_to_components(config["whitelist"])
 
-        components = paths_to_components(config["whitelist"])
+    def run_element(self, element, config):
         max_requests = config["max_requests"] if config["max_requests"] else -1
-
-        for component in components:
-            self.__analyse_component(component, max_requests)
-
+        self.__analyse_component(element, max_requests)

@@ -70,40 +70,43 @@ def opencv_frames(out_folder, fp, rate, threshold, sequential):
 
 
 class FramesAnalyser(Analyser):
-    def run(self, config):
-        # TODO: frames for more than just YouTube.
-        baseoutfolder = self.get_derived_folder("youtube")
-        _media = self.media["youtube"]["data"]
+    def _get_media(self):
+        return self.media["youtube"]["data"]
 
+    def get_elements(self, config):
+        return self._get_media().keys()
+
+    def run_element(self, element, config):
         config = self._get_default_config(config)
         method = config["method"]
         fps = config["fps"]
         change_threshold = config["change_threshold"]
         sequential = config["sequential"]
 
-        for element in _media.keys():
-            outfolder = os.path.join(baseoutfolder, element)
-            # create derived folder for element
-            if not os.path.exists(outfolder):
-                os.makedirs(outfolder)
+        _media = self._get_media()
+        baseoutfolder = self.get_derived_folder("youtube")
+        outfolder = os.path.join(baseoutfolder, element)
+        # create derived folder for element
+        if not os.path.exists(outfolder):
+            os.makedirs(outfolder)
 
-            if method == "ffmpeg":
-                ffmpeg_frames(outfolder, _media[element], fps)
-                self.logger(f"Frames successfully created for element {element}.")
-            elif method == "opencv":
-                num_output, num_considered = opencv_frames(
-                    outfolder,
-                    _media[element],
-                    fps,
-                    change_threshold,
-                    sequential,
-                )
-                kept_ratio = float(num_output) / float(num_considered)
-                percent = int(kept_ratio * 100)
-                num = num_output
-                self.logger(f"Output {num} frames for {element} ({percent}% kept)")
-            else:
-                raise ValueError(f"Unknown frame analysis method: {method}")
+        if method == "ffmpeg":
+            ffmpeg_frames(outfolder, _media[element], fps)
+            self.logger(f"Frames successfully created for element {element}.")
+        elif method == "opencv":
+            num_output, num_considered = opencv_frames(
+                outfolder,
+                _media[element],
+                fps,
+                change_threshold,
+                sequential,
+            )
+            kept_ratio = float(num_output) / float(num_considered)
+            percent = int(kept_ratio * 100)
+            num = num_output
+            self.logger(f"Output {num} frames for {element} ({percent}% kept)")
+        else:
+            raise ValueError(f"Unknown frame analysis method: {method}")
 
 
     def _get_default_config(self, config):
@@ -116,5 +119,3 @@ class FramesAnalyser(Analyser):
         for k, v in config.items():
            defaults[k] = v
         return defaults
-
-
