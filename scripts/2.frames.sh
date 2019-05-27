@@ -9,7 +9,7 @@ MODULE="frames"
 
 FRAME_METHOD="opencv"
 CHANGE_THRESHOLD="1e-5"
-SEQUENTIAL_FRAMES="true"
+SEQUENTIAL_FRAMES="false"
 FPS="1"
 
 CONFIG=$( jq -n \

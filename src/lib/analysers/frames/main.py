@@ -107,7 +107,7 @@ class FramesAnalyser(Analyser):
             "change_threshold": 1e-5,
             "fps": 1,
             "method": "opencv",
-            "sequential": True
+            "sequential": False
         }
         for k, v in config.items():
            defaults[k] = v
