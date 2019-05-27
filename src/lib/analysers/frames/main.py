@@ -106,7 +106,7 @@ class FramesAnalyser(Analyser):
         defaults = {
             "change_threshold": 1e-5,
             "fps": 1,
-            "method": "ffmpeg",
+            "method": "opencv",
             "sequential": True
         }
         for k, v in config.items():
