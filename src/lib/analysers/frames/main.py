@@ -31,22 +31,26 @@ def opencv_frames(out_folder, fp, rate, threshold, sequential):
     fvs = FileVideoStream(str(fp)).start()
     file_fps = fvs.stream.get(cv2.CAP_PROP_FPS)
     
-    # OpenCV doesn't have built-in framerate selection
-    # so, we just skip frames to sample at the correct rate
-    # i.e. if the file is 30fps and we want 2fps, we select every 15th frame
-    # note: this won't work well with weird framerates (e.g. 7fps)
-    read_every = int(file_fps / rate)
-    frame_counter = 0
     last_frame = None
     num_output = 0
     num_considered = 0
+    time_elapsed = 0
+    use_every = 1.0 / float(rate)
+    frame_duration = 1.0 / file_fps
     while fvs.more():
         frame = fvs.read()
         if frame is None:
             break
 
-        use_frame = (frame_counter % read_every) == 0
-        frame_counter += 1
+        if num_considered == 0:
+            use_frame = True
+        elif (time_elapsed + frame_duration) >= use_every:
+            use_frame = True
+            time_elapsed -= use_every
+        else:
+            use_frame = False
+        time_elapsed += frame_duration
+
         if not use_frame:
             continue
 
