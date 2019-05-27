@@ -70,10 +70,19 @@ def opencv_frames(out_folder, fp, rate, threshold, sequential):
 
 
 class FramesAnalyser(Analyser):
-    def run(self, config):
-        # TODO: frames for more than just YouTube.
+    def _get_media(self):
+        return self.media["youtube"]["data"]
+
+    def get_elements(self, config):
+        return self._get_media().keys()
+
+    def run_element(self, element, config):
+        _media = self._get_media()
         baseoutfolder = self.get_derived_folder("youtube")
-        _media = self.media["youtube"]["data"]
+        outfolder = os.path.join(baseoutfolder, element)
+        # create derived folder for element
+        if not os.path.exists(outfolder):
+            os.makedirs(outfolder)
 
         config = self._get_default_config(config)
         method = config["method"]

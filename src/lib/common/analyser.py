@@ -97,7 +97,12 @@ class Analyser(ABC):
 
         # NOTE: run writes to logs via the 'self.logger' function.
         self.media = all_media
-        self.run(config)
+        elements = self.get_elements(config)
+        # TODO: parallelize
+        # TODO: handle this all through something like SELECT_MAP to keep track
+        # of tasks and progress.
+        for element in elements:
+            self.run_element(element, config)
 
         save_logs(self.__logs, self.ANALYSER_LOGS)
 
@@ -115,8 +120,16 @@ class Analyser(ABC):
         return derived_folder
 
     @abstractmethod
-    def run(self, media):
-        """ Should print processed media to a 'derived' folder in the appropriate
+    def get_elements(self, config):
+        """ Returns a list of elements (strings) to be processed, possibly in parallel,
+        by the run_element method. This is analogous to the Selector's index method, and will
+        likely be replaced by something like it once we figure out parallelism/resuming.
+        """
+        return NotImplemented
+
+    @abstractmethod
+    def run_element(self, element, config):
+        """ Should print processed element to a 'derived' folder in the appropriate
         Selector's folder.
         """
         return NotImplemented
