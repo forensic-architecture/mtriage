@@ -14,11 +14,11 @@ class Selector(ABC):
 
     ALL_SELECTORS = []
 
-    def __init__(self, folder, name):
+    def __init__(self, config, module, folder):
         self.BASE_FOLDER = folder
-        self.NAME = name
+        self.NAME = module
         # unique ID
-        self.ID = f"{name}_{str(len(Selector.ALL_SELECTORS))}"
+        self.ID = f"{self.NAME}_{str(len(Selector.ALL_SELECTORS))}"
         Selector.ALL_SELECTORS.append(self.ID)
         # derived instance variables
         self.FOLDER = f"{self.BASE_FOLDER}/{self.NAME}"
