@@ -19,6 +19,7 @@ def get_video_paths(path):
 def get_img_paths(path):
     return list(Path(path).rglob("*.[bB][mM][pP]"))
 
+
 def paths_to_components(whitelist):
     """ Take a list of input paths--of the form '{selector_name}/{?analyser_name}'-- and produces a list of components.
         Components are tuples whose first value is the name of a selector, and whose second value is either the name of
@@ -100,8 +101,9 @@ class Analyser(ABC):
 
         elements = np.array([])
         for _cmp in cmps:
+            outfolder = self.get_derived_folder(_cmp[0])
+
             if _cmp[1] is None:
-                outfolder = self.get_derived_folder(_cmp[0])
                 # None in component indicates that 'raw' data from selector should be used.
                 elements = np.append(
                     elements,
@@ -128,46 +130,66 @@ class Analyser(ABC):
         all_media = {}
 
         # the results from each selector sits in a folder of its name
-        data_passes = [
-            f for f in os.listdir(self.FOLDER) if os.path.isdir(f"{self.FOLDER}/{f}")
-        ]
-        derived_passes = [
+        selectors = [
             f for f in os.listdir(self.FOLDER) if os.path.isdir(f"{self.FOLDER}/{f}")
         ]
 
-        for _pass in data_passes:
-            all_media[_pass] = {Analyser.DATA_EXT: {}, Analyser.DERIVED_EXT: {}}
-            data_pass = f"{self.FOLDER}/{_pass}/{Analyser.DATA_EXT}"
-            data_els = [
+        # Elements are all associated with a selector. Those that come straight from the selector are housed in 'data'.
+        # Those that have been derived in some way, either straight from the data, or from a previous derived folder,
+        # are in 'derived'.
+
+        # .
+        # +-- selector1
+        # |   +-- data
+        # |   |   +-- element1
+        # |   |   +-- element2
+        # |   +-- derived
+        # |   |   +-- analyser1
+        # |   |   |   +-- element1
+        # |   |   |   +-- element2
+        # |   |   +-- analyser2
+        # |   |   |   +-- element1
+        # |   |   |   +-- element2
+        for selector in selectors:
+            all_media[selector] = {Analyser.DATA_EXT: {}, Analyser.DERIVED_EXT: {}}
+
+            # add all original elements
+            data_pass = f"{self.FOLDER}/{selector}/{Analyser.DATA_EXT}"
+            _elements = [
                 f
                 for f in os.listdir(data_pass)
                 if os.path.isdir(os.path.join(data_pass, f))
             ]
-            for el_id in data_els:
-                all_media[_pass][Analyser.DATA_EXT][el_id] = f"{data_pass}/{el_id}"
 
-            derived_pass = f"{self.FOLDER}/{_pass}/{Analyser.DERIVED_EXT}"
-            # NOTE: we have lots of nested loops here, but i think it's necessary...
-            if not os.path.exists(derived_pass):
+            for el_id in _elements:
+                all_media[selector][Analyser.DATA_EXT][el_id] = f"{data_pass}/{el_id}"
+
+            # add all derived elements
+            derived_folder = f"{self.FOLDER}/{selector}/{Analyser.DERIVED_EXT}"
+
+            if not os.path.exists(derived_folder):
                 break
 
-            d_passes = [
+            analysers = [
                 f
-                for f in os.listdir(derived_pass)
-                if os.path.isdir(os.path.join(derived_pass, f))
+                for f in os.listdir(derived_folder)
+                if os.path.isdir(os.path.join(derived_folder, f))
             ]
-            for d_pass in d_passes:
-                all_media[_pass][Analyser.DERIVED_EXT][d_pass] = {}
-                _dpath = f"{derived_pass}/{d_pass}"
-                data_els = [
+
+            for _analyser in analysers:
+                all_media[selector][Analyser.DERIVED_EXT][_analyser] = {}
+                _dpath = f"{derived_folder}/{_analyser}"
+
+                _elements = [
                     f
                     for f in os.listdir(_dpath)
                     if os.path.isdir(os.path.join(_dpath, f))
                 ]
-                for el_id in data_els:
-                    all_media[_pass][Analyser.DERIVED_EXT][d_pass][
+
+                for el_id in _elements:
+                    all_media[selector][Analyser.DERIVED_EXT][_analyser][
                         el_id
-                    ] = f"{data_pass}/{el_id}"
+                    ] = f"{derived_folder}/{_analyser}/{el_id}"
 
         return all_media
 
@@ -178,6 +200,10 @@ class Analyser(ABC):
         elements = self.__get_elements(all_media)
 
         for element in elements:
+            # TODO: create try/catch infrastructure to delete this folder if there is an error.
+            if not os.path.exists(element["dest"]):
+                os.makedirs(element["dest"])
+
             self.run_element(element, config)
 
         save_logs(self.__logs, self.ANALYSER_LOGS)
