@@ -14,12 +14,12 @@ MAX_REQUESTS="1"
 ## paths here are in the form ${selector_name}/${analyser_name}
 ## there should never be a nested analyser name, as even analysers that operate on derived
 ## data still produce derived data at the first level of the 'derived' folder. (??)
-WHITELIST="[\"youtube/frames\"]"
+ELEMENTS_IN="[\"youtube/frames\"]"
 
 CONFIG=$( jq -n \
 	--argjson mr "$MAX_REQUESTS" \
-	--argjson wl "$WHITELIST" \
-	'{whitelist: $wl, max_requests: $mr }'
+	--argjson el_in "$ELEMENTS_IN" \
+	'{elements_in: $el_in, max_requests: $mr }'
 )
 
 python3 $BASE_DIR/src/run.py \

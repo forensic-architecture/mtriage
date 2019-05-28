@@ -7,6 +7,7 @@ fi
 WORKING_DIR="$BASE_DIR/temp/demo_output"
 MODULE="frames"
 
+ELEMENTS_IN="[\"youtube\"]"
 FRAME_METHOD="opencv"
 CHANGE_THRESHOLD="1e-5"
 SEQUENTIAL_FRAMES="false"
@@ -17,7 +18,8 @@ CONFIG=$( jq -n \
 	--argjson ct "$CHANGE_THRESHOLD" \
 	--argjson seq "$SEQUENTIAL_FRAMES" \
 	--argjson fps "$FPS" \
-	'{method: $m, change_threshold: $ct, sequential: $seq, fps: $fps}'
+	--argjson el_in "$ELEMENTS_IN" \
+	'{elements_in: $el_in, method: $m, change_threshold: $ct, sequential: $seq, fps: $fps}'
 )
 
 python3 $BASE_DIR/src/run.py \
