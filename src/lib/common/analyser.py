@@ -50,11 +50,11 @@ class Analyser(ABC):
     DATA_EXT = "data"
     DERIVED_EXT = "derived"
 
-    def __init__(self, folder, name):
+    def __init__(self, config, module, folder):
         self.FOLDER = folder
         self.ANALYSER_LOGS = f"{self.FOLDER}/analyser-logs.txt"
-        self.NAME = name
-        self.ID = f"{name}_{str(len(Analyser.ALL_ANALYSERS))}"
+        self.NAME = module
+        self.ID = f"{self.NAME}_{str(len(Analyser.ALL_ANALYSERS))}"
         self.__logs = []
         Analyser.ALL_ANALYSERS.append(self.ID)
 

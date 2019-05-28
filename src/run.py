@@ -47,11 +47,11 @@ def _select_run(args):
         os.mkdir(args.folder)
 
     TheSelector = get_selector(args.module)
-    print(args.config)
     config = json.loads(args.config) if args.config else {}
 
-    selector = TheSelector(args.folder, args.module)
+    selector = TheSelector(config, args.module, args.folder)
     selector.index(config)
+
     # TODO: conditionally run retrieve based on config
     selector.retrieve(config)
 
@@ -68,7 +68,7 @@ def _analyse_run(args):
     if TheAnalyser is None:
         raise Exception(f"The module you have specified, {args.module}, does not exist")
 
-    analyser = TheAnalyser(args.folder, args.module)
+    analyser = TheAnalyser(config, args.module, args.folder)
     analyser._run(config)
 
 
