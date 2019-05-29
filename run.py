@@ -1,7 +1,9 @@
 import docker
+import inspect
 import os
 import argparse
 from subprocess import call
+
 
 NAME = "forensicarchitecture/mtriage"
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -10,10 +12,97 @@ HOME_PATH = os.path.expanduser("~")
 DOCKER = docker.from_env()
 
 
+def get_subdirs(d):
+    return [o for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
+
+
+def check_in_pipdeps(_str, _arr):
+    """Check whether _arr already contains a string representing the same pip dependency as _str.
+    """
+    lib_name = _str.split("==")[0]
+    for depstr in _arr:
+        if depstr.find(lib_name) is not -1:
+            return True
+    return False
+
+def check_in_dockerlines(_str, _arr):
+    """Check whether _arr already contains a string representing the same line in Dockerfile.
+    """
+    # NOTE: currently only exactly the same lines are disqualified
+    return _str in _arr
+
+def add_deps(dep_path, deps, deps_contains):
+    """ Add dependences at {folder_path} to {deps}, excluding if {deps_contains} is True for any given dependency.
+    """
+    if not os.path.isfile(dep_path):
+        return
+
+    with open(dep_path) as f:
+        for line in f.readlines():
+            if not deps_contains(line, deps):
+                deps.append(line)
+
+
 def build():
-    # TODO: port to docker py CLI.
-    print("Building {} image in Docker...".format(NAME))
-    print("This may take a few minutes...")
+    """ Collect all partial Pip and Docker files from selectors and analysers, and combine them with the core mtriage
+        dependencies in src/build in order to create an appropriate Dockerfile and requirements.txt.
+        NOTE: There is currently no way to include/exclude certain selector dependencies, but this build process is
+              the setup for that optionality.
+    """
+    # setup
+    DOCKERFILE_PARTIAL = "partial.Dockerfile"
+    PIP_PARTIAL = "requirements.txt"
+    BUILD_DOCKERFILE = "{}/build.Dockerfile".format(DIR_PATH)
+    BUILD_PIPFILE = "{}/build.requirements.txt".format(DIR_PATH)
+    CORE_PIPDEPS = "{}/src/build/core.requirements.txt".format(DIR_PATH)
+    CORE_START_DOCKER = "{}/src/build/core.start.Dockerfile".format(DIR_PATH)
+    CORE_END_DOCKER = "{}/src/build/core.end.Dockerfile".format(DIR_PATH)
+    ANALYSERS_PATH = "{}/src/lib/analysers".format(DIR_PATH)
+    SELECTORS_PATH = "{}/src/lib/selectors".format(DIR_PATH)
+
+    with open(CORE_PIPDEPS) as cdeps:
+        pipdeps = cdeps.readlines()
+
+    with open(CORE_START_DOCKER) as dfile:
+        dockerlines = dfile.readlines()
+
+    # search all selectors/analysers for partials
+    selectors = get_subdirs(SELECTORS_PATH)
+    analysers = get_subdirs(ANALYSERS_PATH)
+
+    for selector in selectors:
+        docker_dep = "{}/{}/{}".format(SELECTORS_PATH, selector, DOCKERFILE_PARTIAL)
+        pip_dep = "{}/{}/{}".format(SELECTORS_PATH, selector, PIP_PARTIAL)
+
+        add_deps(docker_dep, dockerlines, check_in_dockerlines)
+        add_deps(pip_dep, pipdeps, check_in_pipdeps)
+
+    for analyser in analysers:
+        docker_dep = "{}/{}/{}".format(ANALYSERS_PATH, analyser, DOCKERFILE_PARTIAL)
+        pip_dep = "{}/{}/{}".format(ANALYSERS_PATH, analyser, PIP_PARTIAL)
+
+        add_deps(docker_dep, dockerlines, check_in_dockerlines)
+        add_deps(pip_dep, pipdeps, check_in_pipdeps)
+
+    with open(CORE_END_DOCKER) as f:
+        for line in f.readlines():
+            dockerlines.append(line)
+
+    # create Dockerfile and requirements.txt for build
+    if os.path.exists(BUILD_PIPFILE):
+        os.remove(BUILD_PIPFILE)
+
+    with open(BUILD_PIPFILE, "w") as f:
+        for dep in pipdeps:
+            f.write(dep)
+
+    if os.path.exists(BUILD_DOCKERFILE):
+        os.remove(BUILD_DOCKERFILE)
+
+    with open(BUILD_DOCKERFILE, "w") as f:
+        for line in dockerlines:
+            f.write(line)
+
     try:
         call(
             [
@@ -22,19 +111,22 @@ def build():
                 "-t",
                 "{}:dev".format(NAME),
                 "-f",
-                "development.Dockerfile",
+                BUILD_DOCKERFILE,
                 ".",
             ]
         )
         print("Build successful, run with: \n\tpython run.py develop")
     except:
-        print("Something went wrong. Run command directly to debug:")
-        print("\tdocker build -t {}:dev -f development.Dockerfile .".format(NAME))
+        print("Something went wrong! EEK.")
+
+    # cleanup
+    os.remove(BUILD_DOCKERFILE)
+    os.remove(BUILD_PIPFILE)
 
 
 def develop():
     # https://docker-py.readthedocs.io/en/stable/containers.html
-    cont_name = NAME.replace("/", "_") # NB: no / allowed in container names
+    cont_name = NAME.replace("/", "_")  # NB: no / allowed in container names
     try:
         DOCKER.containers.get(cont_name)
     except docker.errors.NotFound:
@@ -61,6 +153,7 @@ def develop():
                 "{}:dev".format(NAME),
             ]
         )
+
 
 def test():
     print("Running mtriage tests...")
