@@ -44,17 +44,21 @@ def add_deps(dep_path, deps, deps_contains):
 
 
 def build():
-    ANALYSERS_PATH = "{}/src/lib/analysers".format(DIR_PATH)
-    SELECTORS_PATH = "{}/src/lib/selectors".format(DIR_PATH)
-
+    """ Collect all partial Pip and Docker files from selectors and analysers, and combine them with the core mtriage
+        dependencies in src/build in order to create an appropriate Dockerfile and requirements.txt.
+        NOTE: There is currently no way to include/exclude certain selector dependencies, but this build process is
+              the setup for that optionality.
+    """
+    # setup
+    DOCKERFILE_PARTIAL = "partial.Dockerfile"
+    PIP_PARTIAL = "requirements.txt"
     BUILD_DOCKERFILE = "{}/build.Dockerfile".format(DIR_PATH)
     BUILD_PIPFILE = "{}/build.requirements.txt".format(DIR_PATH)
     CORE_PIPDEPS = "{}/src/build/core.requirements.txt".format(DIR_PATH)
     CORE_START_DOCKER = "{}/src/build/core.start.Dockerfile".format(DIR_PATH)
     CORE_END_DOCKER = "{}/src/build/core.end.Dockerfile".format(DIR_PATH)
-
-    selectors = get_subdirs(SELECTORS_PATH)
-    analysers = get_subdirs(ANALYSERS_PATH)
+    ANALYSERS_PATH = "{}/src/lib/analysers".format(DIR_PATH)
+    SELECTORS_PATH = "{}/src/lib/selectors".format(DIR_PATH)
 
     with open(CORE_PIPDEPS) as cdeps:
         pipdeps = cdeps.readlines()
@@ -62,16 +66,20 @@ def build():
     with open(CORE_START_DOCKER) as dfile:
         dockerlines = dfile.readlines()
 
+    # search all selectors/analysers for partials
+    selectors = get_subdirs(SELECTORS_PATH)
+    analysers = get_subdirs(ANALYSERS_PATH)
+
     for selector in selectors:
-        docker_dep = "{}/{}/partial.Dockerfile".format(SELECTORS_PATH, selector)
-        pip_dep = "{}/{}/requirements.txt".format(SELECTORS_PATH, selector)
+        docker_dep = "{}/{}/{}".format(SELECTORS_PATH, selector, DOCKERFILE_PARTIAL)
+        pip_dep = "{}/{}/{}".format(SELECTORS_PATH, selector, PIP_PARTIAL)
 
         add_deps(docker_dep, dockerlines, check_in_dockerlines)
         add_deps(pip_dep, pipdeps, check_in_pipdeps)
 
     for analyser in analysers:
-        docker_dep = "{}/{}/partial.Dockerfile".format(ANALYSERS_PATH, analyser)
-        pip_dep = "{}/{}/requirements.txt".format(ANALYSERS_PATH, analyser)
+        docker_dep = "{}/{}/{}".format(ANALYSERS_PATH, analyser, DOCKERFILE_PARTIAL)
+        pip_dep = "{}/{}/{}".format(ANALYSERS_PATH, analyser, PIP_PARTIAL)
 
         add_deps(docker_dep, dockerlines, check_in_dockerlines)
         add_deps(pip_dep, pipdeps, check_in_pipdeps)
