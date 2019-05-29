@@ -16,7 +16,7 @@ def get_subdirs(d):
     return [o for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
 
 
-def check_in_deps(_str, _arr):
+def check_in_pipdeps(_str, _arr):
     """Check whether _arr already contains a string representing the same pip dependency as _str.
     """
     lib_name = _str.split("==")[0]
@@ -24,6 +24,23 @@ def check_in_deps(_str, _arr):
         if depstr.find(lib_name) is not -1:
             return True
     return False
+
+def check_in_dockerlines(_str, _arr):
+    """Check whether _arr already contains a string representing the same line in Dockerfile.
+    """
+    # NOTE: currently only exactly the same lines are disqualified
+    return _str in _arr
+
+def add_deps(dep_path, deps, deps_contains):
+    """ Add dependences at {folder_path} to {deps}, excluding if {deps_contains} is True for any given dependency.
+    """
+    if not os.path.isfile(dep_path):
+        return
+
+    with open(dep_path) as f:
+        for line in f.readlines():
+            if not deps_contains(line, deps):
+                deps.append(line)
 
 
 def build():
@@ -45,37 +62,19 @@ def build():
     with open(CORE_START_DOCKER) as dfile:
         dockerlines = dfile.readlines()
 
-    def add_pipdeps(path):
-        if not os.path.isfile(path):
-            return
-
-        with open(path) as f:
-            for line in f.readlines():
-                if not check_in_deps(line, pipdeps):
-                    pipdeps.append(line)
-
-    def add_dockerdeps(path):
-        if not os.path.isfile(path):
-            return
-
-        with open(path) as f:
-            for line in f.readlines():
-                dockerlines.append(line)
-        dockerlines.append('\n')
-
     for selector in selectors:
         docker_dep = "{}/{}/partial.Dockerfile".format(SELECTORS_PATH, selector)
         pip_dep = "{}/{}/requirements.txt".format(SELECTORS_PATH, selector)
 
-        add_dockerdeps(docker_dep)
-        add_pipdeps(pip_dep)
+        add_deps(docker_dep, dockerlines, check_in_dockerlines)
+        add_deps(pip_dep, pipdeps, check_in_pipdeps)
 
     for analyser in analysers:
         docker_dep = "{}/{}/partial.Dockerfile".format(ANALYSERS_PATH, analyser)
         pip_dep = "{}/{}/requirements.txt".format(ANALYSERS_PATH, analyser)
 
-        add_dockerdeps(docker_dep)
-        add_pipdeps(pip_dep)
+        add_deps(docker_dep, dockerlines, check_in_dockerlines)
+        add_deps(pip_dep, pipdeps, check_in_pipdeps)
 
     with open(CORE_END_DOCKER) as f:
         for line in f.readlines():
@@ -110,7 +109,11 @@ def build():
         )
         print("Build successful, run with: \n\tpython run.py develop")
     except:
-        print("Something went wrong! EEK")
+        print("Something went wrong! EEK.")
+
+    # cleanup
+    os.remove(BUILD_DOCKERFILE)
+    os.remove(BUILD_PIPFILE)
 
 
 def develop():
