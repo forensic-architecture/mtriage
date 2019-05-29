@@ -11,24 +11,8 @@ RUN apt-get update \
 # core
 RUN apt-get update && \
 	apt-get install -y \
-	# python-minimal \
 	build-essential \
 	jq
-	# libsm6 \
-	# libxrender1 \
-	# libfontconfig1 \
-
-# DEVTOOLS
-# RUN apt-get install -y \
-# 	wget \
-# 	curl \
-# 	git \
-# 	htop \
-# 	vim \
-# 	zip \
-# 	lsof \
-# 	tmux \
-# 	jq
 
 # *********************
 # starting partials...

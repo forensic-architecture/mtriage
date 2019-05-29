@@ -5,7 +5,6 @@
 
 # install pip packages
 # NOTE: build.requirements.txt is hardcoded here.
-
 ARG requirements_file=build.requirements.txt
 COPY $requirements_file /requirements.txt
 RUN pip install --upgrade pip && \
