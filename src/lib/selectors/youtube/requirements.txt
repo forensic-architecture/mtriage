@@ -1,0 +1,7 @@
+youtube-dl
+
+google-api-core==1.11.0
+google-api-python-client==1.7.8
+google-auth==1.6.3
+google-auth-httplib2==0.0.3
+grpcio==1.21.1

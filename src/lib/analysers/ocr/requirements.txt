@@ -1,0 +1,4 @@
+google-cloud-core==0.29.1
+google-cloud-storage==1.14.0
+google-cloud-vision==0.36.0
+google-images-download==2.5.0
