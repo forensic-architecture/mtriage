@@ -32,9 +32,9 @@ def build():
 
     BUILD_DOCKERFILE = "{}/build.Dockerfile".format(DIR_PATH)
     BUILD_PIPFILE = "{}/build.requirements.txt".format(DIR_PATH)
-    CORE_PIPDEPS = "{}/core.requirements.txt".format(DIR_PATH)
-    CORE_START_DOCKER = "{}/core.start.Dockerfile".format(DIR_PATH)
-    CORE_END_DOCKER = "{}/core.end.Dockerfile".format(DIR_PATH)
+    CORE_PIPDEPS = "{}/src/build/core.requirements.txt".format(DIR_PATH)
+    CORE_START_DOCKER = "{}/src/build/core.start.Dockerfile".format(DIR_PATH)
+    CORE_END_DOCKER = "{}/src/build/core.end.Dockerfile".format(DIR_PATH)
 
     selectors = get_subdirs(SELECTORS_PATH)
     analysers = get_subdirs(ANALYSERS_PATH)
@@ -64,14 +64,14 @@ def build():
         dockerlines.append('\n')
 
     for selector in selectors:
-        docker_dep = "{}/{}/Dockerfile".format(SELECTORS_PATH, selector)
+        docker_dep = "{}/{}/partial.Dockerfile".format(SELECTORS_PATH, selector)
         pip_dep = "{}/{}/requirements.txt".format(SELECTORS_PATH, selector)
 
         add_dockerdeps(docker_dep)
         add_pipdeps(pip_dep)
 
     for analyser in analysers:
-        docker_dep = "{}/{}/Dockerfile".format(ANALYSERS_PATH, analyser)
+        docker_dep = "{}/{}/partial.Dockerfile".format(ANALYSERS_PATH, analyser)
         pip_dep = "{}/{}/requirements.txt".format(ANALYSERS_PATH, analyser)
 
         add_dockerdeps(docker_dep)
