@@ -127,11 +127,8 @@ def build():
 
 
 def develop():
-<<<<<<< ac4250493505e7fc7d5bbb56eedcc10845e79042
     # https://docker-py.readthedocs.io/en/stable/containers.html
     cont_name = NAME.replace("/", "_")  # NB: no / allowed in container names
-=======
->>>>>>> incomplete infra to run tests in container from run.py
     try:
         DOCKER.containers.get(CONT_NAME)
         print("Develop container already running. Stop it and try again.")
@@ -159,39 +156,35 @@ def develop():
         )
 
 
-<<<<<<< bd6984972bf04df1ebf4cfb9a80202b41e653491
-<<<<<<< ac4250493505e7fc7d5bbb56eedcc10845e79042
-=======
-=======
 def clean():
     call(["docker", "rmi", NAME])
 
-
-<<<<<<< 526a4087111eed422ad47526f38fc2b517584023
->>>>>>> WIP: pytest in container
-def __run_cmd(cmd):
-=======
 def __run_tests():
->>>>>>> run tests from run.py
-    res = DOCKER.containers.run(
-        "{}:dev".format(NAME),
-        command="python -m pytest",
-        working_dir="/mtriage/src",
-        remove=True,
-        privileged=True,
-        volumes={
-            DIR_PATH: {"bind": "/mtriage", "mode": "rw"},
-            "{}/.config/gcloud".format(HOME_PATH): {
-                "bind": "/root/.config/gcloud",
-                "mode": "rw",
-            },
-        },
-        environment={"BASE_DIR": "/mtriage"},
+    call(
+        [
+            "docker",
+            "run",
+            "--name",
+            CONT_NAME,
+            "--env",
+            "BASE_DIR=/mtriage",
+            "--env-file={}".format(ENV_FILE),
+            "--rm",
+            "--privileged",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            "-v",
+            "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
+            "--workdir",
+            "/mtriage/src",
+            "{}:dev".format(NAME),
+            "python",
+            "-m",
+            "pytest"
+        ]
     )
-    print(res)
 
 
->>>>>>> incomplete infra to run tests in container from run.py
 def test():
     print("Creating container to run tests...")
     print("----------------------------------")
