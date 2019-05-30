@@ -1,11 +1,14 @@
 language: python
-
-services:
-  docker
-
+services: docker
 before_install:
 - pip install -r requirements.txt
 - python run.py build
-
 script:
 - python run.py test
+env:
+  secure: pIL13HeYacm63uHswMcoB30wDsSjDtmBrUU5fnBBzy2sYQQZJljzNxZ9uhPxO7dzVPpJxMvnc/gwkOVBQskj76Y/oXeLwf7r/NS/Q7xNkKQGziXGmJzKcf2nc9PeJ8iFqeSpsgbnIaZjF/emliJKqFDz48v+9Z0Bo6qZZ1u3P8FW9zPEu44ezDf/Xak8CK3gbkpAcKTtPZheIqh4UroI4rdyYYRtCIUk2OU4x8cSy09dyvXnaJgw8g6HBCWmLQQTuL8JSO1X/Q8xNJBGgSqv7l0OWGEvUA9VPti86cL7wg5abiaxYQWcJx2MuzrpmZu9Forgu/mEJUjCZezTnJ6i3tGkQHZll3DNnUO9AV5Ea1M2e4jYBN/UAd1PYOiKFi2wS/PA7moJLoh/fVX1o2aFE6n6iL1TeTPZBdHa/+vv22FJHeKLeCI/QHv6LH0J4TDd6loZ6iTRQfqP/oRL95+p5Yy164MCpuZI+66ZlU8ZxjwAUSOYIT4FAeoT0QiqXu/vvLGBgrhHG4RKtT6vGHGXoo466SVXeevKMujrLeTYChH/+kvdQQRDqnCOiJgfqawTy1NgZc3cFEtnGIahrNW+Oi170pi9R9C8E0tY64sEeqCNfqCciHIekOno1n6+AWI5GKPlUJ+vvugGQN1OIk3HqPx+3qekW/HxM/dY9N5ilU4=
+after_success:
+- if [[ "$TRAVIS_BRANCH" == "feature/docker-push" ]]; then
+    docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD;
+    docker push $DOCKER_USERNAME/mtriage:experimental
+  fi
