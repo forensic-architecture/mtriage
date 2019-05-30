@@ -10,10 +10,11 @@ class EmptySelector(Selector):
     def index_files(self, config):
         if not os.path.exists(self.SELECT_MAP):
             df = pd.DataFrame(["test"])
-            self.select_logger("Test select log.")
+            self.index_logger("Test select log.")
             return df
         else:
-            return None, ["File already exists for index--not running again."]
+            self.index_logger("File already exists for index--not running again.")
+            return None
 
     def retrieve_row(self, row):
         self.retrieve_logger("Test retrieve log.")
@@ -46,7 +47,7 @@ class TestEmptySelector(unittest.TestCase):
         self.assertIn(self.emptySelector.ID, EmptySelector.ALL_SELECTORS)
         self.assertEqual("test/empty", self.emptySelector.FOLDER)
         self.assertEqual("test/empty/data", self.emptySelector.RETRIEVE_FOLDER)
-        self.assertEqual("test/empty/select-logs.txt", self.emptySelector.SELECT_LOGS)
+        self.assertEqual("test/empty/index-logs.txt", self.emptySelector.INDEX_LOGS)
         self.assertEqual("test/empty/selected.csv", self.emptySelector.SELECT_MAP)
         self.assertEqual(
             "test/empty/retrieve-logs.txt", self.emptySelector.RETRIEVE_LOGS
@@ -56,7 +57,7 @@ class TestEmptySelector(unittest.TestCase):
     def test_index(self):
         self.emptySelector.index({})
         self.assertTrue(os.path.exists(self.emptySelector.SELECT_MAP))
-        self.assertTrue(os.path.exists(self.emptySelector.SELECT_LOGS))
+        self.assertTrue(os.path.exists(self.emptySelector.INDEX_LOGS))
 
     def test_retrieve_all(self):
         self.emptySelector.retrieve_all()

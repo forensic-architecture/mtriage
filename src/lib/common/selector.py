@@ -23,11 +23,11 @@ class Selector(ABC):
         # derived instance variables
         self.FOLDER = f"{self.BASE_FOLDER}/{self.NAME}"
         self.RETRIEVE_FOLDER = f"{self.FOLDER}/data"
-        self.SELECT_LOGS = f"{self.FOLDER}/select-logs.txt"
+        self.INDEX_LOGS = f"{self.FOLDER}/index-logs.txt"
         self.SELECT_MAP = f"{self.FOLDER}/selected.csv"
         self.RETRIEVE_LOGS = f"{self.FOLDER}/retrieve-logs.txt"
         self.__retrieveLogs = []
-        self.__selectLogs = []
+        self.__indexLogs = []
 
         if not os.path.exists(self.RETRIEVE_FOLDER):
             os.makedirs(self.RETRIEVE_FOLDER)
@@ -40,10 +40,10 @@ class Selector(ABC):
         df = self.index_files(config)
         if df is not None:
             df.to_csv(self.SELECT_MAP)
-        save_logs(self.__selectLogs, self.SELECT_LOGS)
+        save_logs(self.__indexLogs, self.INDEX_LOGS)
 
-    def select_logger(self, msg):
-        self.__selectLogs.append(msg)
+    def index_logger(self, msg):
+        self.__indexLogs.append(msg)
         print(msg)
 
     def retrieve_logger(self, msg):

@@ -11,10 +11,10 @@ class YoutubeSelector(Selector):
         if not os.path.exists(self.SELECT_MAP):
             df, logs = selector_run(config, self.FOLDER)
             for l in logs:
-                self.select_logger(l)
+                self.index_logger(l)
             return df
         else:
-            self.select_logger("File already exists for index--not running again.")
+            self.index_logger("File already exists for index--not running again.")
             return None
 
     def setup_retrieve(self):
