@@ -12,11 +12,16 @@ class YoutubeSelector(Selector):
             df, logs = selector_run(config, self.FOLDER)
             self.index_complete(df, logs)
         else:
-            self.index_complete(None, ["File already exists for index--not running again."])
+            self.index_complete(
+                None, ["File already exists for index--not running again."]
+            )
 
     def setup_retrieve(self):
         self.ydl = youtube_dl.YoutubeDL(
-            {"outtmpl": f"{self.RETRIEVE_FOLDER}/%(id)s/%(id)s.mp4", "format": "worstvideo[ext=mp4]"}
+            {
+                "outtmpl": f"{self.RETRIEVE_FOLDER}/%(id)s/%(id)s.mp4",
+                "format": "worstvideo[ext=mp4]",
+            }
         )
 
     def retrieve_row(self, row):
@@ -33,12 +38,14 @@ class YoutubeSelector(Selector):
                 return
             try:
                 result = ydl.extract_info(url)
-                # save meta as a precaution
+                #  save meta as a precaution
                 with open(get_meta_path(vid_id, self.RETRIEVE_FOLDER), "w+") as fp:
                     json.dump(result, fp)
                 LOGS.append(f"{vid_id}: video and meta downloaded successfully.")
                 self.retrieve_row_complete(True, LOGS)
 
             except youtube_dl.utils.DownloadError:
-                LOGS.append(f"Something went wrong downloading {vid_id}. It may have been deleted.")
+                LOGS.append(
+                    f"Something went wrong downloading {vid_id}. It may have been deleted."
+                )
                 self.retrieve_row_complete(False, LOGS)

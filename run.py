@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import docker
 import inspect
 import os
@@ -6,6 +7,7 @@ from subprocess import call
 
 
 NAME = "forensicarchitecture/mtriage"
+CONT_NAME = NAME.replace("/", "_")  # docker doesn't allow slashes in cont names
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 ENV_FILE = "{}/.env".format(DIR_PATH)
 HOME_PATH = os.path.expanduser("~")
@@ -25,11 +27,13 @@ def check_in_pipdeps(_str, _arr):
             return True
     return False
 
+
 def check_in_dockerlines(_str, _arr):
     """Check whether _arr already contains a string representing the same line in Dockerfile.
     """
     # NOTE: currently only exactly the same lines are disqualified
     return _str in _arr
+
 
 def add_deps(dep_path, deps, deps_contains):
     """ Add dependences at {folder_path} to {deps}, excluding if {deps_contains} is True for any given dependency.
@@ -128,7 +132,8 @@ def develop():
     # https://docker-py.readthedocs.io/en/stable/containers.html
     cont_name = NAME.replace("/", "_")  # NB: no / allowed in container names
     try:
-        DOCKER.containers.get(cont_name)
+        DOCKER.containers.get(CONT_NAME)
+        print("Develop container already running. Stop it and try again.")
     except docker.errors.NotFound:
         print("Building container from {}:dev...".format(NAME))
         # TODO: remake with docker py CLI.
@@ -138,7 +143,7 @@ def develop():
                 "run",
                 "-it",
                 "--name",
-                cont_name,
+                CONT_NAME,
                 "--env",
                 "BASE_DIR=/mtriage",
                 "--env-file={}".format(ENV_FILE),
@@ -148,20 +153,51 @@ def develop():
                 "{}:/mtriage".format(DIR_PATH),
                 "-v",
                 "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
-                "-p",
-                "5000:5000",
                 "{}:dev".format(NAME),
             ]
         )
 
 
+def clean():
+    call(["docker", "rmi", NAME])
+
+
+def __run_tests():
+    call(
+        [
+            "docker",
+            "run",
+            "--name",
+            CONT_NAME,
+            "--env",
+            "BASE_DIR=/mtriage",
+            "--env-file={}".format(ENV_FILE),
+            "--rm",
+            "--privileged",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            "-v",
+            "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
+            "--workdir",
+            "/mtriage/src",
+            "{}:dev".format(NAME),
+            "python",
+            "-m",
+            "pytest",
+        ]
+    )
+
+
 def test():
-    print("Running mtriage tests...")
+    print("Creating container to run tests...")
+    print("----------------------------------")
+    __run_tests()
+    print("----------------------------------")
     print("All tests for mtriage done.")
 
 
 if __name__ == "__main__":
-    COMMANDS = {"build": build, "develop": develop, "test": test}
+    COMMANDS = {"build": build, "develop": develop, "test": test, "clean": clean}
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     parser.add_argument("command", choices=COMMANDS.keys())
 

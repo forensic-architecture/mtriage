@@ -11,6 +11,7 @@ from google.protobuf.json_format import MessageToJson
 IS_DEMO = True
 MAX_REQUESTS = 15
 
+
 class OcrAnalyser(Analyser):
     """ This module relies on `gcloud` installed in the Docker container,
     as well as a .config/gcloud with the following capabilities:
