@@ -168,7 +168,7 @@ class Analyser(ABC):
             derived_folder = f"{self.FOLDER}/{selector}/{Analyser.DERIVED_EXT}"
 
             if not os.path.exists(derived_folder):
-                break
+                continue
 
             analysers = [
                 f
