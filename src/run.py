@@ -38,15 +38,14 @@ import argparse
 import json
 import os
 
-from lib.common.get_selector import get_selector
-from lib.common.get_analyser import get_analyser
+from lib.common.get_module import get_module
 
 
 def _select_run(args):
     if not os.path.exists(args.folder):
         os.mkdir(args.folder)
 
-    TheSelector = get_selector(args.module)
+    TheSelector = get_module('selector', args.module)
     config = json.loads(args.config) if args.config else {}
 
     selector = TheSelector(config, args.module, args.folder)
@@ -62,7 +61,7 @@ def _analyse_run(args):
             "No folder exists at the path you specified. Generate one by running the SELECT phase."
         )
 
-    TheAnalyser = get_analyser(args.module)
+    TheAnalyser = get_module('analyser', args.module)
     config = json.loads(args.config) if args.config else {}
 
     if TheAnalyser is None:
