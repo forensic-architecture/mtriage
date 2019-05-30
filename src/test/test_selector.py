@@ -10,14 +10,14 @@ class EmptySelector(Selector):
     def index(self, config):
         if not os.path.exists(self.SELECT_MAP):
             df = pd.DataFrame(["test"])
-            self.index_logger("Test select log.")
+            self.logger("Test select log.")
             return df
         else:
-            self.index_logger("File already exists for index--not running again.")
+            self.logger("File already exists for index--not running again.")
             return None
 
     def retrieve_row(self, row):
-        self.retrieve_logger("Test retrieve log.")
+        self.logger("Test retrieve log.")
         self.retrieve_row_complete(True)
 
 

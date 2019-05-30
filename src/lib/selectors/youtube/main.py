@@ -11,10 +11,10 @@ class YoutubeSelector(Selector):
         if not os.path.exists(self.SELECT_MAP):
             df, logs = selector_run(config, self.FOLDER)
             for l in logs:
-                self.index_logger(l)
+                self.logger(l)
             return df
         else:
-            self.index_logger("File already exists for index--not running again.")
+            self.logger("File already exists for index--not running again.")
             return None
 
     def setup_retrieve(self):
@@ -33,7 +33,7 @@ class YoutubeSelector(Selector):
             vid_does_exist = vid_exists(vid_id, self.RETRIEVE_FOLDER)
 
             if vid_does_exist:
-                self.retrieve_logger(f"{vid_id} has already been downloaded.")
+                self.logger(f"{vid_id} has already been downloaded.")
                 self.retrieve_row_complete(False)
                 return
             try:
@@ -41,13 +41,13 @@ class YoutubeSelector(Selector):
                 #  save meta as a precaution
                 with open(get_meta_path(vid_id, self.RETRIEVE_FOLDER), "w+") as fp:
                     json.dump(result, fp)
-                self.retrieve_logger(
+                self.logger(
                     f"{vid_id}: video and meta downloaded successfully."
                 )
                 self.retrieve_row_complete(True)
 
             except youtube_dl.utils.DownloadError:
-                self.retrieve_logger(
+                self.logger(
                     f"Something went wrong downloading {vid_id}. It may have been deleted."
                 )
                 self.retrieve_row_complete(False)

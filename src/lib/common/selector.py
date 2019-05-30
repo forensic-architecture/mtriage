@@ -13,6 +13,8 @@ class Selector(ABC):
     """
 
     ALL_SELECTORS = []
+    INDEX_KEY = "index"
+    RETRIEVE_KEY = "retrieve"
 
     def __init__(self, config, module, folder):
         self.BASE_FOLDER = folder
@@ -28,6 +30,11 @@ class Selector(ABC):
         self.RETRIEVE_LOGS = f"{self.FOLDER}/retrieve-logs.txt"
         self.__retrieveLogs = []
         self.__indexLogs = []
+        self.__LOGS = {
+            Selector.INDEX_KEY : [],
+            Selector.RETRIEVE_KEY : []
+        }
+        self.__LOG_KEY = Selector.INDEX_KEY
 
         if not os.path.exists(self.RETRIEVE_FOLDER):
             os.makedirs(self.RETRIEVE_FOLDER)
@@ -37,17 +44,14 @@ class Selector(ABC):
         return pd.read_csv(self.CSV, encoding="utf-8")
 
     def start_indexing(self, config):
+        self__LOG_KEY = Selector.INDEX_KEY
         df = self.index(config)
         if df is not None:
             df.to_csv(self.SELECT_MAP)
-        save_logs(self.__indexLogs, self.INDEX_LOGS)
+        save_logs(self.__LOGS[Selector.INDEX_KEY], self.INDEX_LOGS)
 
-    def index_logger(self, msg):
-        self.__indexLogs.append(msg)
-        print(msg)
-
-    def retrieve_logger(self, msg):
-        self.__retrieveLogs.append(msg)
+    def logger(self, msg):
+        self.__LOGS[self.__LOG_KEY].append(msg)
         print(msg)
 
     @abstractmethod
@@ -72,7 +76,8 @@ class Selector(ABC):
         if 'path_to_media' is None then we save logs, but nothing else.
         """
         # NOTE: nothing done with success currently
-        save_logs(self.__retrieveLogs, self.RETRIEVE_LOGS)
+        self__LOG_KEY = Selector.RETRIEVE_KEY
+        save_logs(self.__LOGS[Selector.RETRIEVE_KEY], self.RETRIEVE_LOGS)
 
     def _retrieve_row(self, row):
         #  store row idx for 'retrieve_row_complete'
@@ -95,10 +100,11 @@ class Selector(ABC):
         # return NotImplemented
 
     def retrieve_all(self):
+        self.__LOG_KEY = Selector.RETRIEVE_KEY
         df = pd.read_csv(self.SELECT_MAP, encoding="utf-8")
         self.setup_retrieve()
         df.apply(self._retrieve_row, axis=1)
-        save_logs(self.__retrieveLogs, self.RETRIEVE_LOGS)
+        save_logs(self.__LOGS[Selector.RETRIEVE_KEY], self.RETRIEVE_LOGS)
 
     def retrieve(self, config):
         """ The default retrieve technique is to retrieve all. For custom retrieval heuristics,
