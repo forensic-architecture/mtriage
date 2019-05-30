@@ -3,7 +3,7 @@ import docker
 import inspect
 import os
 import argparse
-from subprocess import call
+import subprocess as sp
 
 
 NAME = "forensicarchitecture/mtriage"
@@ -116,7 +116,7 @@ def build():
     print("Starting build in Docker...")
 
     try:
-        call(
+        sp.call(
             [
                 "docker",
                 "build",
@@ -145,7 +145,7 @@ def develop():
     except docker.errors.NotFound:
         print("Building container from {}:dev...".format(NAME))
         # TODO: remake with docker py CLI.
-        call(
+        sp.call(
             [
                 "docker",
                 "run",
@@ -167,11 +167,11 @@ def develop():
 
 
 def clean():
-    call(["docker", "rmi", NAME])
+    sp.call(["docker", "rmi", NAME])
 
 
 def __run_tests():
-    call(
+    returncode = sp.call(
         [
             "docker",
             "run",
@@ -194,6 +194,7 @@ def __run_tests():
             "pytest",
         ]
     )
+    exit(returncode)
 
 
 def test():
