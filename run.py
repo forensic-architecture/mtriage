@@ -27,11 +27,13 @@ def check_in_pipdeps(_str, _arr):
             return True
     return False
 
+
 def check_in_dockerlines(_str, _arr):
     """Check whether _arr already contains a string representing the same line in Dockerfile.
     """
     # NOTE: currently only exactly the same lines are disqualified
     return _str in _arr
+
 
 def add_deps(dep_path, deps, deps_contains):
     """ Add dependences at {folder_path} to {deps}, excluding if {deps_contains} is True for any given dependency.
@@ -159,6 +161,7 @@ def develop():
 def clean():
     call(["docker", "rmi", NAME])
 
+
 def __run_tests():
     call(
         [
@@ -180,7 +183,7 @@ def __run_tests():
             "{}:dev".format(NAME),
             "python",
             "-m",
-            "pytest"
+            "pytest",
         ]
     )
 

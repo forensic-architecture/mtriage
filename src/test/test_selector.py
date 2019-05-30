@@ -5,24 +5,25 @@ import os
 import shutil
 import unittest
 
-class EmptySelector(Selector):
 
+class EmptySelector(Selector):
     def index(self, config):
         if not os.path.exists(self.SELECT_MAP):
             df = pd.DataFrame([])
-            self.index_complete(df , ["Test log."])
+            self.index_complete(df, ["Test log."])
         else:
-            self.index_complete(None, ["File already exists for index--not running again."])
+            self.index_complete(
+                None, ["File already exists for index--not running again."]
+            )
 
     def retrieve_row(self, row):
         pass
 
 
 class TestEmptySelector(unittest.TestCase):
-
     @classmethod
     def setUpClass(self):
-        self.emptySelector = EmptySelector({}, "empty" , "test")
+        self.emptySelector = EmptySelector({}, "empty", "test")
 
     @classmethod
     def tearDownClass(self):
@@ -35,7 +36,7 @@ class TestEmptySelector(unittest.TestCase):
 
     def test_cannot_instantiate(self):
         with self.assertRaises(TypeError):
-            Selector({}, "empty" , "test")
+            Selector({}, "empty", "test")
 
     def test_init(self):
         self.assertEqual("test", self.emptySelector.BASE_FOLDER)
@@ -47,13 +48,15 @@ class TestEmptySelector(unittest.TestCase):
         self.assertEqual("test/empty/data", self.emptySelector.RETRIEVE_FOLDER)
         self.assertEqual("test/empty/select-logs.txt", self.emptySelector.SELECT_LOGS)
         self.assertEqual("test/empty/selected.csv", self.emptySelector.SELECT_MAP)
-        self.assertEqual("test/empty/retrieve-logs.txt", self.emptySelector.RETRIEVE_LOGS)
+        self.assertEqual(
+            "test/empty/retrieve-logs.txt", self.emptySelector.RETRIEVE_LOGS
+        )
         self.assertTrue(os.path.exists(self.emptySelector.RETRIEVE_FOLDER))
 
     def test_index_complete(self):
         logs = ["Test log."]
         df = pd.DataFrame(["test1"])
-        self.emptySelector.index_complete(df , logs)
+        self.emptySelector.index_complete(df, logs)
         self.assertTrue(os.path.exists(self.emptySelector.SELECT_MAP))
         self.assertTrue(os.path.exists(self.emptySelector.SELECT_LOGS))
 

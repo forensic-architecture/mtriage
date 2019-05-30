@@ -21,7 +21,10 @@ YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 CREDENTIALS_FILE = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 BASE_DIR = os.environ.get("BASE_DIR")
-GOOGLE_CREDS = service_account.Credentials.from_service_account_file(f"{BASE_DIR}/{CREDENTIALS_FILE}")
+GOOGLE_CREDS = service_account.Credentials.from_service_account_file(
+    f"{BASE_DIR}/{CREDENTIALS_FILE}"
+)
+
 
 def print_log(msg, logs):
     logs.append(msg + "\n")
@@ -130,7 +133,7 @@ def selector_run(config, output_path):
     results = []
 
     print_log(f"Query: {config['search_term']}", logs)
-    print_log(f"Start: {config['uploaded_after']}" , logs)
+    print_log(f"Start: {config['uploaded_after']}", logs)
     print_log(f"End: {config['uploaded_after']}", logs)
     print_log(f"Output file: {output_path}", logs)
 
@@ -152,7 +155,6 @@ def selector_run(config, output_path):
     df = pd.DataFrame(results)
 
     print_log("\n\n----------------", logs)
-    print_log(
-        f"Scrape successful, {len(df) - 1} results in {output_path}", logs)
+    print_log(f"Scrape successful, {len(df) - 1} results in {output_path}", logs)
 
     return df, logs

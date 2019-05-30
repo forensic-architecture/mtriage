@@ -4,8 +4,8 @@ from lib.analysers.ocr import main as OcrAnalyser
 from lib.common.get_analyser import get_analyser
 import unittest
 
-class TestGetAnalyser(unittest.TestCase):
 
+class TestGetAnalyser(unittest.TestCase):
     def test_get_frames_analyser(self):
         fa = get_analyser("frames")
         self.assertEqual(fa, FramesAnalyser)

@@ -5,6 +5,7 @@ from imutils.video import FileVideoStream
 from subprocess import call, STDOUT
 from lib.common.analyser import Analyser
 
+
 def ffmpeg_frames(out_folder, fp, rate):
     # TODO: better logs for FFMPEG process
     FNULL = open(os.devnull, "w")
@@ -14,6 +15,7 @@ def ffmpeg_frames(out_folder, fp, rate):
         stderr=STDOUT,
     )
     return str(out)
+
 
 def frame_changed(frame_a, frame_b, threshold):
     """ Return True if frame_b is sufficiently different from frame_a.
@@ -68,14 +70,17 @@ def opencv_frames(out_folder, fp, rate, threshold, sequential):
 
     return num_output, num_considered
 
+
 class FramesAnalyser(Analyser):
     def run_element(self, element, config):
-        FPS_NUMBER = int(config['fps'])
-        dest = element['dest']
-        media = Analyser.find_video_paths(element['src'])
+        FPS_NUMBER = int(config["fps"])
+        dest = element["dest"]
+        media = Analyser.find_video_paths(element["src"])
 
         if len(media) is not 1:
-            raise Error("The frames analyser can only operate on elements that contain one and only one video.")
+            raise Error(
+                "The frames analyser can only operate on elements that contain one and only one video."
+            )
 
         video = media[0]
 

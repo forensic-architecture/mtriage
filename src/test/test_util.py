@@ -2,8 +2,8 @@ from lib.common.util import save_logs
 import os
 import unittest
 
-class TestSaveLogs(unittest.TestCase):
 
+class TestSaveLogs(unittest.TestCase):
     def setUp(self):
         self.LOGPATH = "testlog.txt"
 

@@ -65,7 +65,7 @@ class Selector(ABC):
         save_logs(logs, self.RETRIEVE_LOGS)
 
     def _retrieve_row(self, row):
-        # store row idx for 'retrieve_row_complete'
+        #  store row idx for 'retrieve_row_complete'
         self.LAST_ROW_IDX = row.name
         self.retrieve_row(row)
 
@@ -98,4 +98,3 @@ class Selector(ABC):
         an overload 'retrieve' method should be specified in the preprocessor. TODO: further document, etc.
         """
         self.retrieve_all()
-
