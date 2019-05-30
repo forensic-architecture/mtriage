@@ -62,7 +62,6 @@ class Selector(ABC):
         No options for parallelisation, run on a single CPU.
         """
         raise NotImplementedError
-        return pd.DataFrame()
 
     def setup_retrieve(self):
         """ option to set class variables or do other work only once before each row is retrieved. """
