@@ -1,11 +1,12 @@
 language: python
-
-services:
-  docker
-
+services: docker
 before_install:
 - pip install -r requirements.txt
 - python run.py build
-
 script:
+- cp .env.example .env
 - python run.py test
+- black --check run.py
+- black --check src/
+after_success:
+- bash scripts/travis_docker.sh

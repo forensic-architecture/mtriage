@@ -64,6 +64,8 @@ def build():
     ANALYSERS_PATH = "{}/src/lib/analysers".format(DIR_PATH)
     SELECTORS_PATH = "{}/src/lib/selectors".format(DIR_PATH)
 
+    print("Collecting partial dependencies from selector and analyser folders...")
+
     with open(CORE_PIPDEPS) as cdeps:
         pipdeps = cdeps.readlines()
 
@@ -106,6 +108,12 @@ def build():
     with open(BUILD_DOCKERFILE, "w") as f:
         for line in dockerlines:
             f.write(line)
+
+    print("All Docker dependencies collected in build.Dockerfile.")
+    print("All Pip dependencies collected in build.requirements.txt.")
+    print("--------------------------------------------------------")
+    print("\n")
+    print("Starting build in Docker...")
 
     try:
         call(
