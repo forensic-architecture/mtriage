@@ -50,7 +50,7 @@ def _select_run(args):
     config = json.loads(args.config) if args.config else {}
 
     selector = TheSelector(config, args.module, args.folder)
-    selector.index(config)
+    selector.start_indexing(config)
 
     # TODO: conditionally run retrieve based on config
     selector.retrieve(config)

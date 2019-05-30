@@ -36,8 +36,8 @@ class Selector(ABC):
         """ the select DF is loaded from the appropriate file """
         return pd.read_csv(self.CSV, encoding="utf-8")
 
-    def index(self, config):
-        df = self.index_files(config)
+    def start_indexing(self, config):
+        df = self.index(config)
         if df is not None:
             df.to_csv(self.SELECT_MAP)
         save_logs(self.__indexLogs, self.INDEX_LOGS)
@@ -51,7 +51,7 @@ class Selector(ABC):
         print(msg)
 
     @abstractmethod
-    def index_files(self, config):
+    def index(self, config):
         """TODO: indicate the exact format this should output.
 
         Should populate a dataframe with the results, keep logs, and then call:

@@ -7,7 +7,7 @@ from .retrieve import id_from_url, vid_exists, get_meta_path
 
 
 class YoutubeSelector(Selector):
-    def index_files(self, config):
+    def index(self, config):
         if not os.path.exists(self.SELECT_MAP):
             df, logs = selector_run(config, self.FOLDER)
             for l in logs:

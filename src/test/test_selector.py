@@ -7,7 +7,7 @@ import unittest
 
 
 class EmptySelector(Selector):
-    def index_files(self, config):
+    def index(self, config):
         if not os.path.exists(self.SELECT_MAP):
             df = pd.DataFrame(["test"])
             self.index_logger("Test select log.")
@@ -55,7 +55,7 @@ class TestEmptySelector(unittest.TestCase):
         self.assertTrue(os.path.exists(self.emptySelector.RETRIEVE_FOLDER))
 
     def test_index(self):
-        self.emptySelector.index({})
+        self.emptySelector.start_indexing({})
         self.assertTrue(os.path.exists(self.emptySelector.SELECT_MAP))
         self.assertTrue(os.path.exists(self.emptySelector.INDEX_LOGS))
 
