@@ -9,15 +9,16 @@ import unittest
 class EmptySelector(Selector):
     def index(self, config):
         if not os.path.exists(self.SELECT_MAP):
-            df = pd.DataFrame([])
-            self.index_complete(df, ["Test log."])
+            df = pd.DataFrame(["test"])
+            self.logger("Test select log.")
+            return df
         else:
-            self.index_complete(
-                None, ["File already exists for index--not running again."]
-            )
+            self.logger("File already exists for index--not running again.")
+            return None
 
     def retrieve_row(self, row):
-        pass
+        self.logger("Test retrieve log.")
+        self.retrieve_row_complete(True)
 
 
 class TestEmptySelector(unittest.TestCase):
@@ -46,23 +47,17 @@ class TestEmptySelector(unittest.TestCase):
         self.assertIn(self.emptySelector.ID, EmptySelector.ALL_SELECTORS)
         self.assertEqual("test/empty", self.emptySelector.FOLDER)
         self.assertEqual("test/empty/data", self.emptySelector.RETRIEVE_FOLDER)
-        self.assertEqual("test/empty/select-logs.txt", self.emptySelector.SELECT_LOGS)
+        self.assertEqual("test/empty/index-logs.txt", self.emptySelector.INDEX_LOGS)
         self.assertEqual("test/empty/selected.csv", self.emptySelector.SELECT_MAP)
         self.assertEqual(
             "test/empty/retrieve-logs.txt", self.emptySelector.RETRIEVE_LOGS
         )
         self.assertTrue(os.path.exists(self.emptySelector.RETRIEVE_FOLDER))
 
-    def test_index_complete(self):
-        logs = ["Test log."]
-        df = pd.DataFrame(["test1"])
-        self.emptySelector.index_complete(df, logs)
+    def test_index(self):
+        self.emptySelector.start_indexing({})
         self.assertTrue(os.path.exists(self.emptySelector.SELECT_MAP))
-        self.assertTrue(os.path.exists(self.emptySelector.SELECT_LOGS))
-
-    def test_retrieve_row_complete(self):
-        self.emptySelector.retrieve_row_complete(True, ["another test log"])
-        self.assertTrue(os.path.exists(self.emptySelector.RETRIEVE_LOGS))
+        self.assertTrue(os.path.exists(self.emptySelector.INDEX_LOGS))
 
     def test_retrieve_all(self):
         self.emptySelector.retrieve_all()
