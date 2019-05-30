@@ -26,6 +26,8 @@ class Selector(ABC):
         self.SELECT_LOGS = f"{self.FOLDER}/select-logs.txt"
         self.SELECT_MAP = f"{self.FOLDER}/selected.csv"
         self.RETRIEVE_LOGS = f"{self.FOLDER}/retrieve-logs.txt"
+        self.__retrieveLogs = []
+        self.__selectLogs = []
 
         if not os.path.exists(self.RETRIEVE_FOLDER):
             os.makedirs(self.RETRIEVE_FOLDER)
@@ -34,15 +36,22 @@ class Selector(ABC):
         """ the select DF is loaded from the appropriate file """
         return pd.read_csv(self.CSV, encoding="utf-8")
 
-    def index_complete(self, df, logs):
-        """ the data (list of lists) is saved in the appropriate file """
-        # TODO: do checks to ensure a valid structure, information rich enough.
+    def index(self, config):
+        df = self.index_files(config)
         if df is not None:
             df.to_csv(self.SELECT_MAP)
-        save_logs(logs, self.SELECT_LOGS)
+        save_logs(self.__selectLogs, self.SELECT_LOGS)
+
+    def select_logger(self, msg):
+        self.__selectLogs.append(msg)
+        print(msg)
+
+    def retrieve_logger(self, msg):
+        self.__retrieveLogs.append(msg)
+        print(msg)
 
     @abstractmethod
-    def index(self, config):
+    def index_files(self, config):
         """TODO: indicate the exact format this should output.
 
         Should populate a dataframe with the results, keep logs, and then call:
@@ -51,18 +60,18 @@ class Selector(ABC):
         NOTE: should be a relatively light pass that designates the space to be retrieved.
         No options for parallelisation, run on a single CPU.
         """
-        return NotImplemented
+        return pd.DataFrame()
 
     def setup_retrieve(self):
         """ option to set class variables or do other work only once before each row is retrieved. """
         pass
 
-    def retrieve_row_complete(self, success, logs):
+    def retrieve_row_complete(self, success):
         """ called with the path to the retrieved element (str), and the logs (list of str)
         if 'path_to_media' is None then we save logs, but nothing else.
         """
         # NOTE: nothing done with success currently
-        save_logs(logs, self.RETRIEVE_LOGS)
+        save_logs(self.__retrieveLogs, self.RETRIEVE_LOGS)
 
     def _retrieve_row(self, row):
         #  store row idx for 'retrieve_row_complete'
@@ -79,19 +88,16 @@ class Selector(ABC):
             self.retrieve_row_complete(logs)
         when complete. Log printing is handled by the Sampler class.
 
-        Returns:
-            str: optional logs that are produced from retreving the row.
-
         NOTE: exposed as a function for a single row so that MT can take responsibility
         for parallelisation.
         """
-        return NotImplemented
+        # return NotImplemented
 
     def retrieve_all(self):
         df = pd.read_csv(self.SELECT_MAP, encoding="utf-8")
         self.setup_retrieve()
-        df["logs"] = df.apply(self._retrieve_row, axis=1)
-        save_logs(df["logs"], self.RETRIEVE_LOGS)
+        df.apply(self._retrieve_row, axis=1)
+        save_logs(self.__retrieveLogs, self.RETRIEVE_LOGS)
 
     def retrieve(self, config):
         """ The default retrieve technique is to retrieve all. For custom retrieval heuristics,
