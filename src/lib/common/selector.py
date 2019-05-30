@@ -60,6 +60,7 @@ class Selector(ABC):
         NOTE: should be a relatively light pass that designates the space to be retrieved.
         No options for parallelisation, run on a single CPU.
         """
+        raise NotImplementedError
         return pd.DataFrame()
 
     def setup_retrieve(self):
