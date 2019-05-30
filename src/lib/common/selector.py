@@ -30,10 +30,7 @@ class Selector(ABC):
         self.RETRIEVE_LOGS = f"{self.FOLDER}/retrieve-logs.txt"
         self.__retrieveLogs = []
         self.__indexLogs = []
-        self.__LOGS = {
-            Selector.INDEX_KEY : [],
-            Selector.RETRIEVE_KEY : []
-        }
+        self.__LOGS = {Selector.INDEX_KEY: [], Selector.RETRIEVE_KEY: []}
         self.__LOG_KEY = Selector.INDEX_KEY
 
         if not os.path.exists(self.RETRIEVE_FOLDER):
