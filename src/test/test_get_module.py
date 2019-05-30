@@ -6,7 +6,7 @@ from os.path import isdir
 
 
 def make_empty_main_export(pth):
-    INIT = 'main = False\n__all__ = ["main"]\n'
+    INIT = 'main = True\n__all__ = ["main"]\n'
     with open(f"{pth}/__init__.py", "w") as f:
         f.write(INIT)
 
