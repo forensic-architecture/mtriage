@@ -45,7 +45,7 @@ def _select_run(args):
     if not os.path.exists(args.folder):
         os.mkdir(args.folder)
 
-    TheSelector = get_module('selector', args.module)
+    TheSelector = get_module("selector", args.module)
     config = json.loads(args.config) if args.config else {}
 
     selector = TheSelector(config, args.module, args.folder)
@@ -61,7 +61,7 @@ def _analyse_run(args):
             "No folder exists at the path you specified. Generate one by running the SELECT phase."
         )
 
-    TheAnalyser = get_module('analyser', args.module)
+    TheAnalyser = get_module("analyser", args.module)
     config = json.loads(args.config) if args.config else {}
 
     if TheAnalyser is None:

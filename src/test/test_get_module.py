@@ -4,8 +4,9 @@ import shutil
 from os import listdir, makedirs
 from os.path import isdir
 
+
 def make_empty_main_export(pth):
-    INIT = "main = True\n__all__ = [\"main\"]\n"
+    INIT = 'main = True\n__all__ = ["main"]\n'
     with open(f"{pth}/__init__.py", "w") as f:
         f.write(INIT)
 
@@ -37,16 +38,15 @@ class TestGetModule(unittest.TestCase):
 
     def test_raises_when_faulty(self):
         with self.assertRaises(ModuleNotFoundError):
-            get_module('selector', "smth")
+            get_module("selector", "smth")
 
         with self.assertRaises(ModuleNotFoundError):
-            get_module('analyser', "smth")
+            get_module("analyser", "smth")
 
-        with self.assertRaisesRegex(ImportError,"must be 'selector' or 'analyser'"):
-            get_module('neitherthing', "smth")
+        with self.assertRaisesRegex(ImportError, "must be 'selector' or 'analyser'"):
+            get_module("neitherthing", "smth")
 
     def test_imports_main(self):
         # main just exported as 'True', to check import logic is correct
-        self.assertTrue(get_module('selector', 'empty'))
-        self.assertTrue(get_module('analyser', 'empty'))
-
+        self.assertTrue(get_module("selector", "empty"))
+        self.assertTrue(get_module("analyser", "empty"))
