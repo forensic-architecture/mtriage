@@ -9,16 +9,15 @@ import unittest
 class EmptySelector(Selector):
     def index(self, config):
         if not os.path.exists(self.SELECT_MAP):
-            df = pd.DataFrame(["test"])
+            df = pd.DataFrame([{"element_id": "test"}])
             self.logger("Test select log.")
             return df
         else:
             self.logger("File already exists for index--not running again.")
             return None
 
-    def retrieve_row(self, row):
+    def retrieve_element(self, element, config):
         self.logger("Test retrieve log.")
-        self.retrieve_row_complete(True)
 
 
 class TestEmptySelector(unittest.TestCase):
@@ -60,5 +59,5 @@ class TestEmptySelector(unittest.TestCase):
         self.assertTrue(os.path.exists(self.emptySelector.INDEX_LOGS))
 
     def test_retrieve_all(self):
-        self.emptySelector.retrieve_all()
+        self.emptySelector.retrieve_all({})
         self.assertTrue(os.path.exists(self.emptySelector.RETRIEVE_LOGS))

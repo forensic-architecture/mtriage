@@ -27,46 +27,41 @@ GOOGLE_CREDS = service_account.Credentials.from_service_account_file(
 class YoutubeSelector(Selector):
     def index(self, config):
         if not os.path.exists(self.SELECT_MAP):
-            df = self._selector_run(config, self.FOLDER)
+            df = self._run(config, self.FOLDER)
             return df
         else:
             self.logger("File already exists for index--not running again.")
             return None
 
-    def setup_retrieve(self):
+    def setup_retrieve(self, base_folder, config):
         self.ydl = youtube_dl.YoutubeDL(
             {
-                "outtmpl": f"{self.RETRIEVE_FOLDER}/%(id)s/%(id)s.mp4",
+                "outtmpl": f"{base_folder}/%(id)s/%(id)s.mp4",
                 "format": "worstvideo[ext=mp4]",
             }
         )
 
-    def retrieve_row(self, row):
-        url = row.url
+    def retrieve_element(self, element, config):
+        dest = element["dest"]
+        url = element["url"]
         ydl = self.ydl
         with ydl:
             vid_id = self._id_from_url(url)
-            vid_does_exist = self._vid_exists(vid_id, self.RETRIEVE_FOLDER)
+            vid_does_exist = self._vid_exists(dest)
 
             if vid_does_exist:
                 self.logger(f"{vid_id} has already been downloaded.")
-                self.retrieve_row_complete(False)
-                return
             try:
                 result = ydl.extract_info(url)
-                #  save meta as a precaution
-                with open(self._get_meta_path(vid_id), "w+") as fp:
+                with open(self._get_meta_path(dest), "w+") as fp:
                     json.dump(result, fp)
                 self.logger(f"{vid_id}: video and meta downloaded successfully.")
-                self.retrieve_row_complete(True)
-
             except youtube_dl.utils.DownloadError:
                 self.logger(
                     f"Something went wrong downloading {vid_id}. It may have been deleted."
                 )
-                self.retrieve_row_complete(False)
 
-    def _selector_run(self, config, output_path):
+    def _run(self, config, output_path):
 
         results = []
 
@@ -108,12 +103,14 @@ class YoutubeSelector(Selector):
             desc = search_result["snippet"]["description"]
             publishedAt = search_result["snippet"]["publishedAt"]
             url = f"https://www.youtube.com/watch?v={videoId}"
+            element_id = self._id_from_url(url)
             csv_obj.append(
                 {
                     "url": url,
                     "title": title.replace(",", ";"),
                     "desc": desc.replace(",", ";"),
                     "published": publishedAt[0:10],
+                    "element_id": element_id,
                 }
             )
         return csv_obj
@@ -170,11 +167,11 @@ class YoutubeSelector(Selector):
             for dt in range(between)
         ]
 
-    def _get_meta_path(self, vid_id):
-        return f"{self.RETRIEVE_FOLDER}/{vid_id}/meta.json"
+    def _get_meta_path(self, dest):
+        return f"{dest}/meta.json"
 
-    def _get_folder_path(self, vid_id):
-        return f"{self.RETRIEVE_FOLDER}/{vid_id}"
+    # def _get_folder_path(self, base_folder, vid_id):
+    #     return f"{base_folder}/{vid_id}"
 
     def _id_from_url(self, url):
         id_search = re.search(
@@ -184,11 +181,10 @@ class YoutubeSelector(Selector):
             return id_search.group(1)
         return None
 
-    def _vid_exists(self, vid_id, folder):
-        fp = self._get_folder_path(vid_id)
+    def _vid_exists(self, dest):
         try:
             m_vid_file = list(
-                filter(lambda x: re.match("(.*\.mp4)|(.*\.mkv)", x), os.listdir(fp))
+                filter(lambda x: re.match("(.*\.mp4)|(.*\.mkv)", x), os.listdir(dest))
             )
             # video has already been downloaded.
             if len(m_vid_file) != 1:
