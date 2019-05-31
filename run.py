@@ -19,10 +19,15 @@ DOCKER = docker.from_env()
 def get_subdirs(d):
     return [o for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
 
+
 class InvalidPipDep(Exception):
     pass
 
+
 def name_and_ver(pipdep):
+    """ Return the name and version from a string that expresses a pip dependency.
+        Raises an InvalidPipDep exception if the string is an invalid dependency.
+    """
     pipdep = pipdep.split("==")
     dep_name = pipdep[0]
     try:
@@ -37,6 +42,7 @@ def name_and_ver(pipdep):
         return dep_name, dep_version
     except:
         raise InvalidPipDep
+
 
 def should_add_pipdep(dep, pipdeps):
     """Check whether pipdep should be added.
@@ -162,14 +168,10 @@ def build():
 
 
 def develop():
-    # https://docker-py.readthedocs.io/en/stable/containers.html
-    cont_name = NAME.replace("/", "_")  # NB: no / allowed in container names
     try:
         DOCKER.containers.get(CONT_NAME)
         print("Develop container already running. Stop it and try again.")
     except docker.errors.NotFound:
-        print("Building container from {}:dev...".format(NAME))
-        # TODO: remake with docker py CLI.
         sp.call(
             [
                 "docker",
@@ -196,24 +198,27 @@ def clean():
 
 
 def __run_lib_tests():
-    returncode = sp.call([
-        "docker",
-        "run",
-        "--env",
-        "BASE_DIR=/mtriage",
-        "--env-file={}".format(ENV_FILE),
-        "--rm",
-        "-v",
-        "{}:/mtriage".format(DIR_PATH),
-        "--workdir",
-        "/mtriage/src",
-        "{}:dev".format(NAME),
-        "python",
-        "-m",
-        "pytest",
-    ])
+    returncode = sp.call(
+        [
+            "docker",
+            "run",
+            "--env",
+            "BASE_DIR=/mtriage",
+            "--env-file={}".format(ENV_FILE),
+            "--rm",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            "--workdir",
+            "/mtriage/src",
+            "{}:dev".format(NAME),
+            "python",
+            "-m",
+            "pytest",
+        ]
+    )
     if returncode is 1:
         exit(returncode)
+
 
 def __run_runpy_tests():
     # NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
@@ -221,6 +226,7 @@ def __run_runpy_tests():
     returncode = sp.call(["python", "-m", "pytest", "test/"])
     if returncode is 1:
         exit(returncode)
+
 
 def test():
     print("Creating container to run tests...")

@@ -1,6 +1,6 @@
 import unittest
 import docker
-from run import name_and_ver, InvalidPipDep, should_add_pipdep
+from run import name_and_ver, InvalidPipDep, should_add_pipdep, should_add_dockerline
 
 
 class TestRunpy(unittest.TestCase):
@@ -45,4 +45,13 @@ class TestRunpy(unittest.TestCase):
         # check error
         with self.assertRaises(InvalidPipDep):
             should_add_pipdep("invalid==1==", p4)
+
+    def test_should_add_dockerline(self):
+        p1 = []
+        self.assertTrue(should_add_dockerline("any line here", p1))
+        p2 = ["RUN apt-get install -y vim"]
+        self.assertFalse(should_add_dockerline("RUN apt-get install -y vim", p2))
+        p3 = ["RUN apt-get install -y vim", "RUN curl -o https://smthn", "RUN it"]
+        self.assertTrue(should_add_dockerline("RUN apt get install -y curl", p3))
+        self.assertFalse(should_add_dockerline("RUN curl -o https://smthn", p3))
 
