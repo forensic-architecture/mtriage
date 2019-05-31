@@ -58,6 +58,9 @@ class Selector(ABC):
         Should populate a dataframe with the results, keep logs, and then call:
             self.index_complete(df, logs)
 
+        REQUIRED: each result in the dataframe must contain an 'element_id' field containing
+        a unique identifier for the element.
+
         NOTE: should be a relatively light pass that designates the space to be retrieved.
         No options for parallelisation, run on a single CPU.
         """
