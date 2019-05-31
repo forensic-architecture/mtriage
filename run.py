@@ -55,7 +55,7 @@ def should_add_pipdep(dep, pipdeps):
                 return False
             elif _dep_ver is None:
                 return True
-            elif dep_ver < _dep_ver:
+            elif str(dep_ver) < str(_dep_ver):
                 return False
     return True
 

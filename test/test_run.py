@@ -6,6 +6,7 @@ from run import name_and_ver, InvalidPipDep, should_add_pipdep, should_add_docke
 class TestRunpy(unittest.TestCase):
     """ Tests the run.py file that orchestrates mtriage.
     """
+
     def test_name_and_ver(self):
         name, ver = name_and_ver("numpy")
         self.assertEqual(name, "numpy")
@@ -54,4 +55,3 @@ class TestRunpy(unittest.TestCase):
         p3 = ["RUN apt-get install -y vim", "RUN curl -o https://smthn", "RUN it"]
         self.assertTrue(should_add_dockerline("RUN apt get install -y curl", p3))
         self.assertFalse(should_add_dockerline("RUN curl -o https://smthn", p3))
-
