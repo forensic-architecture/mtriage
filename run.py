@@ -170,37 +170,49 @@ def clean():
     sp.call(["docker", "rmi", NAME])
 
 
-def __run_tests():
-    returncode = sp.call(
-        [
-            "docker",
-            "run",
-            "--name",
-            CONT_NAME,
-            "--env",
-            "BASE_DIR=/mtriage",
-            "--env-file={}".format(ENV_FILE),
-            "--rm",
-            "--privileged",
-            "-v",
-            "{}:/mtriage".format(DIR_PATH),
-            "-v",
-            "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
-            "--workdir",
-            "/mtriage/src",
-            "{}:dev".format(NAME),
-            "python",
-            "-m",
-            "pytest",
-        ]
-    )
-    exit(returncode)
+def __run_lib_tests():
+    returncode = sp.call([
+        "docker",
+        "run",
+        "--env",
+        "BASE_DIR=/mtriage",
+        "--env-file={}".format(ENV_FILE),
+        "--rm",
+        "-v",
+        "{}:/mtriage".format(DIR_PATH),
+        "--workdir",
+        "/mtriage/src",
+        "{}:dev".format(NAME),
+        "python",
+        "-m",
+        "pytest",
+    ])
+    if returncode is 1:
+        exit(returncode)
+
+def __run_runpy_tests():
+    returncode = sp.call([
+        "docker",
+        "run",
+        "--env",
+        "BASE_DIR=/mtriage",
+        # "--env-file={}".format(ENV_FILE),
+        "--rm",
+        # "--privileged",
+        "-v",
+        "{}:/mtriage".format(DIR_PATH),
+        "{}:dev".format(NAME),
+         "pytest", "test"
+    ])
+    if returncode is 1:
+        exit(returncode)
 
 
 def test():
     print("Creating container to run tests...")
     print("----------------------------------")
-    __run_tests()
+    __run_lib_tests()
+    __run_runpy_tests()
     print("----------------------------------")
     print("All tests for mtriage done.")
 
