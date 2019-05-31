@@ -1,2 +1,2 @@
 docker==3.5.0
-black
+pytest==4.5.0
