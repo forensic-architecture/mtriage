@@ -5,6 +5,6 @@ class DarknetAnalyser(Analyser):
     def get_elements(self, config):
         return self.media["youtube"]["derived"]["frames"].keys()
 
-    def run_element(self, element, config):
+    def analyse_element(self, element, config):
         # TODO: this analyser is a stub currently.
         print(element)

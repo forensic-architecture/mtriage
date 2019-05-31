@@ -204,7 +204,7 @@ class Analyser(ABC):
             if not os.path.exists(element["dest"]):
                 os.makedirs(element["dest"])
 
-            self.run_element(element, config)
+            self.analyse_element(element, config)
 
         save_logs(self.__logs, self.ANALYSER_LOGS)
 
@@ -221,7 +221,7 @@ class Analyser(ABC):
         return derived_folder
 
     @abstractmethod
-    def run_element(self, element, config):
+    def analyse_element(self, element, config):
         """ Method defined on each analyser that implements analysis element-wise.
 
             An element is currently simply a path to the relevant media. TODO: elements should be a more structured
