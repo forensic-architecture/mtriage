@@ -51,9 +51,11 @@ def should_add_pipdep(dep, pipdeps):
     for _dep in pipdeps:
         _dep_name, _dep_ver = name_and_ver(_dep)
         if _dep_name == dep_name:
-            if _dep_ver is None and dep_ver is None:
+            # new version unspecified, cannot be more specific
+            if dep_ver is None:
                 return False
-            elif _dep_ver is None:
+            # new version more specific
+            elif _dep_ver is None and dep_ver is not None:
                 return True
             elif str(dep_ver) < str(_dep_ver):
                 return False
