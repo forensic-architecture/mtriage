@@ -53,9 +53,9 @@ def should_add_pipdep(dep, pipdeps):
         if _dep_name == dep_name:
             if _dep_ver is None and dep_ver is None:
                 return False
-            if _dep_ver is None:
+            elif _dep_ver is None:
                 return True
-            if dep_ver < _dep_ver:
+            elif dep_ver < _dep_ver:
                 return False
     return True
 
