@@ -5,11 +5,11 @@ from lib.common.util import save_logs
 
 
 class Selector(ABC):
-    """A Selector implements the indexing and retrieving of media for a platform
-    or otherwise distinct space.
+    """A Selector implements the indexing and retrieving of media for a platform or otherwise distinct space.
 
-    The working directory of the selector is passed during class instantiation,
-    and can be referenced in the implementations of methods.
+    'index' and 'retrieve_element' are abstract methods that need to be defined on selectors. Other attributes and
+    methods in the class should not have to be explicitly referenced by selectors, as all data necessary is passed in
+    the arguments of exposed methods.
     """
 
     ALL_SELECTORS = []
@@ -58,30 +58,20 @@ class Selector(ABC):
         Should populate a dataframe with the results, keep logs, and then call:
             self.index_complete(df, logs)
 
+        REQUIRED: each result in the dataframe must contain an 'element_id' field containing
+        a unique identifier for the element.
+
         NOTE: should be a relatively light pass that designates the space to be retrieved.
         No options for parallelisation, run on a single CPU.
         """
         raise NotImplementedError
 
-    def setup_retrieve(self):
+    def setup_retrieve(self, dest, config):
         """ option to set class variables or do other work only once before each row is retrieved. """
         pass
 
-    def retrieve_row_complete(self, success):
-        """ called with the path to the retrieved element (str), and the logs (list of str)
-        if 'path_to_media' is None then we save logs, but nothing else.
-        """
-        # NOTE: nothing done with success currently
-        self__LOG_KEY = Selector.RETRIEVE_KEY
-        save_logs(self.__LOGS[Selector.RETRIEVE_KEY], self.RETRIEVE_LOGS)
-
-    def _retrieve_row(self, row):
-        #  store row idx for 'retrieve_row_complete'
-        self.LAST_ROW_IDX = row.name
-        self.retrieve_row(row)
-
     @abstractmethod
-    def retrieve_row(self, row):
+    def retrieve_element(self, element, config):
         """Retrieve takes a single element as an argument, which is a row in the dataframe
         that was produced from the 'index' method. It is called in PREPROCESS. Data that
         has already been retrieved will not be retrieved again.
@@ -93,17 +83,24 @@ class Selector(ABC):
         NOTE: exposed as a function for a single row so that MT can take responsibility
         for parallelisation.
         """
-        # return NotImplemented
 
-    def retrieve_all(self):
+        raise NotImplementedError
+
+    def retrieve_all(self, config):
         self.__LOG_KEY = Selector.RETRIEVE_KEY
         df = pd.read_csv(self.SELECT_MAP, encoding="utf-8")
-        self.setup_retrieve()
-        df.apply(self._retrieve_row, axis=1)
+        self.setup_retrieve(self.RETRIEVE_FOLDER, config)
+
+        for index, row in df.iterrows():
+            element = row.to_dict()
+            element_id = row["element_id"]
+            element["dest"] = f"{self.RETRIEVE_FOLDER}/{element_id}"
+            self.retrieve_element(element, config)
+
         save_logs(self.__LOGS[Selector.RETRIEVE_KEY], self.RETRIEVE_LOGS)
 
-    def retrieve(self, config):
+    def start_retrieving(self, config):
         """ The default retrieve technique is to retrieve all. For custom retrieval heuristics,
         an overload 'retrieve' method should be specified in the preprocessor. TODO: further document, etc.
         """
-        self.retrieve_all()
+        self.retrieve_all(config)

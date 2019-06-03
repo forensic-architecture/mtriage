@@ -9,7 +9,7 @@ import operator
 
 
 class EmptyAnalyser(Analyser):
-    def run_element(self, element, config):
+    def analyse_element(self, element, config):
         pass
 
 

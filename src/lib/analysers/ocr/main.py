@@ -35,7 +35,7 @@ class OcrAnalyser(Analyser):
 
         return self.VISION_CLIENT.text_detection({"content": content})
 
-    def run_element(self, element, config):
+    def analyse_element(self, element, config):
         dest = element["dest"]
         input_frames = Analyser.find_img_paths(element["src"])
 

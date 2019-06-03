@@ -72,7 +72,7 @@ def opencv_frames(out_folder, fp, rate, threshold, sequential):
 
 
 class FramesAnalyser(Analyser):
-    def run_element(self, element, config):
+    def analyse_element(self, element, config):
         FPS_NUMBER = int(config["fps"])
         dest = element["dest"]
         media = Analyser.find_video_paths(element["src"])
