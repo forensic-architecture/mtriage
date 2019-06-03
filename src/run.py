@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
-"""The entry point of the SELECT phase.
+"""The entry point for mtriage.
 
-The select phase designates a media space locally, on the web, or through some
-combination of both. The parameters by which a space is selected are made
-available through a range of different selector modules.
+Orchestrates selectors and analysers via CLI parameters.
 
 Modules:
     Each module corresponds to a web platform API, or some equivalent method
     of programmatic retrieval.
 
-    The current design for a selector module is simple: it should exist as a
-    folder in lib.select that contains a 'run.py' file. This file should
-    expose a function called 'main' that does the module's work by accepting
-    two arguments: e.g. `main(config, folder_path)`.
-
+    TODO: document where to find selector and analyser design docs.
 Attributes:
     module (str): Indicates the platform or source from which media should be
         analysed. The code that implements is module is self-contained to a
@@ -27,13 +21,9 @@ Attributes:
         that all generated data is saved in this directory. The directory also
         contains logs, and represents the 'saved state' of a media triage
         analysis.
-Todo:
-    * document the configuration options for Youtube module.
-    * implement Twitter module
-    * allow the composition of module/config pairs, e.g. the ability to specify
-        multiple at the level of module arguments.
-    * https://whopostedwhat.com/ - Facebook.
+
 """
+
 import argparse
 import json
 import os
