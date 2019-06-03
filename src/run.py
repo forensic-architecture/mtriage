@@ -29,6 +29,7 @@ import json
 import os
 
 from lib.common.get_module import get_module
+from lib.common.exceptions import SelectorNotFoundError, AnalyserNotFoundError, WorkingDirectorNotFoundError
 
 
 def _select_run(args):
@@ -36,26 +37,28 @@ def _select_run(args):
         os.mkdir(args.folder)
 
     TheSelector = get_module("selector", args.module)
+
+    if TheSelector is None:
+        raise SelectorNotFoundError(args.module)
+
     config = json.loads(args.config) if args.config else {}
-
     selector = TheSelector(config, args.module, args.folder)
-    selector.start_indexing(config)
 
+    selector.start_indexing(config)
     # TODO: conditionally run retrieve based on config
     selector.start_retriving(config)
 
 
 def _analyse_run(args):
     if not os.path.exists(args.folder):
-        raise Exception(
-            "No folder exists at the path you specified. Generate one by running the SELECT phase."
-        )
+        raise WorkingDirectorNotFoundError(args.folder)
 
     TheAnalyser = get_module("analyser", args.module)
-    config = json.loads(args.config) if args.config else {}
 
     if TheAnalyser is None:
-        raise Exception(f"The module you have specified, {args.module}, does not exist")
+        raise AnalyserNotFoundError(args.module)
+
+    config = json.loads(args.config) if args.config else {}
 
     analyser = TheAnalyser(config, args.module, args.folder)
     analyser._run(config)
