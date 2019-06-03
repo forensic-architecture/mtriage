@@ -52,7 +52,7 @@ def _select_run(args):
     selector.start_indexing(config)
 
     # TODO: conditionally run retrieve based on config
-    selector.retrieve(config)
+    selector.start_retriving(config)
 
 
 def _analyse_run(args):

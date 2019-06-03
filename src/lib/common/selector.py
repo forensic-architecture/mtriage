@@ -5,11 +5,11 @@ from lib.common.util import save_logs
 
 
 class Selector(ABC):
-    """A Selector implements the indexing and retrieving of media for a platform
-    or otherwise distinct space.
+    """A Selector implements the indexing and retrieving of media for a platform or otherwise distinct space.
 
-    The working directory of the selector is passed during class instantiation,
-    and can be referenced in the implementations of methods.
+    'index' and 'retrieve_element' are abstract methods that need to be defined on selectors. Other attributes and
+    methods in the class should not have to be explicitly referenced by selectors, as all data necessary is passed in
+    the arguments of exposed methods.
     """
 
     ALL_SELECTORS = []
@@ -99,7 +99,7 @@ class Selector(ABC):
 
         save_logs(self.__LOGS[Selector.RETRIEVE_KEY], self.RETRIEVE_LOGS)
 
-    def retrieve(self, config):
+    def start_retrieving(self, config):
         """ The default retrieve technique is to retrieve all. For custom retrieval heuristics,
         an overload 'retrieve' method should be specified in the preprocessor. TODO: further document, etc.
         """
