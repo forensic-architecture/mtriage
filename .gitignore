@@ -5,6 +5,7 @@
 __pycache__/
 .mypy*
 .vscode
+*.pyc
 
 # build artifacts
 build.Dockerfile

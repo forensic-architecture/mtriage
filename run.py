@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import docker
 import inspect
+import pytest
 import os
+import re
 import argparse
 import subprocess as sp
 
@@ -18,32 +20,63 @@ def get_subdirs(d):
     return [o for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
 
 
-def check_in_pipdeps(_str, _arr):
-    """Check whether _arr already contains a string representing the same pip dependency as _str.
+class InvalidPipDep(Exception):
+    pass
+
+
+def name_and_ver(pipdep):
+    """ Return the name and version from a string that expresses a pip dependency.
+        Raises an InvalidPipDep exception if the string is an invalid dependency.
     """
-    lib_name = _str.split("==")[0]
-    for depstr in _arr:
-        if depstr.find(lib_name) is not -1:
-            return True
-    return False
+    pipdep = pipdep.split("==")
+    dep_name = pipdep[0]
+    try:
+        if len(pipdep) == 1:
+            dep_version = None
+        elif len(pipdep) > 2:
+            raise InvalidPipDep
+        else:
+            dep_version = pipdep[1]
+            if re.search(r"^([0-9]{1,2}\.){0,2}([0-9]{1,2})$", dep_version) is None:
+                raise InvalidPipDep
+        return dep_name, dep_version
+    except:
+        raise InvalidPipDep
 
 
-def check_in_dockerlines(_str, _arr):
-    """Check whether _arr already contains a string representing the same line in Dockerfile.
+def should_add_pipdep(dep, pipdeps):
+    """Check whether pipdep should be added.
     """
-    # NOTE: currently only exactly the same lines are disqualified
-    return _str in _arr
+    dep_name, dep_ver = name_and_ver(dep)
+    for _dep in pipdeps:
+        _dep_name, _dep_ver = name_and_ver(_dep)
+        if _dep_name == dep_name:
+            # new version unspecified, cannot be more specific
+            if dep_ver is None:
+                return False
+            # new version more specific
+            elif _dep_ver is None and dep_ver is not None:
+                return True
+            elif str(dep_ver) < str(_dep_ver):
+                return False
+    return True
 
 
-def add_deps(dep_path, deps, deps_contains):
-    """ Add dependences at {folder_path} to {deps}, excluding if {deps_contains} is True for any given dependency.
+def should_add_dockerline(line, dockerfile):
+    """Check whether line should be added to array representing Dockerfile.
+    """
+    return line not in dockerfile
+
+
+def add_deps(dep_path, deps, should_add):
+    """ Add dependences at {folder_path} to {deps}, excluding if {should_add} is True for any given dependency.
     """
     if not os.path.isfile(dep_path):
         return
 
     with open(dep_path) as f:
         for line in f.readlines():
-            if not deps_contains(line, deps):
+            if should_add(line, deps):
                 deps.append(line)
 
 
@@ -80,15 +113,15 @@ def build():
         docker_dep = "{}/{}/{}".format(SELECTORS_PATH, selector, DOCKERFILE_PARTIAL)
         pip_dep = "{}/{}/{}".format(SELECTORS_PATH, selector, PIP_PARTIAL)
 
-        add_deps(docker_dep, dockerlines, check_in_dockerlines)
-        add_deps(pip_dep, pipdeps, check_in_pipdeps)
+        add_deps(docker_dep, dockerlines, should_add_dockerline)
+        add_deps(pip_dep, pipdeps, should_add_pipdep)
 
     for analyser in analysers:
         docker_dep = "{}/{}/{}".format(ANALYSERS_PATH, analyser, DOCKERFILE_PARTIAL)
         pip_dep = "{}/{}/{}".format(ANALYSERS_PATH, analyser, PIP_PARTIAL)
 
-        add_deps(docker_dep, dockerlines, check_in_dockerlines)
-        add_deps(pip_dep, pipdeps, check_in_pipdeps)
+        add_deps(docker_dep, dockerlines, should_add_dockerline)
+        add_deps(pip_dep, pipdeps, should_add_pipdep)
 
     with open(CORE_END_DOCKER) as f:
         for line in f.readlines():
@@ -137,14 +170,10 @@ def build():
 
 
 def develop():
-    # https://docker-py.readthedocs.io/en/stable/containers.html
-    cont_name = NAME.replace("/", "_")  # NB: no / allowed in container names
     try:
         DOCKER.containers.get(CONT_NAME)
         print("Develop container already running. Stop it and try again.")
     except docker.errors.NotFound:
-        print("Building container from {}:dev...".format(NAME))
-        # TODO: remake with docker py CLI.
         sp.call(
             [
                 "docker",
@@ -170,22 +199,17 @@ def clean():
     sp.call(["docker", "rmi", NAME])
 
 
-def __run_tests():
+def __run_lib_tests():
     returncode = sp.call(
         [
             "docker",
             "run",
-            "--name",
-            CONT_NAME,
             "--env",
             "BASE_DIR=/mtriage",
             "--env-file={}".format(ENV_FILE),
             "--rm",
-            "--privileged",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
-            "-v",
-            "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
             "--workdir",
             "/mtriage/src",
             "{}:dev".format(NAME),
@@ -194,13 +218,23 @@ def __run_tests():
             "pytest",
         ]
     )
-    exit(returncode)
+    if returncode is 1:
+        exit(returncode)
+
+
+def __run_runpy_tests():
+    # NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
+    # using the LOCAL python (could be 2 or 3).
+    returncode = sp.call(["python", "-m", "pytest", "test/"])
+    if returncode is 1:
+        exit(returncode)
 
 
 def test():
     print("Creating container to run tests...")
     print("----------------------------------")
-    __run_tests()
+    __run_lib_tests()
+    __run_runpy_tests()
     print("----------------------------------")
     print("All tests for mtriage done.")
 
