@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
-"""The entry point of the SELECT phase.
+"""The entry point for mtriage.
 
-The select phase designates a media space locally, on the web, or through some
-combination of both. The parameters by which a space is selected are made
-available through a range of different selector modules.
+Orchestrates selectors and analysers via CLI parameters.
 
 Modules:
     Each module corresponds to a web platform API, or some equivalent method
     of programmatic retrieval.
 
-    The current design for a selector module is simple: it should exist as a
-    folder in lib.select that contains a 'run.py' file. This file should
-    expose a function called 'main' that does the module's work by accepting
-    two arguments: e.g. `main(config, folder_path)`.
-
+    TODO: document where to find selector and analyser design docs.
 Attributes:
     module (str): Indicates the platform or source from which media should be
         analysed. The code that implements is module is self-contained to a
@@ -27,63 +21,77 @@ Attributes:
         that all generated data is saved in this directory. The directory also
         contains logs, and represents the 'saved state' of a media triage
         analysis.
-Todo:
-    * document the configuration options for Youtube module.
-    * implement Twitter module
-    * allow the composition of module/config pairs, e.g. the ability to specify
-        multiple at the level of module arguments.
-    * https://whopostedwhat.com/ - Facebook.
+
 """
+
 import argparse
 import json
 import os
 
 from lib.common.get_module import get_module
+from lib.common.exceptions import (
+    InvalidPhaseError,
+    SelectorNotFoundError,
+    AnalyserNotFoundError,
+    WorkingDirectorNotFoundError,
+)
 
 
 def _select_run(args):
+    # NOTE: make output dirs if they don't exist
     if not os.path.exists(args.folder):
-        os.mkdir(args.folder)
+        os.makedirs(args.folder)
 
-    TheSelector = get_module("selector", args.module)
+    try:
+        TheSelector = get_module("selector", args.module)
+    except:
+        raise SelectorNotFoundError(args.module)
+
     config = json.loads(args.config) if args.config else {}
-
     selector = TheSelector(config, args.module, args.folder)
-    selector.start_indexing(config)
 
+    selector.start_indexing(config)
     # TODO: conditionally run retrieve based on config
-    selector.start_retriving(config)
+    selector.start_retrieving(config)
 
 
 def _analyse_run(args):
     if not os.path.exists(args.folder):
-        raise Exception(
-            "No folder exists at the path you specified. Generate one by running the SELECT phase."
-        )
+        raise WorkingDirectorNotFoundError(args.folder)
 
-    TheAnalyser = get_module("analyser", args.module)
+    try:
+        TheAnalyser = get_module("analyser", args.module)
+    except:
+        raise AnalyserNotFoundError(args.module)
+
     config = json.loads(args.config) if args.config else {}
-
-    if TheAnalyser is None:
-        raise Exception(f"The module you have specified, {args.module}, does not exist")
 
     analyser = TheAnalyser(config, args.module, args.folder)
     analyser._run(config)
 
 
-if __name__ == "__main__":
+def _run():
     PARSER = argparse.ArgumentParser()
-    PARSER.add_argument("--module", "-m", help="Module to use")
-    PARSER.add_argument("--config", "-c", help="Configuration options for module")
+    PARSER.add_argument("--module", "-m", help="Module to use", required=True)
     PARSER.add_argument(
-        "--phase", "-p", help="The phase to run. One of: select, analyse"
+        "--config", "-c", help="Configuration options for module", required=True
     )
-    PARSER.add_argument("--folder", "-f", help="Path to working folder for results")
+    PARSER.add_argument(
+        "--phase", "-p", help="The phase to run. One of: select, analyse", required=True
+    )
+    PARSER.add_argument(
+        "--folder", "-f", help="Path to working folder for results", required=True
+    )
 
     ARGS = PARSER.parse_args()
+
     if ARGS.phase == "select":
         _select_run(ARGS)
     elif ARGS.phase == "analyse":
         _analyse_run(ARGS)
     else:
-        print("The phase you pass must be either 'select' or 'analyse'.")
+        raise (InvalidPhaseError())
+
+
+if __name__ == "__main__":
+    _run()
