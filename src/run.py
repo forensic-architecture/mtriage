@@ -29,16 +29,22 @@ import json
 import os
 
 from lib.common.get_module import get_module
-from lib.common.exceptions import SelectorNotFoundError, AnalyserNotFoundError, WorkingDirectorNotFoundError
+from lib.common.exceptions import (
+    InvalidPhaseError,
+    SelectorNotFoundError,
+    AnalyserNotFoundError,
+    WorkingDirectorNotFoundError,
+)
 
 
 def _select_run(args):
+    # make output dirs if they don't exist
     if not os.path.exists(args.folder):
-        os.mkdir(args.folder)
+        os.makedirs(args.folder)
 
-    TheSelector = get_module("selector", args.module)
-
-    if TheSelector is None:
+    try:
+        TheSelector = get_module("selector", args.module)
+    except:
         raise SelectorNotFoundError(args.module)
 
     config = json.loads(args.config) if args.config else {}
@@ -53,9 +59,9 @@ def _analyse_run(args):
     if not os.path.exists(args.folder):
         raise WorkingDirectorNotFoundError(args.folder)
 
-    TheAnalyser = get_module("analyser", args.module)
-
-    if TheAnalyser is None:
+    try:
+        TheAnalyser = get_module("analyser", args.module)
+    except:
         raise AnalyserNotFoundError(args.module)
 
     config = json.loads(args.config) if args.config else {}
@@ -64,19 +70,28 @@ def _analyse_run(args):
     analyser._run(config)
 
 
-if __name__ == "__main__":
+def _run():
     PARSER = argparse.ArgumentParser()
-    PARSER.add_argument("--module", "-m", help="Module to use")
-    PARSER.add_argument("--config", "-c", help="Configuration options for module")
+    PARSER.add_argument("--module", "-m", help="Module to use", required=True)
     PARSER.add_argument(
-        "--phase", "-p", help="The phase to run. One of: select, analyse"
+        "--config", "-c", help="Configuration options for module", required=True
     )
-    PARSER.add_argument("--folder", "-f", help="Path to working folder for results")
+    PARSER.add_argument(
+        "--phase", "-p", help="The phase to run. One of: select, analyse", required=True
+    )
+    PARSER.add_argument(
+        "--folder", "-f", help="Path to working folder for results", required=True
+    )
 
     ARGS = PARSER.parse_args()
+
     if ARGS.phase == "select":
         _select_run(ARGS)
     elif ARGS.phase == "analyse":
         _analyse_run(ARGS)
     else:
-        print("The phase you pass must be either 'select' or 'analyse'.")
+        raise(InvalidPhaseError())
+
+
+if __name__ == "__main__":
+    _run()
