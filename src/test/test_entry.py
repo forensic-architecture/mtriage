@@ -73,15 +73,11 @@ class EntryTestCase(TestCase):
     @mock.patch(
         "argparse.ArgumentParser.parse_args",
         return_value=argparse.Namespace(
-            phase="analyse",
-            module="youtube",
-            config={},
-            folder="bad_folder",
+            phase="analyse", module="youtube", config={}, folder="bad_folder"
         ),
     )
     def test_invalid_analyser(self, mock_args):
         with self.assertRaisesRegex(
-            WorkingDirectorNotFoundError,
-            "'bad_folder', does not exist",
+            WorkingDirectorNotFoundError, "'bad_folder', does not exist"
         ):
             _run()

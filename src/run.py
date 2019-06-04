@@ -38,7 +38,7 @@ from lib.common.exceptions import (
 
 
 def _select_run(args):
-    # make output dirs if they don't exist
+    # NOTE: make output dirs if they don't exist
     if not os.path.exists(args.folder):
         os.makedirs(args.folder)
 
@@ -90,7 +90,7 @@ def _run():
     elif ARGS.phase == "analyse":
         _analyse_run(ARGS)
     else:
-        raise(InvalidPhaseError())
+        raise (InvalidPhaseError())
 
 
 if __name__ == "__main__":
