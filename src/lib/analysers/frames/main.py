@@ -78,7 +78,7 @@ class FramesAnalyser(Analyser):
         media = Analyser.find_video_paths(element["src"])
 
         if len(media) is not 1:
-            raise Error(
+            raise Exception(
                 "The frames analyser can only operate on elements that contain one and only one video."
             )
 
