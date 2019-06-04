@@ -89,7 +89,7 @@ class Analyser(ABC):
         """
 
         def derive_el(key):
-            return {"src": data_obj[key], "dest": f"{outfolder}/{key}"}
+            return {"id": key, "src": data_obj[key], "dest": f"{outfolder}/{key}"}
 
         return np.array(list(map(derive_el, list(data_obj.keys()))))
 
@@ -194,7 +194,7 @@ class Analyser(ABC):
         return all_media
 
     def _run(self, config):
-        self.setup_run()
+        self.setup_run(config)
 
         all_media = self.__get_all_media()
         elements = self.__get_elements(all_media)
@@ -206,10 +206,15 @@ class Analyser(ABC):
 
             self.analyse_element(element, config)
 
+        self.post_analyse(config)
         save_logs(self.__logs, self.ANALYSER_LOGS)
 
-    def setup_run(self):
+    def setup_run(self, config):
         """option to set up class variables"""
+        pass
+
+    def post_analyse(self, config):
+        """option to perform any clear up"""
         pass
 
     def get_derived_folder(self, selector):

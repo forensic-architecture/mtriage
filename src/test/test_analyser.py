@@ -108,10 +108,12 @@ class TestAnalyser(unittest.TestCase):
         derived_elements = self.emptyAnalyser.derive_elements(data_obj, outfolder)
         expected = [
             {
+                "id": "el1",
                 "src": f"{self.FOLDER}/sel1/{Analyser.DATA_EXT}/el1",
                 "dest": f"{outfolder}/el1",
             },
             {
+                "id": "el2",
                 "src": f"{self.FOLDER}/sel1/{Analyser.DATA_EXT}/el2",
                 "dest": f"{outfolder}/el2",
             },
@@ -149,32 +151,39 @@ class TestAnalyser(unittest.TestCase):
 
         expected = [
             {
+                "id": "el1",
                 "src": f"{self.FOLDER}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
                 "dest": f"{self.FOLDER}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}/el1",
             },
             {
+                "id": "el2",
                 "src": f"{self.FOLDER}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
                 "dest": f"{self.FOLDER}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}/el2",
             },
             {
+                "id": "el3",
                 "src": f"{self.FOLDER}/sel1/{Analyser.DERIVED_EXT}/an2/el3",
                 "dest": f"{self.FOLDER}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}/el3",
             },
             {
+                "id": "el4",
                 "src": f"{self.FOLDER}/sel2/{Analyser.DATA_EXT}/el4",
                 "dest": f"{self.FOLDER}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}/el4",
             },
             {
+                "id": "el5",
                 "src": f"{self.FOLDER}/sel2/{Analyser.DATA_EXT}/el5",
                 "dest": f"{self.FOLDER}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}/el5",
             },
             {
+                "id": "el6",
                 "src": f"{self.FOLDER}/sel2/{Analyser.DATA_EXT}/el6",
                 "dest": f"{self.FOLDER}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}/el6",
             },
         ]
 
         elements = self.emptyAnalyser._Analyser__get_elements(media)
+
         self.assertTrue(np.array_equal(elements, expected))
 
     def test_run(self):
