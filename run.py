@@ -80,22 +80,26 @@ def add_deps(dep_path, deps, should_add):
                 deps.append(line)
 
 
-def build():
+def build(IS_GPU):
     """ Collect all partial Pip and Docker files from selectors and analysers, and combine them with the core mtriage
         dependencies in src/build in order to create an appropriate Dockerfile and requirements.txt.
         NOTE: There is currently no way to include/exclude certain selector dependencies, but this build process is
               the setup for that optionality.
     """
     # setup
+    TAG_NAME = "dev-gpu" if IS_GPU else "dev"
+    DOCKER_BASE = "core-gpu" if IS_GPU else "core"
+
     DOCKERFILE_PARTIAL = "partial.Dockerfile"
     PIP_PARTIAL = "requirements.txt"
     BUILD_DOCKERFILE = "{}/build.Dockerfile".format(DIR_PATH)
     BUILD_PIPFILE = "{}/build.requirements.txt".format(DIR_PATH)
     CORE_PIPDEPS = "{}/src/build/core.requirements.txt".format(DIR_PATH)
-    CORE_START_DOCKER = "{}/src/build/core.start.Dockerfile".format(DIR_PATH)
-    CORE_END_DOCKER = "{}/src/build/core.end.Dockerfile".format(DIR_PATH)
+    CORE_START_DOCKER = "{}/src/build/{}.start.Dockerfile".format(DIR_PATH, DOCKER_BASE)
+    CORE_END_DOCKER = "{}/src/build/{}.end.Dockerfile".format(DIR_PATH, DOCKER_BASE)
     ANALYSERS_PATH = "{}/src/lib/analysers".format(DIR_PATH)
     SELECTORS_PATH = "{}/src/lib/selectors".format(DIR_PATH)
+
 
     print("Collecting partial dependencies from selector and analyser folders...")
 
@@ -154,7 +158,7 @@ def build():
                 "docker",
                 "build",
                 "-t",
-                "{}:dev".format(NAME),
+                "{}:{}".format(NAME, TAG_NAME),
                 "-f",
                 BUILD_DOCKERFILE,
                 ".",
@@ -169,7 +173,9 @@ def build():
     os.remove(BUILD_PIPFILE)
 
 
-def develop():
+def develop(IS_GPU):
+    TAG_NAME = "dev-gpu" if IS_GPU else "dev"
+
     try:
         DOCKER.containers.get(CONT_NAME)
         print("Develop container already running. Stop it and try again.")
@@ -181,6 +187,7 @@ def develop():
                 "-it",
                 "--name",
                 CONT_NAME,
+                "--runtime=nvidia" if IS_GPU else "",
                 "--env",
                 "BASE_DIR=/mtriage",
                 "--env-file={}".format(ENV_FILE),
@@ -190,7 +197,7 @@ def develop():
                 "{}:/mtriage".format(DIR_PATH),
                 "-v",
                 "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
-                "{}:dev".format(NAME),
+                "{}:{}".format(NAME, TAG_NAME),
             ]
         )
 
@@ -243,8 +250,9 @@ if __name__ == "__main__":
     COMMANDS = {"build": build, "develop": develop, "test": test, "clean": clean}
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     parser.add_argument("command", choices=COMMANDS.keys())
+    parser.add_argument("--gpu", action="store_true")
 
     args = parser.parse_args()
 
     cmd = COMMANDS[args.command]
-    cmd()
+    cmd(args.gpu)
