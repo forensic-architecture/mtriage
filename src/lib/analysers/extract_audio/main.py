@@ -10,8 +10,9 @@ class ExtractAudioAnalyser(Analyser):
         key = element["id"]
 
         media = Analyser.find_video_paths(element["src"])
+
         if len(media) is not 1:
-            raise Error(
+            raise Exception(
                 "The strip_audio analyser can only operate on elements that contain one and only one video."
             )
 

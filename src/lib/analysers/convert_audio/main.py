@@ -15,7 +15,7 @@ class ConvertAudioAnalyser(Analyser):
         media = list(Path(src).rglob(f"*.{input_ext}"))
 
         if len(media) is not 1:
-            raise Error(
+            raise Exception(
                 "The convert_audio analyser can only operate on elements that contain one and only one audio file."
             )
 
