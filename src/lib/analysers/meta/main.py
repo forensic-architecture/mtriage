@@ -42,9 +42,9 @@ class MetaAnalyser(Analyser):
     def post_analyse(self, config, derived_folders):
         delete_cache = config["delete_cache"]
         if delete_cache:
-            self.logger("deleting cache")
             for derived_folder in derived_folders:
                 cache = f"{derived_folder}/cache"
+                self.logger("deleting cache: " + cache)
                 rmtree(cache)
 
     def _derive_child_element(self, child_index, element, child_src, analyser):
@@ -54,7 +54,7 @@ class MetaAnalyser(Analyser):
         if not os.path.exists(dest):
             os.makedirs(dest)
         src = child_src if child_src != None else element["src"]
-        return {"id": el_id, "derived_folder" : derived_folder, "src": src, "dest": dest}
+        return {"id": el_id, "derived_folder": derived_folder, "src": src, "dest": dest}
 
     def _finalise_element(self, config, last_child_element, element):
 
