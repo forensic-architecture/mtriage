@@ -89,7 +89,12 @@ class Analyser(ABC):
         """
 
         def derive_el(key):
-            return {"id": key, "src": data_obj[key], "dest": f"{outfolder}/{key}"}
+            return {
+                "id": key,
+                "derived_folder": outfolder,
+                "src": data_obj[key],
+                "dest": f"{outfolder}/{key}",
+            }
 
         return np.array(list(map(derive_el, list(data_obj.keys()))))
 
@@ -101,7 +106,7 @@ class Analyser(ABC):
 
         elements = np.array([])
         for _cmp in cmps:
-            outfolder = self.get_derived_folder(_cmp[0])
+            outfolder = self.__get_derived_folder(_cmp[0])
 
             if _cmp[1] is None:
                 # None in component indicates that 'raw' data from selector should be used.
@@ -199,25 +204,27 @@ class Analyser(ABC):
         all_media = self.__get_all_media()
         elements = self.__get_elements(all_media)
 
+        derived_folders = set([])
         for element in elements:
             # TODO: create try/catch infrastructure to delete this folder if there is an error.
             if not os.path.exists(element["dest"]):
                 os.makedirs(element["dest"])
 
             self.analyse_element(element, config)
+            derived_folders.add(element["derived_folder"])
 
-        self.post_analyse(config)
+        self.post_analyse(config, derived_folders)
         save_logs(self.__logs, self.ANALYSER_LOGS)
 
     def pre_analyse(self, config):
         """option to set up class variables"""
         pass
 
-    def post_analyse(self, config):
+    def post_analyse(self, config, derived_folders):
         """option to perform any clear up"""
         pass
 
-    def get_derived_folder(self, selector):
+    def __get_derived_folder(self, selector):
         """Returns the path to a derived folder from a string selector"""
         derived_folder = f"{self.FOLDER}/{selector}/{Analyser.DERIVED_EXT}/{self.NAME}"
         if not os.path.exists(derived_folder):

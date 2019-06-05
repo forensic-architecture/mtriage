@@ -11,8 +11,8 @@ class MetaAnalyser(Analyser):
         self.child_analysers = []
         whitelist = self.CONFIG["elements_in"]
 
-        cmps = paths_to_components(whitelist)
-        self.selector = cmps[0][0]
+        # cmps = paths_to_components(whitelist)
+        # self.selector = cmps[0][0]
 
         child_modules = config["children"]
         for module in child_modules:
@@ -39,22 +39,22 @@ class MetaAnalyser(Analyser):
             src = child_element["dest"]
         self._finalise_element(config, child_element, element)
 
-    def post_analyse(self, config):
+    def post_analyse(self, config, derived_folders):
         delete_cache = config["delete_cache"]
         if delete_cache:
             self.logger("deleting cache")
-            derived_folder = self.get_derived_folder(self.selector)
-            cache = f"{derived_folder}/cache"
-            rmtree(cache)
+            for derived_folder in derived_folders:
+                cache = f"{derived_folder}/cache"
+                rmtree(cache)
 
     def _derive_child_element(self, child_index, element, child_src, analyser):
-        derived_folder = self.get_derived_folder(self.selector)
+        derived_folder = element["derived_folder"]
         el_id = element["id"]
         dest = f"{derived_folder}/cache/meta_{child_index}_{analyser.NAME}/{el_id}"
         if not os.path.exists(dest):
             os.makedirs(dest)
         src = child_src if child_src != None else element["src"]
-        return {"id": el_id, "src": src, "dest": dest}
+        return {"id": el_id, "derived_folder" : derived_folder, "src": src, "dest": dest}
 
     def _finalise_element(self, config, last_child_element, element):
 
