@@ -14,7 +14,7 @@ class MetaAnalyser(Analyser):
         cmps = paths_to_components(whitelist)
         self.selector = cmps[0][0]
 
-        child_modules = config["modules"]
+        child_modules = config["children"]
         for module in child_modules:
             child_name = module["name"]
             child_config = module["config"]

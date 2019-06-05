@@ -14,7 +14,7 @@ CONFIG=$( jq -n \
 	'{
 		elements_in: $el_in,
 		delete_cache : true,
-		modules: [
+		children: [
 			{
 				"name" : "extract_audio",
 				"config" : { "output_ext" : "mp3" }
