@@ -6,7 +6,7 @@ from shutil import copyfile, rmtree
 
 
 class MetaAnalyser(Analyser):
-    def setup_run(self, config):
+    def pre_analyse(self, config):
 
         self.child_analysers = []
         whitelist = self.CONFIG["elements_in"]
@@ -24,7 +24,7 @@ class MetaAnalyser(Analyser):
                     f"The module you have specified, {child_name}, does not exist"
                 )
             child_analyser = ChildAnalyser(child_config, child_name, self.FOLDER)
-            child_analyser.setup_run(child_config)
+            child_analyser.pre_analyse(child_config)
             self.child_analysers.append(child_analyser)
             self.logger(f"Setup child analyser {child_name}")
 

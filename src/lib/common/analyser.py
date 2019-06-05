@@ -194,7 +194,7 @@ class Analyser(ABC):
         return all_media
 
     def _run(self, config):
-        self.setup_run(config)
+        self.pre_analyse(config)
 
         all_media = self.__get_all_media()
         elements = self.__get_elements(all_media)
@@ -209,7 +209,7 @@ class Analyser(ABC):
         self.post_analyse(config)
         save_logs(self.__logs, self.ANALYSER_LOGS)
 
-    def setup_run(self, config):
+    def pre_analyse(self, config):
         """option to set up class variables"""
         pass
 
