@@ -49,7 +49,8 @@ class TestAnalyser(unittest.TestCase):
         self.assertEqual(self.FOLDER, self.emptyAnalyser.FOLDER)
         self.assertEqual("empty", self.emptyAnalyser.NAME)
         self.assertEqual(
-            f"{self.FOLDER}/analyser-logs.txt", self.emptyAnalyser.ANALYSER_LOGS
+            f"{self.FOLDER}/analyser-logs/{self.NAME}-logs.txt",
+            self.emptyAnalyser.ANALYSER_LOGS,
         )
         self.assertEqual("empty_0", self.emptyAnalyser.ID)
         self.assertEqual(1, len(EmptyAnalyser.ALL_ANALYSERS))

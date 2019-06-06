@@ -1,4 +1,5 @@
 from lib.common.analyser import Analyser
+from lib.common.exceptions import ElementOperationFailedSkipError
 from subprocess import call, STDOUT
 import os
 
@@ -8,11 +9,10 @@ class ExtractAudioAnalyser(Analyser):
 
         dest = element["dest"]
         key = element["id"]
-
         media = Analyser.find_video_paths(element["src"])
 
         if len(media) is not 1:
-            raise Exception(
+            raise ElementOperationFailedSkipError(
                 "The strip_audio analyser can only operate on elements that contain one and only one video."
             )
 
@@ -22,7 +22,7 @@ class ExtractAudioAnalyser(Analyser):
 
         FNULL = open(os.devnull, "w")
         out = call(
-            ["ffmpeg", "-i", video, f"{dest}/{key}.{output_ext}"],
+            ["ffmpeg", "-y", "-i", video, f"{dest}/{key}.{output_ext}"],
             stdout=FNULL,
             stderr=STDOUT,
         )

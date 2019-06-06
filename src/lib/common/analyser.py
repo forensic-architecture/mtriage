@@ -6,6 +6,10 @@ import numpy as np
 from abc import ABC, abstractmethod
 from pathlib import Path
 from lib.common.util import save_logs
+from lib.common.exceptions import (
+    ElementOperationFailedSkipError,
+    ElementOperationFailedRetryError,
+)
 
 
 def get_json_paths(path):
@@ -57,10 +61,15 @@ class Analyser(ABC):
         self.NAME = module
         self.FOLDER = folder
 
-        self.ANALYSER_LOGS = f"{self.FOLDER}/analyser-logs.txt"
+        self.ANALYSER_LOGS = f"{self.FOLDER}/analyser-logs/{self.NAME}-logs.txt"
+        if not os.path.exists(f"{self.FOLDER}/analyser-logs"):
+            os.makedirs(f"{self.FOLDER}/analyser-logs")
+
         self.ID = f"{self.NAME}_{str(len(Analyser.ALL_ANALYSERS))}"
-        self.__logs = []
+        self._logs = []
         Analyser.ALL_ANALYSERS.append(self.ID)
+
+        # initialise logs dictionary one for each selector
 
     # STATIC METHODS
     # intended for use in implementations of 'run_element'.
@@ -77,9 +86,33 @@ class Analyser(ABC):
         return get_json_paths(element_path)
 
     # INTERNAL METHODS
-    def logger(self, msg):
-        self.__logs.append(msg)
+    def logger(self, msg, element=None):
+        context = f"{self.NAME}: "
+        if element != None:
+            el_id = element["id"]
+            context = context + f"{el_id}: "
+        msg = f"{context}{msg}"
+        self._logs.append(msg)
         print(msg)
+
+    def error_logger(self, msg, element=None):
+        context = f"{self.NAME}: "
+        if element != None:
+            print("element: " + str(element))
+            el_id = element["id"]
+            context = context + f"{el_id}: "
+        err_msg = f"ERROR: {context}{msg}"
+        self._logs.append("")
+        self._logs.append(
+            "-----------------------------------------------------------------------------"
+        )
+        self._logs.append(err_msg)
+        self._logs.append(
+            "-----------------------------------------------------------------------------"
+        )
+        self._logs.append("")
+        err_msg = f"\033[91m{err_msg}\033[0m"
+        print(err_msg)
 
     def derive_elements(self, data_obj, outfolder):
         """ An 'element' (as it is passed to the 'run_element' method that is exposed on analysers) is currently a
@@ -136,7 +169,9 @@ class Analyser(ABC):
 
         # the results from each selector sits in a folder of its name
         selectors = [
-            f for f in os.listdir(self.FOLDER) if os.path.isdir(f"{self.FOLDER}/{f}")
+            f
+            for f in os.listdir(self.FOLDER)
+            if (os.path.isdir(f"{self.FOLDER}/{f}") and f != "analyser-logs")
         ]
 
         # Elements are all associated with a selector. Those that come straight from the selector are housed in 'data'.
@@ -210,11 +245,11 @@ class Analyser(ABC):
             if not os.path.exists(element["dest"]):
                 os.makedirs(element["dest"])
 
-            self.analyse_element(element, config)
+            self.__attempt_analyse(5, element, config)
             derived_folders.add(element["derived_folder"])
 
         self.post_analyse(config, derived_folders)
-        save_logs(self.__logs, self.ANALYSER_LOGS)
+        save_logs(self._logs, self.ANALYSER_LOGS)
 
     def pre_analyse(self, config):
         """option to set up class variables"""
@@ -242,3 +277,28 @@ class Analyser(ABC):
             Should create a new element in the appropriate 'derived' folder.
         """
         return NotImplemented
+
+    def __attempt_analyse(self, attempts, element, config):
+        try:
+            self.analyse_element(element, config)
+        except ElementOperationFailedSkipError as e:
+            self.error_logger(str(e), element)
+            return
+        except ElementOperationFailedRetryError as e:
+            self.error_logger(str(e), element)
+            if attempts > 1:
+                return self.attempt_analyse(attempts - 1, element, config)
+            else:
+                self.error_logger(
+                    "failed after maximum retries - skipping element", element
+                )
+                return
+        except Exception as e:
+            dev = config["dev"] if "dev" in config else False
+            if dev:
+                raise e
+            else:
+                self.error_logger(
+                    "unknown exception raised - skipping element", element
+                )
+                return

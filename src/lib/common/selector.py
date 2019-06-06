@@ -2,6 +2,10 @@ import os
 from abc import ABC, abstractmethod
 import pandas as pd
 from lib.common.util import save_logs
+from lib.common.exceptions import (
+    ElementOperationFailedRetryError,
+    ElementOperationFailedSkipError,
+)
 
 
 class Selector(ABC):
@@ -15,6 +19,7 @@ class Selector(ABC):
     ALL_SELECTORS = []
     INDEX_KEY = "index"
     RETRIEVE_KEY = "retrieve"
+    ERROR_KEY = "error"
 
     def __init__(self, config, module, folder):
         self.BASE_FOLDER = folder
@@ -28,8 +33,6 @@ class Selector(ABC):
         self.INDEX_LOGS = f"{self.FOLDER}/index-logs.txt"
         self.SELECT_MAP = f"{self.FOLDER}/selected.csv"
         self.RETRIEVE_LOGS = f"{self.FOLDER}/retrieve-logs.txt"
-        self.__retrieveLogs = []
-        self.__indexLogs = []
         self.__LOGS = {Selector.INDEX_KEY: [], Selector.RETRIEVE_KEY: []}
         self.__LOG_KEY = Selector.INDEX_KEY
 
@@ -47,14 +50,37 @@ class Selector(ABC):
             df.to_csv(self.SELECT_MAP)
         save_logs(self.__LOGS[Selector.INDEX_KEY], self.INDEX_LOGS)
 
-    def logger(self, msg):
+    def logger(self, msg, element=None):
+        context = f""
+        if element != None:
+            el_id = element["id"]
+            context = context + f"{el_id}: "
+        msg = f"{context}{msg}"
         self.__LOGS[self.__LOG_KEY].append(msg)
         print(msg)
+
+    def error_logger(self, msg, element=None):
+        context = f""
+        if element != None:
+            print("element: " + str(element))
+            el_id = element["element_id"]
+            context = context + f"{el_id}: "
+        err_msg = f"ERROR: {context}{msg}"
+        self.__LOGS[self.__LOG_KEY].append("")
+        self.__LOGS[self.__LOG_KEY].append(
+            "-----------------------------------------------------------------------------"
+        )
+        self.__LOGS[self.__LOG_KEY].append(err_msg)
+        self.__LOGS[self.__LOG_KEY].append(
+            "-----------------------------------------------------------------------------"
+        )
+        self.__LOGS[self.__LOG_KEY].append("")
+        err_msg = f"\033[91m{err_msg}\033[0m"
+        print(err_msg)
 
     @abstractmethod
     def index(self, config):
         """TODO: indicate the exact format this should output.
-
         Should populate a dataframe with the results, keep logs, and then call:
             self.index_complete(df, logs)
 
@@ -95,7 +121,7 @@ class Selector(ABC):
             element = row.to_dict()
             element_id = row["element_id"]
             element["dest"] = f"{self.RETRIEVE_FOLDER}/{element_id}"
-            self.retrieve_element(element, config)
+            self.__attempt_retrieve(5, element, config)
 
         save_logs(self.__LOGS[Selector.RETRIEVE_KEY], self.RETRIEVE_LOGS)
 
@@ -104,3 +130,28 @@ class Selector(ABC):
         an overload 'retrieve' method should be specified in the preprocessor. TODO: further document, etc.
         """
         self.retrieve_all(config)
+
+    def __attempt_retrieve(self, attempts, element, config):
+        try:
+            return self.retrieve_element(element, config)
+        except ElementOperationFailedSkipError as e:
+            self.error_logger(str(e), element)
+            return
+        except ElementOperationFailedRetryError as e:
+            self.error_logger(str(e), element)
+            if attempts > 1:
+                return self.attempt_retrieve(attempts - 1, element, config)
+            else:
+                self.error_logger(
+                    "failed after maximum retries - skipping element", element
+                )
+                return
+        except Exception as e:
+            dev = config["dev"] if "dev" in config else False
+            if dev:
+                raise e
+            else:
+                self.error_logger(
+                    "unknown exception raised - skipping element", element
+                )
+                return

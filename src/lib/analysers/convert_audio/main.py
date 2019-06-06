@@ -1,4 +1,5 @@
 from lib.common.analyser import Analyser
+from lib.common.exceptions import ElementOperationFailedSkipError
 from subprocess import call, STDOUT
 from pathlib import Path
 import os
@@ -15,7 +16,7 @@ class ConvertAudioAnalyser(Analyser):
         media = list(Path(src).rglob(f"*.{input_ext}"))
 
         if len(media) is not 1:
-            raise Exception(
+            raise ElementOperationFailedSkipError(
                 "The convert_audio analyser can only operate on elements that contain one and only one audio file."
             )
 
@@ -23,7 +24,7 @@ class ConvertAudioAnalyser(Analyser):
 
         FNULL = open(os.devnull, "w")
         out = call(
-            ["ffmpeg", "-i", audio, f"{dest}/{key}.{output_ext}"],
+            ["ffmpeg", "-y", "-i", audio, f"{dest}/{key}.{output_ext}"],
             stdout=FNULL,
             stderr=STDOUT,
         )

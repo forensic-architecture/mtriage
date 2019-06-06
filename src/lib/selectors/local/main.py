@@ -18,6 +18,7 @@ class LocalSelector(Selector):
     """
 
     def index(self, config):
+
         if not os.path.exists(self.SELECT_MAP):
             df = self._run(config, self.FOLDER)
             return df
@@ -26,14 +27,17 @@ class LocalSelector(Selector):
             return None
 
     def retrieve_element(self, element, config):
+
         dest = element["dest"]
         src_path = element["path"]
         name = element["name"]
+
         extension = element["extension"]
         if not os.path.exists(dest):
             os.makedirs(dest)
         dest_path = f"{dest}/{name}.{extension}"
         copyfile(src_path, dest_path)
+        self.logger("retrieved file: " + dest_path)
 
     def _run(self, config, output_path):
         results = []

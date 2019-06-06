@@ -24,3 +24,13 @@ class WorkingDirectorNotFoundError(Exception):
 class InvalidPhaseError(Exception):
     def __init__(self):
         super().__init__("The 'phase' argument must be either 'select' or 'analyse'.")
+
+
+class ElementOperationFailedSkipError(Exception):
+    def __init__(self, msg):
+        super().__init__(f"{msg} - skipping element")
+
+
+class ElementOperationFailedRetryError(Exception):
+    def __init__(self, msg):
+        super().__init__(f"{msg} - attempt retry")

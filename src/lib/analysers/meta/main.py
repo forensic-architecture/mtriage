@@ -11,11 +11,8 @@ class MetaAnalyser(Analyser):
         self.child_analysers = []
         whitelist = self.CONFIG["elements_in"]
 
-        # cmps = paths_to_components(whitelist)
-        # self.selector = cmps[0][0]
-
-        child_modules = config["children"]
-        for module in child_modules:
+        child_module = config["children"]
+        for module in child_module:
             child_name = module["name"]
             child_config = module["config"]
             ChildAnalyser = get_module("analyser", child_name)
@@ -25,6 +22,8 @@ class MetaAnalyser(Analyser):
                 )
             child_analyser = ChildAnalyser(child_config, child_name, self.FOLDER)
             child_analyser.pre_analyse(child_config)
+            self._extract_logs_from(child_analyser)
+
             self.child_analysers.append(child_analyser)
             self.logger(f"Setup child analyser {child_name}")
 
@@ -37,9 +36,13 @@ class MetaAnalyser(Analyser):
             el_id = element["id"]
             self.logger(f"Analysed element {el_id} in {analyser.NAME}")
             src = child_element["dest"]
+            self._extract_logs_from(analyser)
         self._finalise_element(config, child_element, element)
 
     def post_analyse(self, config, derived_folders):
+        for child in self.child_analysers:
+            child.post_analyse(config, derived_folders)
+            self._extract_logs_from(child)
         delete_cache = config["delete_cache"]
         if delete_cache:
             for derived_folder in derived_folders:
@@ -69,3 +72,7 @@ class MetaAnalyser(Analyser):
                 f_src = os.path.join(root, file)
                 f_dest = os.path.join(dest, file)
                 copyfile(f_src, f_dest)
+
+    def _extract_logs_from(self, child):
+        self._logs = self._logs + child._logs
+        child._logs.clear()
