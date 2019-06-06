@@ -5,6 +5,18 @@ from shutil import copyfile
 
 
 class LocalSelector(Selector):
+    """ A simple selector for importing local files into mtriage.
+
+    It recursively finds every file in a source_folder specified in the
+    config (see example script 4.select_local.sh) and imports each file
+    into its own element. The element ID is the file's name concatenated
+    with its extension.
+
+    n.b. the directory being imported must be located within the mtriage
+    directory to be accessible inside the docker container (the temp
+    folder is recommended).
+    """
+
     def index(self, config):
         if not os.path.exists(self.SELECT_MAP):
             df = self._run(config, self.FOLDER)
@@ -35,7 +47,7 @@ class LocalSelector(Selector):
                         "name": f[0],
                         "extension": f[1],
                         "path": os.path.join(root, file),
-                        "element_id": f[0],
+                        "element_id": f"{f[0]}{f[1]}",
                     }
                 )
                 self.logger("indexed file: " + os.path.join(root, file))
