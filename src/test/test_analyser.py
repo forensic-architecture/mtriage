@@ -192,8 +192,6 @@ class TestAnalyser(unittest.TestCase):
 
         elements = self.emptyAnalyser._Analyser__get_elements(media)
 
-        print("elements: " + str(elements))
-        print("expected: " + str(expected))
         self.assertTrue(np.array_equal(elements, expected))
 
     def test_run(self):
