@@ -23,7 +23,7 @@ class OcrAnalyser(Analyser):
     the top of this repo, GOOGLE_APPLICATION_CREDENTIALS.
     """
 
-    def setup_run(self):
+    def pre_analyse(self, config):
         # creds are interpolated from env variable, GOOGLE_APPLICATION_CREDENTIALS. See
         # https://cloud.google.com/docs/authentication/getting-started
         self.VISION_CLIENT = vision.ImageAnnotatorClient()
