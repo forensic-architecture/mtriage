@@ -30,21 +30,21 @@ class MetaAnalyser(Analyser):
     def analyse_element(self, element, config):
         src = None
         child_element = None
-        for index, analyser in enumerate(self.child_analysers):
-            child_element = self._derive_child_element(index, element, src, analyser)
-            analyser.PHASE_KEY = "analyse"
-            analyser.analyse_element(child_element, analyser.CONFIG)
+        for index, child_analyser in enumerate(self.child_analysers):
+            child_element = self._derive_child_element(index, element, src, child_analyser)
+            child_analyser.PHASE_KEY = "analyse"
+            child_analyser.analyse_element(child_element, child_analyser.CONFIG)
             el_id = element["id"]
-            self.logger(f"Analysed element {el_id} in {analyser.NAME}")
+            self.logger(f"Analysed element {el_id} in {child_analyser.NAME}")
             src = child_element["dest"]
-            self._extract_logs_from(analyser)
+            self._extract_logs_from(child_analyser)
         self._finalise_element(config, child_element, element)
 
     def post_analyse(self, config, derived_dirs):
-        for child in self.child_analysers:
-            child.PHASE_KEY = "post-analyse"
-            child.post_analyse(config, derived_dirs)
-            self._extract_logs_from(child)
+        for child_analyser in self.child_analysers:
+            child_analyser.PHASE_KEY = "post-analyse"
+            child_analyser.post_analyse(config, derived_dirs)
+            self._extract_logs_from(child_analyser)
         delete_cache = config["delete_cache"]
         if delete_cache:
             for derived_dir in derived_dirs:
