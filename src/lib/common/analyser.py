@@ -52,24 +52,25 @@ class Analyser(ABC):
         implementations of methods.
     """
 
-    ALL_ANALYSERS = []
     DATA_EXT = "data"
     DERIVED_EXT = "derived"
+    PRE_ANALYSE_KEY = "preanalyse"
+    MAIN_ANALYSE_KEY = "analyse"
+    POST_ANLALYSE_KEY = "postanalyse"
 
     def __init__(self, config, module, folder):
-        self.CONFIG = config
         self.NAME = module
-        self.FOLDER = folder
+        self.CONFIG = config
+        self.BASE_DIR = folder
+        self.LOGS_DIR = f"{self.BASE_DIR}/logs"
+        self.LOGS_FILE = f"{self.LOGS_DIR}/{self.NAME}.txt"
 
-        self.ANALYSER_LOGS = f"{self.FOLDER}/analyser-logs/{self.NAME}-logs.txt"
-        if not os.path.exists(f"{self.FOLDER}/analyser-logs"):
-            os.makedirs(f"{self.FOLDER}/analyser-logs")
+        # setup for phases of logging
+        self.__LOGS =  []
+        self.__PHASE_KEY = Analyser.PRE_ANALYSE_KEY
 
-        self.ID = f"{self.NAME}_{str(len(Analyser.ALL_ANALYSERS))}"
-        self._logs = []
-        Analyser.ALL_ANALYSERS.append(self.ID)
-
-        # initialise logs dictionary one for each selector
+        if not os.path.exists(self.LOGS_DIR):
+            os.makedirs(self.LOGS_DIR)
 
     # STATIC METHODS
     # intended for use in implementations of 'run_element'.
@@ -85,14 +86,19 @@ class Analyser(ABC):
     def find_json_paths(element_path):
         return get_json_paths(element_path)
 
+    def save_and_clear_logs():
+        save_logs(self.__LOGS, self.__LOGS_FILE)
+        self.__LOGS = []
+
     # INTERNAL METHODS
     def logger(self, msg, element=None):
-        context = f"{self.NAME}: "
+        context = f"{self.NAME}: {self.__PHASE_KEY}: "
         if element != None:
             el_id = element["id"]
             context = context + f"{el_id}: "
         msg = f"{context}{msg}"
-        self._logs.append(msg)
+        self.__LOGS.append(msg)
+
         print(msg)
 
     def error_logger(self, msg, element=None):
@@ -102,15 +108,15 @@ class Analyser(ABC):
             el_id = element["id"]
             context = context + f"{el_id}: "
         err_msg = f"ERROR: {context}{msg}"
-        self._logs.append("")
-        self._logs.append(
+        self.__LOGS.append("")
+        self.__LOGS.append(
             "-----------------------------------------------------------------------------"
         )
-        self._logs.append(err_msg)
-        self._logs.append(
+        self.__LOGS.append(err_msg)
+        self.__LOGS.append(
             "-----------------------------------------------------------------------------"
         )
-        self._logs.append("")
+        self.__LOGS.append("")
         err_msg = f"\033[91m{err_msg}\033[0m"
         print(err_msg)
 
@@ -159,7 +165,7 @@ class Analyser(ABC):
         return elements
 
     def __get_all_media(self):
-        """Get all available media by indexing the folder system from self.FOLDER.
+        """Get all available media by indexing the folder system from self.BASE_DIR.
         The 'all_media' is currently an object (TODO: note its structure). It should only be used internally, here in
         the analyser base class implementation.
         Note that this function needs to be run dynamically (each time an analyser is run), as new elements may have
@@ -170,8 +176,8 @@ class Analyser(ABC):
         # the results from each selector sits in a folder of its name
         selectors = [
             f
-            for f in os.listdir(self.FOLDER)
-            if (os.path.isdir(f"{self.FOLDER}/{f}") and f != "analyser-logs")
+            for f in os.listdir(self.BASE_DIR)
+            if (os.path.isdir(f"{self.BASE_DIR}/{f}") and f != "analyser-logs")
         ]
 
         # Elements are all associated with a selector. Those that come straight from the selector are housed in 'data'.
@@ -194,7 +200,7 @@ class Analyser(ABC):
             all_media[selector] = {Analyser.DATA_EXT: {}, Analyser.DERIVED_EXT: {}}
 
             # add all original elements
-            data_pass = f"{self.FOLDER}/{selector}/{Analyser.DATA_EXT}"
+            data_pass = f"{self.BASE_DIR}/{selector}/{Analyser.DATA_EXT}"
             _elements = [
                 f
                 for f in os.listdir(data_pass)
@@ -205,7 +211,7 @@ class Analyser(ABC):
                 all_media[selector][Analyser.DATA_EXT][el_id] = f"{data_pass}/{el_id}"
 
             # add all derived elements
-            derived_folder = f"{self.FOLDER}/{selector}/{Analyser.DERIVED_EXT}"
+            derived_folder = f"{self.BASE_DIR}/{selector}/{Analyser.DERIVED_EXT}"
 
             if not os.path.exists(derived_folder):
                 continue
@@ -234,8 +240,10 @@ class Analyser(ABC):
         return all_media
 
     def _run(self, config):
+        self.__PHASE_KEY = Analyser.PRE_ANALYSE_KEY
         self.pre_analyse(config)
 
+        self.__PHASE_KEY = Analyser.MAIN_ANALYSE_KEY
         all_media = self.__get_all_media()
         elements = self.__get_elements(all_media)
 
@@ -248,8 +256,10 @@ class Analyser(ABC):
             self.__attempt_analyse(5, element, config)
             derived_folders.add(element["derived_folder"])
 
+        self.__PHASE_KEY = Analyser.POST_ANLALYSE_KEY
         self.post_analyse(config, derived_folders)
-        save_logs(self._logs, self.ANALYSER_LOGS)
+
+        self.save_and_clear_logs()
 
     def pre_analyse(self, config):
         """option to set up class variables"""
@@ -261,7 +271,9 @@ class Analyser(ABC):
 
     def __get_derived_folder(self, selector):
         """Returns the path to a derived folder from a string selector"""
-        derived_folder = f"{self.FOLDER}/{selector}/{Analyser.DERIVED_EXT}/{self.NAME}"
+        derived_folder = (
+            f"{self.BASE_DIR}/{selector}/{Analyser.DERIVED_EXT}/{self.NAME}"
+        )
         if not os.path.exists(derived_folder):
             os.makedirs(derived_folder)
 
