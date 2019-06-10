@@ -21,9 +21,9 @@ class MetaAnalyser(Analyser):
                     f"The module you have specified, {child_name}, does not exist"
                 )
             child_analyser = ChildAnalyser(child_config, child_name, self.BASE_DIR)
+            child_analyser.PHASE_KEY = "pre-analyse"
             child_analyser.pre_analyse(child_config)
             self._extract_logs_from(child_analyser)
-
             self.child_analysers.append(child_analyser)
             self.logger(f"Setup child analyser {child_name}")
 
@@ -32,6 +32,7 @@ class MetaAnalyser(Analyser):
         child_element = None
         for index, analyser in enumerate(self.child_analysers):
             child_element = self._derive_child_element(index, element, src, analyser)
+            analyser.PHASE_KEY = "analyse"
             analyser.analyse_element(child_element, analyser.CONFIG)
             el_id = element["id"]
             self.logger(f"Analysed element {el_id} in {analyser.NAME}")
@@ -41,6 +42,7 @@ class MetaAnalyser(Analyser):
 
     def post_analyse(self, config, derived_dirs):
         for child in self.child_analysers:
+            child.PHASE_KEY = "post-analyse"
             child.post_analyse(config, derived_dirs)
             self._extract_logs_from(child)
         delete_cache = config["delete_cache"]
