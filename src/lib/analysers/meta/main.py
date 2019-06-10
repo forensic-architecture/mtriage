@@ -31,7 +31,9 @@ class MetaAnalyser(Analyser):
         src = None
         child_element = None
         for index, child_analyser in enumerate(self.child_analysers):
-            child_element = self._derive_child_element(index, element, src, child_analyser)
+            child_element = self._derive_child_element(
+                index, element, src, child_analyser
+            )
             child_analyser.PHASE_KEY = "analyse"
             child_analyser.analyse_element(child_element, child_analyser.CONFIG)
             el_id = element["id"]
