@@ -19,8 +19,8 @@ class LocalSelector(Selector):
 
     def index(self, config):
 
-        if not os.path.exists(self.SELECT_MAP):
-            df = self._run(config, self.FOLDER)
+        if not os.path.exists(self.ELEMENT_MAP):
+            df = self._run(config, self.DIR)
             return df
         else:
             self.logger("File already exists for index--not running again.")
