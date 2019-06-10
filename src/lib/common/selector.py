@@ -16,28 +16,33 @@ class Selector(ABC):
     the arguments of exposed methods.
     """
 
-    ALL_SELECTORS = []
+    # ALL_SELECTORS = []
     INDEX_KEY = "index"
     RETRIEVE_KEY = "retrieve"
     ERROR_KEY = "error"
 
     def __init__(self, config, module, folder):
-        self.BASE_FOLDER = folder
         self.NAME = module
-        # unique ID
-        self.ID = f"{self.NAME}_{str(len(Selector.ALL_SELECTORS))}"
-        Selector.ALL_SELECTORS.append(self.ID)
-        # derived instance variables
-        self.FOLDER = f"{self.BASE_FOLDER}/{self.NAME}"
-        self.RETRIEVE_FOLDER = f"{self.FOLDER}/data"
-        self.INDEX_LOGS = f"{self.FOLDER}/index-logs.txt"
-        self.SELECT_MAP = f"{self.FOLDER}/selected.csv"
-        self.RETRIEVE_LOGS = f"{self.FOLDER}/retrieve-logs.txt"
+        self.BASE_DIR = folder
+        self.DIR = f"{self.BASE_DIR}/{self.NAME}"
+        self.ELEMENT_DIR = f"{self.DIR}/data"
+        self.LOGS_DIR = f"{self.BASE_DIR}/logs"
+        self.LOGS_FILE = f"{self.LOGS_DIR}/{self.NAME}.txt"
+
+        self.ELEMENT_MAP = f"{self.DIR}/element_map.csv"
+
+        # logs are kept in memory as index/retrieve runs, and then dumped
+        # to the relevant logs file at the end of a successful operation.
         self.__LOGS = {Selector.INDEX_KEY: [], Selector.RETRIEVE_KEY: []}
+
+        # stateful variable that tells self.logger where to print logs.
         self.__LOG_KEY = Selector.INDEX_KEY
 
-        if not os.path.exists(self.RETRIEVE_FOLDER):
-            os.makedirs(self.RETRIEVE_FOLDER)
+        # make dirs if don't exist
+        if not os.path.exists(self.LOGS_DIR):
+            os.makedirs(self.LOGS_DIR)
+        if not os.path.exists(self.ELEMENT_DIR):
+            os.makedirs(self.ELEMENT_DIR)
 
     def load(self):
         """ the select DF is loaded from the appropriate file """
@@ -48,10 +53,10 @@ class Selector(ABC):
         df = self.index(config)
         if df is not None:
             df.to_csv(self.SELECT_MAP)
-        save_logs(self.__LOGS[Selector.INDEX_KEY], self.INDEX_LOGS)
+        save_logs(self.__LOGS[Selector.INDEX_KEY], self.LOGS_FILE)
 
     def logger(self, msg, element=None):
-        context = f""
+        context = f"{self.__LOG_KEY}: "
         if element != None:
             el_id = element["id"]
             context = context + f"{el_id}: "
@@ -115,15 +120,15 @@ class Selector(ABC):
     def retrieve_all(self, config):
         self.__LOG_KEY = Selector.RETRIEVE_KEY
         df = pd.read_csv(self.SELECT_MAP, encoding="utf-8")
-        self.setup_retrieve(self.RETRIEVE_FOLDER, config)
+        self.setup_retrieve(self.ELEMENT_DIR, config)
 
         for index, row in df.iterrows():
             element = row.to_dict()
             element_id = row["element_id"]
-            element["dest"] = f"{self.RETRIEVE_FOLDER}/{element_id}"
+            element["dest"] = f"{self.ELEMENT_FOLDER}/{element_id}"
             self.__attempt_retrieve(5, element, config)
 
-        save_logs(self.__LOGS[Selector.RETRIEVE_KEY], self.RETRIEVE_LOGS)
+        save_logs(self.__LOGS[Selector.RETRIEVE_KEY], self.LOGS_FILE)
 
     def start_retrieving(self, config):
         """ The default retrieve technique is to retrieve all. For custom retrieval heuristics,
