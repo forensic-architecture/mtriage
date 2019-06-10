@@ -33,16 +33,19 @@ class Selector(ABC):
 
         # logs are kept in memory as index/retrieve runs, and then dumped
         # to the relevant logs file at the end of a successful operation.
-        self.__LOGS = {Selector.INDEX_KEY: [], Selector.RETRIEVE_KEY: []}
-
-        # stateful variable that tells self.logger where to print logs.
-        self.__LOG_KEY = Selector.INDEX_KEY
+        self.__LOGS = []
+        # stateful variable that tells self.logger which phase we're in.
+        self.__PHASE_KEY = Selector.INDEX_KEY
 
         # make dirs if don't exist
         if not os.path.exists(self.LOGS_DIR):
             os.makedirs(self.LOGS_DIR)
         if not os.path.exists(self.ELEMENT_DIR):
             os.makedirs(self.ELEMENT_DIR)
+
+    def save_and_clear_logs(self):
+        save_logs(self.__LOGS, self.LOGS_FILE)
+        self.__LOGS = []
 
     def load(self):
         """ the select DF is loaded from the appropriate file """
@@ -53,15 +56,15 @@ class Selector(ABC):
         df = self.index(config)
         if df is not None:
             df.to_csv(self.SELECT_MAP)
-        save_logs(self.__LOGS[Selector.INDEX_KEY], self.LOGS_FILE)
+        self.save_and_clear_logs()
 
     def logger(self, msg, element=None):
-        context = f"{self.__LOG_KEY}: "
+        context = f"{self.__PHASE_KEY}: "
         if element != None:
             el_id = element["id"]
             context = context + f"{el_id}: "
         msg = f"{context}{msg}"
-        self.__LOGS[self.__LOG_KEY].append(msg)
+        self.__LOGS.append(msg)
         print(msg)
 
     def error_logger(self, msg, element=None):
@@ -71,15 +74,15 @@ class Selector(ABC):
             el_id = element["element_id"]
             context = context + f"{el_id}: "
         err_msg = f"ERROR: {context}{msg}"
-        self.__LOGS[self.__LOG_KEY].append("")
-        self.__LOGS[self.__LOG_KEY].append(
+        self.__LOGS.append("")
+        self.__LOGS.append(
             "-----------------------------------------------------------------------------"
         )
-        self.__LOGS[self.__LOG_KEY].append(err_msg)
-        self.__LOGS[self.__LOG_KEY].append(
+        self.__LOGS.append(err_msg)
+        self.__LOGS.append(
             "-----------------------------------------------------------------------------"
         )
-        self.__LOGS[self.__LOG_KEY].append("")
+        self.__LOGS.append("")
         err_msg = f"\033[91m{err_msg}\033[0m"
         print(err_msg)
 
@@ -118,7 +121,7 @@ class Selector(ABC):
         raise NotImplementedError
 
     def retrieve_all(self, config):
-        self.__LOG_KEY = Selector.RETRIEVE_KEY
+        self.__PHASE_KEY = Selector.RETRIEVE_KEY
         df = pd.read_csv(self.SELECT_MAP, encoding="utf-8")
         self.setup_retrieve(self.ELEMENT_DIR, config)
 
@@ -128,7 +131,7 @@ class Selector(ABC):
             element["dest"] = f"{self.ELEMENT_FOLDER}/{element_id}"
             self.__attempt_retrieve(5, element, config)
 
-        save_logs(self.__LOGS[Selector.RETRIEVE_KEY], self.LOGS_FILE)
+        self.save_and_clear_logs()
 
     def start_retrieving(self, config):
         """ The default retrieve technique is to retrieve all. For custom retrieval heuristics,
