@@ -26,12 +26,12 @@ class InvalidPhaseError(Exception):
         super().__init__("The 'phase' argument must be either 'select' or 'analyse'.")
 
 
-class ElementOperationFailedSkipError(Exception):
+class ElementShouldSkipError(Exception):
     def __init__(self, msg):
         super().__init__(f"{msg} - skipping element")
 
 
-class ElementOperationFailedRetryError(Exception):
+class ElementShouldRetryError(Exception):
     def __init__(self, msg):
         super().__init__(f"{msg} - attempt retry")
 

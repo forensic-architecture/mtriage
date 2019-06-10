@@ -4,8 +4,8 @@ import pandas as pd
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
 from lib.common.exceptions import (
-    ElementOperationFailedRetryError,
-    ElementOperationFailedSkipError,
+    ElementShouldRetryError,
+    ElementShouldSkipError,
 )
 
 
@@ -101,10 +101,10 @@ class Selector(MTModule):
     def __attempt_retrieve(self, attempts, element):
         try:
             return self.retrieve_element(element, self.CONFIG)
-        except ElementOperationFailedSkipError as e:
+        except ElementShouldSkipError as e:
             self.error_logger(str(e), element)
             return
-        except ElementOperationFailedRetryError as e:
+        except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
                 return self.attempt_retrieve(attempts - 1, element, self.CONFIG)

@@ -1,5 +1,5 @@
 from lib.common.analyser import Analyser
-from lib.common.exceptions import ElementOperationFailedSkipError
+from lib.common.exceptions import ElementShuoldSkipError
 from subprocess import call, STDOUT
 import os
 
@@ -12,7 +12,7 @@ class ExtractAudioAnalyser(Analyser):
         media = Analyser.find_video_paths(element["src"])
 
         if len(media) is not 1:
-            raise ElementOperationFailedSkipError(
+            raise ElementShuoldSkipError(
                 "The strip_audio analyser can only operate on elements that contain one and only one video."
             )
 

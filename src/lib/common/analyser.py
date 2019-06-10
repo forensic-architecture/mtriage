@@ -7,8 +7,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from lib.common.util import save_logs
 from lib.common.exceptions import (
-    ElementOperationFailedSkipError,
-    ElementOperationFailedRetryError,
+    ElementShouldSkipError,
+    ElementShouldRetryError,
 )
 from lib.common.mtmodule import MTModule
 
@@ -241,10 +241,10 @@ class Analyser(MTModule):
     def __attempt_analyse(self, attempts, element, config):
         try:
             self.analyse_element(element, config)
-        except ElementOperationFailedSkipError as e:
+        except ElementShouldSkipError as e:
             self.error_logger(str(e), element)
             return
-        except ElementOperationFailedRetryError as e:
+        except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
                 return self.attempt_analyse(attempts - 1, element, config)

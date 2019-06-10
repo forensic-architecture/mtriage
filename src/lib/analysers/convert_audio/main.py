@@ -1,5 +1,5 @@
 from lib.common.analyser import Analyser
-from lib.common.exceptions import ElementOperationFailedSkipError
+from lib.common.exceptions import ElementShouldSkipError
 from subprocess import call, STDOUT
 from pathlib import Path
 import os
@@ -16,7 +16,7 @@ class ConvertAudioAnalyser(Analyser):
         media = list(Path(src).rglob(f"*.{input_ext}"))
 
         if len(media) is not 1:
-            raise ElementOperationFailedSkipError(
+            raise ElementShouldSkipError(
                 "The convert_audio analyser can only operate on elements that contain one and only one audio file."
             )
 
