@@ -61,10 +61,10 @@ class Selector(MTModule):
 
     # optionally implemented by child
     # both ELEMENT_DIR and CONFIG are implicitly available on self, but passed explicitily for convenience
-    def pre_retrieve(self, element_dir, config):
+    def pre_retrieve(self, config, element_dir):
         pass
 
-    def post_retrieve(self, element_dir, config):
+    def post_retrieve(self, config, element_dir):
         pass
 
     # logged phases that this class manages
@@ -77,7 +77,7 @@ class Selector(MTModule):
     @MTModule.logged_phase("pre-retrieve")
     def __pre_retrieve(self ):
         df = pd.read_csv(self.ELEMENT_MAP, encoding="utf-8")
-        self.pre_retrieve(self.ELEMENT_DIR, self.CONFIG)
+        self.pre_retrieve(self.CONFIG, self.ELEMENT_DIR)
         return df
 
     @MTModule.logged_phase("retrieve")
@@ -90,7 +90,7 @@ class Selector(MTModule):
 
     @MTModule.logged_phase("post-retrieve")
     def __post_retrieve(self):
-        self.post_retrieve(self.ELEMENT_DIR, self.CONFIG)
+        self.post_retrieve(self.CONFIG, self.ELEMENT_DIR)
 
     # entrypoint
     def start_retrieving(self):
