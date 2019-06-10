@@ -38,5 +38,7 @@ class ElementShouldRetryError(Exception):
 
 class ImproperLoggedPhaseError(Exception):
     def __init__(self, fname):
-        super().__init__(f"""The method '{fname}' does not belong to a class that inherits from MTModule. The
-                        logged_phase decorator can only be applied to methods on such a class.""")
+        super().__init__(
+            f"""The method '{fname}' does not belong to a class that inherits from MTModule. The
+                        logged_phase decorator can only be applied to methods on such a class."""
+        )

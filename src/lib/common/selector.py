@@ -3,10 +3,7 @@ from abc import abstractmethod
 import pandas as pd
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
-from lib.common.exceptions import (
-    ElementShouldRetryError,
-    ElementShouldSkipError,
-)
+from lib.common.exceptions import ElementShouldRetryError, ElementShouldSkipError
 
 
 class Selector(MTModule):
@@ -75,7 +72,7 @@ class Selector(MTModule):
             df.to_csv(self.ELEMENT_MAP)
 
     @MTModule.logged_phase("pre-retrieve")
-    def __pre_retrieve(self ):
+    def __pre_retrieve(self):
         df = pd.read_csv(self.ELEMENT_MAP, encoding="utf-8")
         self.pre_retrieve(self.CONFIG, self.ELEMENT_DIR)
         return df

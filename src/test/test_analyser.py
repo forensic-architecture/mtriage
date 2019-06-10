@@ -68,9 +68,7 @@ class TestAnalyser(unittest.TestCase):
                         "el1": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
                         "el2": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
                     },
-                    "an2": {
-                        "el3": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el3"
-                    },
+                    "an2": {"el3": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el3"},
                 },
             },
             "sel2": {
@@ -98,7 +96,9 @@ class TestAnalyser(unittest.TestCase):
             "el2": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el2",
         }
         outdir = f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}"
-        derived_elements = self.emptyAnalyser._Analyser__derive_elements(data_obj, outdir)
+        derived_elements = self.emptyAnalyser._Analyser__derive_elements(
+            data_obj, outdir
+        )
         expected = [
             {
                 "id": "el1",
@@ -129,9 +129,7 @@ class TestAnalyser(unittest.TestCase):
                         "el1": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
                         "el2": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
                     },
-                    "an2": {
-                        "el3": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el3"
-                    },
+                    "an2": {"el3": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el3"},
                 },
             },
             "sel2": {

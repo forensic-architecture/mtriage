@@ -6,10 +6,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from pathlib import Path
 from lib.common.util import save_logs
-from lib.common.exceptions import (
-    ElementShouldSkipError,
-    ElementShouldRetryError,
-)
+from lib.common.exceptions import ElementShouldSkipError, ElementShouldRetryError
 from lib.common.mtmodule import MTModule
 
 
@@ -230,9 +227,7 @@ class Analyser(MTModule):
 
     def __get_derived_dir(self, selector):
         """Returns the path to a derived dir from a string selector"""
-        derived_dir = (
-            f"{self.BASE_DIR}/{selector}/{Analyser.DERIVED_EXT}/{self.NAME}"
-        )
+        derived_dir = f"{self.BASE_DIR}/{selector}/{Analyser.DERIVED_EXT}/{self.NAME}"
         if not os.path.exists(derived_dir):
             os.makedirs(derived_dir)
 

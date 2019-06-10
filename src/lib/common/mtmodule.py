@@ -28,7 +28,9 @@ class MTModule(ABC):
                 ret_val = function(self, *args)
                 self.save_and_clear_logs()
                 return ret_val
+
             return wrapper
+
         return decorator
 
     def save_and_clear_logs(self):

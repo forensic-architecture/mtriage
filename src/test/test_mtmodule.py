@@ -9,6 +9,7 @@ import unittest
 class EmptyMTModule(MTModule):
     pass
 
+
 class TestEmptyMTModule(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -24,12 +25,14 @@ class TestEmptyMTModule(unittest.TestCase):
         self.assertEqual(self.mod.BASE_DIR, self.BASE_DIR)
         self.assertEqual(self.mod._MTModule__LOGS, [])
         self.assertEqual(self.mod._MTModule__LOGS_DIR, f"{self.BASE_DIR}/logs")
-        self.assertEqual(self.mod._MTModule__LOGS_FILE, f"{self.BASE_DIR}/logs/empty.txt")
+        self.assertEqual(
+            self.mod._MTModule__LOGS_FILE, f"{self.BASE_DIR}/logs/empty.txt"
+        )
         self.assertTrue(os.path.exists(f"{self.BASE_DIR}/logs"))
 
     def test_logged_phase_decorator(self):
         # logged_phase decorator should only work on methods that are of a class that inherits from MTModule
-        class BadClass():
+        class BadClass:
             @MTModule.logged_phase("somekey")
             def improper_func(self):
                 pass
@@ -56,6 +59,3 @@ class TestEmptyMTModule(unittest.TestCase):
 
         # check that logs were cleared after phase
         self.assertEqual(gc._MTModule__LOGS, [])
-
-
-
