@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from lib.common.util import save_logs
+from lib.common.exceptions import ImproperLoggedPhaseError
 from functools import partial, wraps
 import os
+
 
 class MTModule(ABC):
     def __init__(self, NAME, BASE_DIR):
@@ -20,6 +22,8 @@ class MTModule(ABC):
         def decorator(function):
             @wraps(function)
             def wrapper(self, *args):
+                if not isinstance(self, MTModule):
+                    raise ImproperLoggedPhaseError(function.__name__)
                 self.PHASE_KEY = phase_key
                 ret_val = function(self, *args)
                 self.save_and_clear_logs()

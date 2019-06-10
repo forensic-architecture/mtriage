@@ -10,14 +10,12 @@ class EmptySelector(Selector):
     def index(self, config):
         if not os.path.exists(self.ELEMENT_MAP):
             df = pd.DataFrame([{"element_id": "test"}])
-            self.logger("Test select log.")
             return df
         else:
-            self.logger("File already exists for index--not running again.")
             return None
 
     def retrieve_element(self, element, config):
-        self.logger("Test retrieve log.")
+        pass
 
 
 class TestEmptySelector(unittest.TestCase):
@@ -52,6 +50,3 @@ class TestEmptySelector(unittest.TestCase):
     def test_start_retrieving(self):
         self.emptySelector.start_retrieving()
         # TODO: test something
-
-    def test_logs(self):
-        self.assertTrue(os.path.exists(self.emptySelector._MTModule__LOGS_FILE))
