@@ -49,8 +49,8 @@ class TestEmptySelector(unittest.TestCase):
         self.emptySelector.start_indexing({})
         self.assertTrue(os.path.exists(self.emptySelector.ELEMENT_MAP))
 
-    def test_retrieve_all(self):
-        self.emptySelector.retrieve_all({})
+    def test_start_retrieving(self):
+        self.emptySelector.start_retrieving({})
         # TODO: test something
 
     def test_logs(self):

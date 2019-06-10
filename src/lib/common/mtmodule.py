@@ -3,14 +3,10 @@ from lib.common.util import save_logs
 from functools import partial, wraps
 import os
 
-
-
-
-
 class MTModule(ABC):
-    def __init__(self, BASE_DIR, NAME):
-        self.BASE_DIR = BASE_DIR
+    def __init__(self, NAME, BASE_DIR):
         self.NAME = NAME
+        self.BASE_DIR = BASE_DIR
         self.__LOGS = []
         self.PHASE_KEY = None
         self.__LOGS_DIR = f"{self.BASE_DIR}/logs"

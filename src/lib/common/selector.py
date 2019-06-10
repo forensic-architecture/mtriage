@@ -1,5 +1,5 @@
 import os
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import pandas as pd
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
@@ -7,8 +7,6 @@ from lib.common.exceptions import (
     ElementOperationFailedRetryError,
     ElementOperationFailedSkipError,
 )
-
-from lib.common.mtmodule import logged_phase
 
 
 class Selector(MTModule):
@@ -19,76 +17,18 @@ class Selector(MTModule):
     the arguments of exposed methods.
     """
 
-    # ALL_SELECTORS = []
-    INDEX_PHASE = "index"
-    RETRIEVE_PHASE = "retrieve"
     ERROR_KEY = "error"
 
     def __init__(self, config, module, folder):
-        super().__init__(folder, module)
-        # self.NAME = module
-        # self.BASE_DIR = folder
+        super().__init__(module, folder)
         self.DIR = f"{self.BASE_DIR}/{self.NAME}"
         self.ELEMENT_DIR = f"{self.DIR}/data"
-        # self.LOGS_DIR = f"{self.BASE_DIR}/logs"
-        # self.LOGS_FILE = f"{self.LOGS_DIR}/{self.NAME}.txt"
-
         self.ELEMENT_MAP = f"{self.DIR}/element_map.csv"
 
-        # logs are kept in memory as index/retrieve runs, and then dumped
-        # to the relevant logs file at the end of a successful operation.
-        # self.__LOGS = []
-        # stateful variable that tells self.logger which phase we're in.
-        # self.set_phase(Selector.INDEX_KEY)
-
-        # make dirs if don't exist
         if not os.path.exists(self.ELEMENT_DIR):
             os.makedirs(self.ELEMENT_DIR)
 
-    # def save_and_clear_logs(self):
-    #     save_logs(self.__LOGS, self.LOGS_FILE)
-    #     self.__LOGS = []
-
-    def load(self):
-        """ the select DF is loaded from the appropriate file """
-        return pd.read_csv(self.CSV, encoding="utf-8")
-
-    @logged_phase("index")
-    def start_indexing(self, config):
-        # self.set_phase(Selector.INDEX_PHASE)
-        df = self.index(config)
-        if df is not None:
-            df.to_csv(self.ELEMENT_MAP)
-        # self.save_and_clear_logs()
-
-    # def logger(self, msg, element=None):
-    #     context = f"{self.__PHASE_KEY}: "
-    #     if element != None:
-    #         el_id = element["id"]
-    #         context = context + f"{el_id}: "
-    #     msg = f"{context}{msg}"
-    #     self.__LOGS.append(msg)
-    #     print(msg)
-
-    # def error_logger(self, msg, element=None):
-    #     context = f""
-    #     if element != None:
-    #         print("element: " + str(element))
-    #         el_id = element["element_id"]
-    #         context = context + f"{el_id}: "
-    #     err_msg = f"ERROR: {context}{msg}"
-    #     self.__LOGS.append("")
-    #     self.__LOGS.append(
-    #         "-----------------------------------------------------------------------------"
-    #     )
-    #     self.__LOGS.append(err_msg)
-    #     self.__LOGS.append(
-    #         "-----------------------------------------------------------------------------"
-    #     )
-    #     self.__LOGS.append("")
-    #     err_msg = f"\033[91m{err_msg}\033[0m"
-    #     print(err_msg)
-
+    # must be implemented by child
     @abstractmethod
     def index(self, config):
         """TODO: indicate the exact format this should output.
@@ -103,10 +43,6 @@ class Selector(MTModule):
         """
         raise NotImplementedError
 
-    def setup_retrieve(self, dest, config):
-        """ option to set class variables or do other work only once before each row is retrieved. """
-        pass
-
     @abstractmethod
     def retrieve_element(self, element, config):
         """Retrieve takes a single element as an argument, which is a row in the dataframe
@@ -120,28 +56,45 @@ class Selector(MTModule):
         NOTE: exposed as a function for a single row so that MT can take responsibility
         for parallelisation.
         """
-
         raise NotImplementedError
 
-    @logged_phase("retrieve")
-    def retrieve_all(self, config):
-        # self.set_phase(Selector.RETRIEVE_PHASE)
-        df = pd.read_csv(self.ELEMENT_MAP, encoding="utf-8")
-        self.setup_retrieve(self.ELEMENT_DIR, config)
+    # optionally implemented by child
+    def pre_retrieve(self, element_dir, config):
+        pass
 
+    def post_retrieve(self, element_dir, config):
+        pass
+
+    # logged phases that this class manages
+    @MTModule.logged_phase("index")
+    def start_indexing(self, config):
+        df = self.index(config)
+        if df is not None:
+            df.to_csv(self.ELEMENT_MAP)
+
+    @MTModule.logged_phase("pre-retrieve")
+    def __pre_retrieve(self, config):
+        df = pd.read_csv(self.ELEMENT_MAP, encoding="utf-8")
+        self.pre_retrieve(self.ELEMENT_DIR, config)
+        return df
+
+    @MTModule.logged_phase("retrieve")
+    def __retrieve(self, df, config):
         for index, row in df.iterrows():
             element = row.to_dict()
             element_id = row["element_id"]
             element["dest"] = f"{self.ELEMENT_DIR}/{element_id}"
             self.__attempt_retrieve(5, element, config)
 
-        self.save_and_clear_logs()
+    @MTModule.logged_phase("post-retrieve")
+    def __post_retrieve(self, config):
+        self.post_retrieve(self.ELEMENT_DIR, config)
 
+    # entrypoint
     def start_retrieving(self, config):
-        """ The default retrieve technique is to retrieve all. For custom retrieval heuristics,
-        an overload 'retrieve' method should be specified in the preprocessor. TODO: further document, etc.
-        """
-        self.retrieve_all(config)
+        df = self.__pre_retrieve(config)
+        self.__retrieve(df, config)
+        self.__post_retrieve(config)
 
     def __attempt_retrieve(self, attempts, element, config):
         try:
