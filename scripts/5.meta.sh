@@ -13,6 +13,7 @@ CONFIG=$( jq -n \
 	--argjson el_in "$ELEMENTS_IN" \
 	'{
 		elements_in: $el_in,
+		dev : true,
 		delete_cache : true,
 		children: [
 			{

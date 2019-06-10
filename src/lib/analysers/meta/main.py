@@ -11,11 +11,8 @@ class MetaAnalyser(Analyser):
         self.child_analysers = []
         whitelist = self.CONFIG["elements_in"]
 
-        # cmps = paths_to_components(whitelist)
-        # self.selector = cmps[0][0]
-
-        child_modules = config["children"]
-        for module in child_modules:
+        child_module = config["children"]
+        for module in child_module:
             child_name = module["name"]
             child_config = module["config"]
             ChildAnalyser = get_module("analyser", child_name)
@@ -23,8 +20,10 @@ class MetaAnalyser(Analyser):
                 raise Exception(
                     f"The module you have specified, {child_name}, does not exist"
                 )
-            child_analyser = ChildAnalyser(child_config, child_name, self.FOLDER)
+            child_analyser = ChildAnalyser(child_config, child_name, self.BASE_DIR)
             child_analyser.pre_analyse(child_config)
+            self._extract_logs_from(child_analyser)
+
             self.child_analysers.append(child_analyser)
             self.logger(f"Setup child analyser {child_name}")
 
@@ -37,24 +36,28 @@ class MetaAnalyser(Analyser):
             el_id = element["id"]
             self.logger(f"Analysed element {el_id} in {analyser.NAME}")
             src = child_element["dest"]
+            self._extract_logs_from(analyser)
         self._finalise_element(config, child_element, element)
 
-    def post_analyse(self, config, derived_folders):
+    def post_analyse(self, config, derived_dirs):
+        for child in self.child_analysers:
+            child.post_analyse(config, derived_dirs)
+            self._extract_logs_from(child)
         delete_cache = config["delete_cache"]
         if delete_cache:
-            for derived_folder in derived_folders:
-                cache = f"{derived_folder}/cache"
+            for derived_dir in derived_dirs:
+                cache = f"{derived_dir}/cache"
                 self.logger("deleting cache: " + cache)
                 rmtree(cache)
 
     def _derive_child_element(self, child_index, element, child_src, analyser):
-        derived_folder = element["derived_folder"]
+        derived_dir = element["derived_dir"]
         el_id = element["id"]
-        dest = f"{derived_folder}/cache/meta_{child_index}_{analyser.NAME}/{el_id}"
+        dest = f"{derived_dir}/cache/meta_{child_index}_{analyser.NAME}/{el_id}"
         if not os.path.exists(dest):
             os.makedirs(dest)
         src = child_src if child_src != None else element["src"]
-        return {"id": el_id, "derived_folder": derived_folder, "src": src, "dest": dest}
+        return {"id": el_id, "derived_dir": derived_dir, "src": src, "dest": dest}
 
     def _finalise_element(self, config, last_child_element, element):
 
@@ -69,3 +72,7 @@ class MetaAnalyser(Analyser):
                 f_src = os.path.join(root, file)
                 f_dest = os.path.join(dest, file)
                 copyfile(f_src, f_dest)
+
+    def _extract_logs_from(self, child):
+        self._MTModule__LOGS = self._MTModule__LOGS + child._MTModule__LOGS
+        child._MTModule__LOGS.clear()

@@ -4,6 +4,7 @@ import numpy as np
 from imutils.video import FileVideoStream
 from subprocess import call, STDOUT
 from lib.common.analyser import Analyser
+from lib.common.exceptions import ElementShouldSkipError
 
 
 def ffmpeg_frames(out_folder, fp, rate):
@@ -78,7 +79,7 @@ class FramesAnalyser(Analyser):
         media = Analyser.find_video_paths(element["src"])
 
         if len(media) is not 1:
-            raise Exception(
+            raise ElementShouldSkipError(
                 "The frames analyser can only operate on elements that contain one and only one video."
             )
 

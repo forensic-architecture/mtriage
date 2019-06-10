@@ -33,10 +33,10 @@ class YoutubeSelector(Selector):
             self.logger("File already exists for index--not running again.")
             return None
 
-    def setup_retrieve(self, base_folder, config):
+    def pre_retrieve(self, config, element_dir):
         self.ydl = youtube_dl.YoutubeDL(
             {
-                "outtmpl": f"{base_folder}/%(id)s/%(id)s.mp4",
+                "outtmpl": f"{element_dir}/%(id)s/%(id)s.mp4",
                 "format": "worstvideo[ext=mp4]",
             }
         )

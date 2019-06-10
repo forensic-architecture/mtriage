@@ -1,10 +1,12 @@
 import os
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import pandas as pd
+from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
+from lib.common.exceptions import ElementShouldRetryError, ElementShouldSkipError
 
 
-class Selector(ABC):
+class Selector(MTModule):
     """A Selector implements the indexing and retrieving of media for a platform or otherwise distinct space.
 
     'index' and 'retrieve_element' are abstract methods that need to be defined on selectors. Other attributes and
@@ -12,49 +14,22 @@ class Selector(ABC):
     the arguments of exposed methods.
     """
 
-    ALL_SELECTORS = []
-    INDEX_KEY = "index"
-    RETRIEVE_KEY = "retrieve"
+    ERROR_KEY = "error"
 
     def __init__(self, config, module, folder):
-        self.BASE_FOLDER = folder
-        self.NAME = module
-        # unique ID
-        self.ID = f"{self.NAME}_{str(len(Selector.ALL_SELECTORS))}"
-        Selector.ALL_SELECTORS.append(self.ID)
-        # derived instance variables
-        self.FOLDER = f"{self.BASE_FOLDER}/{self.NAME}"
-        self.RETRIEVE_FOLDER = f"{self.FOLDER}/data"
-        self.INDEX_LOGS = f"{self.FOLDER}/index-logs.txt"
-        self.SELECT_MAP = f"{self.FOLDER}/selected.csv"
-        self.RETRIEVE_LOGS = f"{self.FOLDER}/retrieve-logs.txt"
-        self.__retrieveLogs = []
-        self.__indexLogs = []
-        self.__LOGS = {Selector.INDEX_KEY: [], Selector.RETRIEVE_KEY: []}
-        self.__LOG_KEY = Selector.INDEX_KEY
+        super().__init__(module, folder)
+        self.DIR = f"{self.BASE_DIR}/{self.NAME}"
+        self.CONFIG = config
+        self.ELEMENT_DIR = f"{self.DIR}/data"
+        self.ELEMENT_MAP = f"{self.DIR}/element_map.csv"
 
-        if not os.path.exists(self.RETRIEVE_FOLDER):
-            os.makedirs(self.RETRIEVE_FOLDER)
+        if not os.path.exists(self.ELEMENT_DIR):
+            os.makedirs(self.ELEMENT_DIR)
 
-    def load(self):
-        """ the select DF is loaded from the appropriate file """
-        return pd.read_csv(self.CSV, encoding="utf-8")
-
-    def start_indexing(self, config):
-        self__LOG_KEY = Selector.INDEX_KEY
-        df = self.index(config)
-        if df is not None:
-            df.to_csv(self.SELECT_MAP)
-        save_logs(self.__LOGS[Selector.INDEX_KEY], self.INDEX_LOGS)
-
-    def logger(self, msg):
-        self.__LOGS[self.__LOG_KEY].append(msg)
-        print(msg)
-
+    # must be implemented by child
     @abstractmethod
     def index(self, config):
         """TODO: indicate the exact format this should output.
-
         Should populate a dataframe with the results, keep logs, and then call:
             self.index_complete(df, logs)
 
@@ -65,10 +40,6 @@ class Selector(ABC):
         No options for parallelisation, run on a single CPU.
         """
         raise NotImplementedError
-
-    def setup_retrieve(self, dest, config):
-        """ option to set class variables or do other work only once before each row is retrieved. """
-        pass
 
     @abstractmethod
     def retrieve_element(self, element, config):
@@ -83,24 +54,68 @@ class Selector(ABC):
         NOTE: exposed as a function for a single row so that MT can take responsibility
         for parallelisation.
         """
-
         raise NotImplementedError
 
-    def retrieve_all(self, config):
-        self.__LOG_KEY = Selector.RETRIEVE_KEY
-        df = pd.read_csv(self.SELECT_MAP, encoding="utf-8")
-        self.setup_retrieve(self.RETRIEVE_FOLDER, config)
+    # optionally implemented by child
+    # both ELEMENT_DIR and CONFIG are implicitly available on self, but passed explicitily for convenience
+    def pre_retrieve(self, config, element_dir):
+        pass
 
+    def post_retrieve(self, config, element_dir):
+        pass
+
+    # logged phases that this class manages
+    @MTModule.logged_phase("index")
+    def start_indexing(self):
+        df = self.index(self.CONFIG)
+        if df is not None:
+            df.to_csv(self.ELEMENT_MAP)
+
+    @MTModule.logged_phase("pre-retrieve")
+    def __pre_retrieve(self):
+        df = pd.read_csv(self.ELEMENT_MAP, encoding="utf-8")
+        self.pre_retrieve(self.CONFIG, self.ELEMENT_DIR)
+        return df
+
+    @MTModule.logged_phase("retrieve")
+    def __retrieve(self, df):
         for index, row in df.iterrows():
             element = row.to_dict()
             element_id = row["element_id"]
-            element["dest"] = f"{self.RETRIEVE_FOLDER}/{element_id}"
-            self.retrieve_element(element, config)
+            element["dest"] = f"{self.ELEMENT_DIR}/{element_id}"
+            self.__attempt_retrieve(5, element)
 
-        save_logs(self.__LOGS[Selector.RETRIEVE_KEY], self.RETRIEVE_LOGS)
+    @MTModule.logged_phase("post-retrieve")
+    def __post_retrieve(self):
+        self.post_retrieve(self.CONFIG, self.ELEMENT_DIR)
 
-    def start_retrieving(self, config):
-        """ The default retrieve technique is to retrieve all. For custom retrieval heuristics,
-        an overload 'retrieve' method should be specified in the preprocessor. TODO: further document, etc.
-        """
-        self.retrieve_all(config)
+    # entrypoint
+    def start_retrieving(self):
+        df = self.__pre_retrieve()
+        self.__retrieve(df)
+        self.__post_retrieve()
+
+    def __attempt_retrieve(self, attempts, element):
+        try:
+            return self.retrieve_element(element, self.CONFIG)
+        except ElementShouldSkipError as e:
+            self.error_logger(str(e), element)
+            return
+        except ElementShouldRetryError as e:
+            self.error_logger(str(e), element)
+            if attempts > 1:
+                return self.attempt_retrieve(attempts - 1, element, self.CONFIG)
+            else:
+                self.error_logger(
+                    "failed after maximum retries - skipping element", element
+                )
+                return
+        except Exception as e:
+            dev = self.CONFIG["dev"] if "dev" in self.CONFIG else False
+            if dev:
+                raise e
+            else:
+                self.error_logger(
+                    "unknown exception raised - skipping element", element
+                )
+                return

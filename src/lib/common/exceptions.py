@@ -24,3 +24,21 @@ class WorkingDirectorNotFoundError(Exception):
 class InvalidPhaseError(Exception):
     def __init__(self):
         super().__init__("The 'phase' argument must be either 'select' or 'analyse'.")
+
+
+class ElementShouldSkipError(Exception):
+    def __init__(self, msg):
+        super().__init__(f"{msg} - skipping element")
+
+
+class ElementShouldRetryError(Exception):
+    def __init__(self, msg):
+        super().__init__(f"{msg} - attempt retry")
+
+
+class ImproperLoggedPhaseError(Exception):
+    def __init__(self, fname):
+        super().__init__(
+            f"""The method '{fname}' does not belong to a class that inherits from MTModule. The
+                        logged_phase decorator can only be applied to methods on such a class."""
+        )
