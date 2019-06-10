@@ -50,9 +50,9 @@ def _select_run(args):
     config = json.loads(args.config) if args.config else {}
     selector = TheSelector(config, args.module, args.folder)
 
-    selector.start_indexing(config)
+    selector.start_indexing()
     # TODO: conditionally run retrieve based on config
-    selector.start_retrieving(config)
+    selector.start_retrieving()
 
 
 def _analyse_run(args):
@@ -67,7 +67,7 @@ def _analyse_run(args):
     config = json.loads(args.config) if args.config else {}
 
     analyser = TheAnalyser(config, args.module, args.folder)
-    analyser._run(config)
+    analyser.start_analysing()
 
 
 def _run():

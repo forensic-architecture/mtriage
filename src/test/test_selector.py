@@ -46,11 +46,11 @@ class TestEmptySelector(unittest.TestCase):
         self.assertTrue(os.path.exists(self.emptySelector.ELEMENT_DIR))
 
     def test_index(self):
-        self.emptySelector.start_indexing({})
+        self.emptySelector.start_indexing()
         self.assertTrue(os.path.exists(self.emptySelector.ELEMENT_MAP))
 
     def test_start_retrieving(self):
-        self.emptySelector.start_retrieving({})
+        self.emptySelector.start_retrieving()
         # TODO: test something
 
     def test_logs(self):

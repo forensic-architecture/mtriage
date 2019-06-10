@@ -22,6 +22,7 @@ class Selector(MTModule):
     def __init__(self, config, module, folder):
         super().__init__(module, folder)
         self.DIR = f"{self.BASE_DIR}/{self.NAME}"
+        self.CONFIG = config
         self.ELEMENT_DIR = f"{self.DIR}/data"
         self.ELEMENT_MAP = f"{self.DIR}/element_map.csv"
 
@@ -59,6 +60,7 @@ class Selector(MTModule):
         raise NotImplementedError
 
     # optionally implemented by child
+    # both ELEMENT_DIR and CONFIG are implicitly available on self, but passed explicitily for convenience
     def pre_retrieve(self, element_dir, config):
         pass
 
@@ -67,52 +69,52 @@ class Selector(MTModule):
 
     # logged phases that this class manages
     @MTModule.logged_phase("index")
-    def start_indexing(self, config):
-        df = self.index(config)
+    def start_indexing(self):
+        df = self.index(self.CONFIG)
         if df is not None:
             df.to_csv(self.ELEMENT_MAP)
 
     @MTModule.logged_phase("pre-retrieve")
-    def __pre_retrieve(self, config):
+    def __pre_retrieve(self ):
         df = pd.read_csv(self.ELEMENT_MAP, encoding="utf-8")
-        self.pre_retrieve(self.ELEMENT_DIR, config)
+        self.pre_retrieve(self.ELEMENT_DIR, self.CONFIG)
         return df
 
     @MTModule.logged_phase("retrieve")
-    def __retrieve(self, df, config):
+    def __retrieve(self, df):
         for index, row in df.iterrows():
             element = row.to_dict()
             element_id = row["element_id"]
             element["dest"] = f"{self.ELEMENT_DIR}/{element_id}"
-            self.__attempt_retrieve(5, element, config)
+            self.__attempt_retrieve(5, element)
 
     @MTModule.logged_phase("post-retrieve")
-    def __post_retrieve(self, config):
-        self.post_retrieve(self.ELEMENT_DIR, config)
+    def __post_retrieve(self):
+        self.post_retrieve(self.ELEMENT_DIR, self.CONFIG)
 
     # entrypoint
-    def start_retrieving(self, config):
-        df = self.__pre_retrieve(config)
-        self.__retrieve(df, config)
-        self.__post_retrieve(config)
+    def start_retrieving(self):
+        df = self.__pre_retrieve()
+        self.__retrieve(df)
+        self.__post_retrieve()
 
-    def __attempt_retrieve(self, attempts, element, config):
+    def __attempt_retrieve(self, attempts, element):
         try:
-            return self.retrieve_element(element, config)
+            return self.retrieve_element(element, self.CONFIG)
         except ElementOperationFailedSkipError as e:
             self.error_logger(str(e), element)
             return
         except ElementOperationFailedRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
-                return self.attempt_retrieve(attempts - 1, element, config)
+                return self.attempt_retrieve(attempts - 1, element, self.CONFIG)
             else:
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
                 )
                 return
         except Exception as e:
-            dev = config["dev"] if "dev" in config else False
+            dev = self.CONFIG["dev"] if "dev" in self.CONFIG else False
             if dev:
                 raise e
             else:
