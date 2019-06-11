@@ -1,5 +1,5 @@
 from lib.common.analyser import Analyser
-from lib.common.exceptions import ElementShuoldSkipError
+from lib.common.exceptions import ElementShouldSkipError
 from subprocess import call, STDOUT
 import os
 
