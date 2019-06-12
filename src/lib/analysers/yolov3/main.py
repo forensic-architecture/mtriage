@@ -117,7 +117,10 @@ class YoloV3Analyser(Analyser):
                         labels[pred_label]["frames"].append(frame_no)
                         labels[pred_label]["scores"].append(pred_conf)
                     else:
-                        labels[pred_label] = {"frames": [frame_no], "scores": [pred_conf]}
+                        labels[pred_label] = {
+                            "frames": [frame_no],
+                            "scores": [pred_conf],
+                        }
 
         # NOTE: this logic hardcodes to videos produced from the youtube selector, which produces an accompanying
         # meta.json with these fields (and many more)
@@ -138,5 +141,3 @@ class YoloV3Analyser(Analyser):
         with open(f"{element['dest']}/{element['id']}.json", "w") as f:
             json.dump(out, f)
             self.logger(f"Wrote predictions JSON for {element['id']}")
-
-

@@ -33,9 +33,7 @@ def draw():
                 box_w = x2 - x1
                 box_h = y2 - y1
 
-                color = bbox_colors[
-                    int(np.where(unique_labels == int(cls_pred))[0])
-                ]
+                color = bbox_colors[int(np.where(unique_labels == int(cls_pred))[0])]
                 # Create a Rectangle patch
                 bbox = patches.Rectangle(
                     (x1, y1),
@@ -63,6 +61,8 @@ def draw():
                 plt.gca().yaxis.set_major_locator(NullLocator())
                 filename = path.split("/")[-1].split(".")[0]
                 plt.savefig(
-                    f"{element['dest']}/{filename}.png", bbox_inches="tight", pad_inches=0.0
+                    f"{element['dest']}/{filename}.png",
+                    bbox_inches="tight",
+                    pad_inches=0.0,
                 )
                 plt.close()
