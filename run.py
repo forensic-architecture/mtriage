@@ -17,7 +17,12 @@ DOCKER = docker.from_env()
 
 
 def get_subdirs(d):
-    return [o for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
+    whitelist = ["__pycache__"]
+    return [
+        o
+        for o in os.listdir(d)
+        if os.path.isdir(os.path.join(d, o)) and o not in whitelist
+    ]
 
 
 class InvalidPipDep(Exception):
@@ -100,7 +105,6 @@ def build(IS_GPU):
     ANALYSERS_PATH = "{}/src/lib/analysers".format(DIR_PATH)
     SELECTORS_PATH = "{}/src/lib/selectors".format(DIR_PATH)
 
-
     print("Collecting partial dependencies from selector and analyser folders...")
 
     with open(CORE_PIPDEPS) as cdeps:
@@ -149,8 +153,10 @@ def build(IS_GPU):
     print("All Docker dependencies collected in build.Dockerfile.")
     print("All Pip dependencies collected in build.requirements.txt.")
     print("--------------------------------------------------------")
-    print("\n")
-    print("Starting build in Docker...")
+    if IS_GPU:
+        print("GPU flag enabled, building for nvidia-docker...")
+    else:
+        print("Building for CPU in Docker...")
 
     try:
         sp.call(
@@ -202,7 +208,7 @@ def develop(IS_GPU):
         )
 
 
-def clean():
+def clean(IS_GPU):
     sp.call(["docker", "rmi", NAME])
 
 
@@ -237,7 +243,7 @@ def __run_runpy_tests():
         exit(returncode)
 
 
-def test():
+def test(IS_GPU):
     print("Creating container to run tests...")
     print("----------------------------------")
     __run_lib_tests()

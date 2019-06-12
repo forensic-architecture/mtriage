@@ -14,6 +14,15 @@ RUN apt-get update && \
 	build-essential \
 	jq
 
+# Copy necessary folders
+RUN mkdir -p /mtriage
+COPY ./scripts /mtriage/scripts
+COPY ./src /mtriage/src
+COPY ./temp /mtriage/temp
+COPY ./credentials /mtriage/credentials
+WORKDIR /mtriage
+
+
 # *********************
 # starting partials...
 # *********************

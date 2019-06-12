@@ -1,2 +1,6 @@
 Dockerfile
 requirements.txt
+temp/**/*
+**/*/__pycache__
+**/*.pyc
+
