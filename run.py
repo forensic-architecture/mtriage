@@ -93,7 +93,7 @@ def build(IS_GPU):
     """
     # setup
     TAG_NAME = "dev-gpu" if IS_GPU else "dev"
-    DOCKER_BASE = "core-gpu" if IS_GPU else "core"
+    DOCKER_BASE = "core-gpu" if IS_GPU else "core-cpu"
 
     DOCKERFILE_PARTIAL = "partial.Dockerfile"
     PIP_PARTIAL = "requirements.txt"
@@ -101,7 +101,7 @@ def build(IS_GPU):
     BUILD_PIPFILE = "{}/build.requirements.txt".format(DIR_PATH)
     CORE_PIPDEPS = "{}/src/build/core.requirements.txt".format(DIR_PATH)
     CORE_START_DOCKER = "{}/src/build/{}.start.Dockerfile".format(DIR_PATH, DOCKER_BASE)
-    CORE_END_DOCKER = "{}/src/build/{}.end.Dockerfile".format(DIR_PATH, DOCKER_BASE)
+    CORE_END_DOCKER = "{}/src/build/core.end.Dockerfile".format(DIR_PATH)
     ANALYSERS_PATH = "{}/src/lib/analysers".format(DIR_PATH)
     SELECTORS_PATH = "{}/src/lib/selectors".format(DIR_PATH)
 
