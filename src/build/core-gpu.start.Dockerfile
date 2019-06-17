@@ -16,11 +16,9 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
            /etc/apt/sources.list.d/nvidia-ml.list && \
 
     apt-get update && \
-
 # ==================================================================
 # tools
 # ------------------------------------------------------------------
-
     DEBIAN_FRONTEND=noninteractive $APT_INSTALL \
         build-essential \
         apt-utils \
@@ -32,16 +30,9 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
         unzip \
         unrar \
         && \
-
-    $GIT_CLONE https://github.com/Kitware/CMake ~/cmake && \
-    cd ~/cmake && \
-    ./bootstrap && \
-    make -j"$(nproc)" install && \
-
 # ==================================================================
 # python
 # ------------------------------------------------------------------
-
     DEBIAN_FRONTEND=noninteractive $APT_INSTALL \
         software-properties-common \
         && \
@@ -65,6 +56,7 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
     apt-get autoremove && \
     rm -rf /var/lib/apt/lists/* /tmp/* ~/*
 
+# default port for tensorboard
 EXPOSE 6006
 
 # core
