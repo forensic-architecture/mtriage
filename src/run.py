@@ -27,6 +27,9 @@ Attributes:
 import argparse
 import json
 import os
+from pathlib import Path
+from subprocess import check_output
+import shutil
 
 from lib.common.get_module import get_module
 from lib.common.exceptions import (
@@ -77,7 +80,10 @@ def _run():
         "--config", "-c", help="Configuration options for module", required=True
     )
     PARSER.add_argument(
-        "--phase", "-p", help="The phase to run. One of: select, analyse", required=True
+        "--phase",
+        "-p",
+        help="The phase to run. One of: select, analyse, view",
+        required=True,
     )
     PARSER.add_argument(
         "--folder", "-f", help="Path to working folder for results", required=True
