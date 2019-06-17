@@ -30,6 +30,9 @@ class InvalidAnalyserConfigError(Exception):
     def __init__(self, msg):
         super().__init__(f"Invalid analyser config - {msg}")
 
+class InvalidSelectorConfigError(Exception):
+    def __init__(self, msg):
+        super().__init__(f"Invalid selector config - {msg}")
 
 class ElementShouldSkipError(Exception):
     def __init__(self, msg):
@@ -39,6 +42,10 @@ class ElementShouldSkipError(Exception):
 class ElementShouldRetryError(Exception):
     def __init__(self, msg):
         super().__init__(f"{msg} - attempt retry")
+
+class SelectorIndexError(Exception):
+    def __init__(self, msg):
+        super().__init__(f"Selector index failed - {msg}")        
 
 
 class ImproperLoggedPhaseError(Exception):

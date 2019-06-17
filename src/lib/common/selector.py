@@ -14,8 +14,6 @@ class Selector(MTModule):
     the arguments of exposed methods.
     """
 
-    ERROR_KEY = "error"
-
     def __init__(self, config, module, folder):
         super().__init__(module, folder)
         self.DIR = f"{self.BASE_DIR}/{self.NAME}"
