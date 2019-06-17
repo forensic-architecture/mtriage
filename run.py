@@ -195,13 +195,7 @@ def build(args):
     os.remove(BUILD_PIPFILE)
 
 
-<<<<<<< HEAD
-def develop(IS_GPU):
-    TAG_NAME = "dev-gpu" if IS_GPU else "dev"
-
-=======
 def develop(args):
->>>>>>> viewer plugin server + workflow
     try:
         DOCKER.containers.get(CONT_NAME)
         print("Develop container already running. Stop it and try again.")
@@ -228,11 +222,7 @@ def develop(args):
         )
 
 
-<<<<<<< HEAD
-def clean(IS_GPU):
-=======
 def clean(args):
->>>>>>> viewer plugin server + workflow
     sp.call(["docker", "rmi", NAME])
 
 
@@ -267,11 +257,7 @@ def __run_runpy_tests():
         exit(returncode)
 
 
-<<<<<<< HEAD
-def test(IS_GPU):
-=======
 def test(args):
->>>>>>> viewer plugin server + workflow
     print("Creating container to run tests...")
     print("----------------------------------")
     __run_lib_tests()
@@ -439,17 +425,10 @@ if __name__ == "__main__":
     }
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     parser.add_argument("command", choices=COMMANDS.keys())
-<<<<<<< HEAD
-    parser.add_argument("--gpu", action="store_true")
-=======
     parser.add_argument("--input", "-i", help="Input Folder", required=False)
     parser.add_argument("--viewer", "-v", help="Viewer Plugin Folder", required=False)
->>>>>>> viewer plugin server + workflow
+    parser.add_argument("--gpu", action="store_true")
 
     args = parser.parse_args()
     cmd = COMMANDS[args.command]
-<<<<<<< HEAD
-    cmd(args.gpu)
-=======
     cmd(args)
->>>>>>> viewer plugin server + workflow
