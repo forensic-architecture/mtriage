@@ -13,6 +13,7 @@ from torch.autograd import Variable
 from lib.analysers.yolov3.utils import *
 from lib.analysers.yolov3.models import Darknet
 from lib.common.analyser import Analyser
+from lib.common.util import vuevis_prepare_el, deduce_frame_no
 
 
 class YoloV3Analyser(Analyser):
@@ -122,22 +123,12 @@ class YoloV3Analyser(Analyser):
                             "scores": [pred_conf],
                         }
 
-        # NOTE: this logic hardcodes to videos produced from the youtube selector, which produces an accompanying
-        # meta.json with these fields (and many more)
         try:
-            out = {"id": element["id"], "labels": labels}
-            hacked_el_src = element["src"].replace("derived/frames", "data")
-            with open(f"{hacked_el_src}/meta.json", "r") as f:
-                f = json.load(f)
-                out["title"] = f["title"]
-                out["description"] = f["description"]
-                out["webpage_url"] = f["webpage_url"]
-                out["duration"] = f["duration"]
-                out["upload_date"] = f["upload_date"]
+            out = vuevis_prepare_el(element)
+            out.update({ "labels": labels })
         except FileNotFoundError:
             self.logger(f"Could not find meta.json, skipping {element['id']}.")
 
-        self.logger(element["dest"])
         with open(f"{element['dest']}/{element['id']}.json", "w") as f:
             json.dump(out, f)
             self.logger(f"Wrote predictions JSON for {element['id']}")

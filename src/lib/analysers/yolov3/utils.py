@@ -1,19 +1,11 @@
 import torch
 import glob
-import ntpath
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 from PIL import Image
 import torch.nn.functional as F
 import numpy as np
 
-
-def deduce_frame_no(path):
-    # TODO: error handling
-    head, tail = ntpath.split(path)
-    f = tail or nt.basename(head)
-    num = f.split(".")[0]
-    return int(num)
 
 
 def to_cpu(tensor):
