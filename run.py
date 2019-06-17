@@ -5,11 +5,20 @@ import pytest
 import os
 import re
 import argparse
+import shutil
 import subprocess as sp
+import webbrowser
 
 
 NAME = "forensicarchitecture/mtriage"
 CONT_NAME = NAME.replace("/", "_")  # docker doesn't allow slashes in cont names
+
+SERVER_NAME = "forensicarchitecture/mtriageserver"
+CONT_SERVER_NAME = SERVER_NAME.replace("/", "_")
+
+VIEWER_NAME = "forensicarchitecture/mtriageviewer"
+CONT_VIEWER_NAME = VIEWER_NAME.replace("/", "_")
+
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 ENV_FILE = "{}/.env".format(DIR_PATH)
 HOME_PATH = os.path.expanduser("~")
@@ -26,6 +35,10 @@ def get_subdirs(d):
 
 
 class InvalidPipDep(Exception):
+    pass
+
+
+class InvalidArgumentsError(Exception):
     pass
 
 
@@ -85,12 +98,15 @@ def add_deps(dep_path, deps, should_add):
                 deps.append(line)
 
 
-def build(IS_GPU):
+def build(args):
     """ Collect all partial Pip and Docker files from selectors and analysers, and combine them with the core mtriage
         dependencies in src/build in order to create an appropriate Dockerfile and requirements.txt.
         NOTE: There is currently no way to include/exclude certain selector dependencies, but this build process is
               the setup for that optionality.
     """
+
+    IS_GPU = args.gpu
+
     # setup
     TAG_NAME = "dev-gpu" if IS_GPU else "dev"
     DOCKER_BASE = "core-gpu" if IS_GPU else "core-cpu"
@@ -136,15 +152,15 @@ def build(IS_GPU):
             dockerlines.append(line)
 
     # create Dockerfile and requirements.txt for build
-    if os.path.exists(BUILD_PIPFILE):
-        os.remove(BUILD_PIPFILE)
+    # if os.path.exists(BUILD_PIPFILE):
+    #     os.remove(BUILD_PIPFILE)
 
     with open(BUILD_PIPFILE, "w") as f:
         for dep in pipdeps:
             f.write(dep)
 
-    if os.path.exists(BUILD_DOCKERFILE):
-        os.remove(BUILD_DOCKERFILE)
+    # if os.path.exists(BUILD_DOCKERFILE):
+    #     os.remove(BUILD_DOCKERFILE)
 
     with open(BUILD_DOCKERFILE, "w") as f:
         for line in dockerlines:
@@ -179,9 +195,7 @@ def build(IS_GPU):
     os.remove(BUILD_PIPFILE)
 
 
-def develop(IS_GPU):
-    TAG_NAME = "dev-gpu" if IS_GPU else "dev"
-
+def develop(args):
     try:
         DOCKER.containers.get(CONT_NAME)
         print("Develop container already running. Stop it and try again.")
@@ -208,7 +222,7 @@ def develop(IS_GPU):
         )
 
 
-def clean(IS_GPU):
+def clean(args):
     sp.call(["docker", "rmi", NAME])
 
 
@@ -243,7 +257,7 @@ def __run_runpy_tests():
         exit(returncode)
 
 
-def test(IS_GPU):
+def test(args):
     print("Creating container to run tests...")
     print("----------------------------------")
     __run_lib_tests()
@@ -252,13 +266,169 @@ def test(IS_GPU):
     print("All tests for mtriage done.")
 
 
+def viewer(args):
+
+    """ Must be invoked with an input folder and viewer-plugin e.g.:
+
+            python run.py viewer -i <derived_folder> -v <viewer_plugin>
+
+        Server requires that input folder contains directories corresponsing to elements (where directory names
+        are element ids.) Each element directory must contain a json file containing:
+
+        {
+            "id": <element_id>,
+            "media": [
+                <media1.mp3>
+                <media1.mp4>,
+                <media1.png>,
+                etc.
+            ]
+        }
+
+        As well as any other data to be consumed by the viewr-plugin. Media are any other files
+        in the element folder that need to be available to the viewer-plugin.
+
+        Viewers must be yarn buildable apps living in the src/lib/viewers folder. Their name is taken to be the name
+        of their outer directory.
+
+        Once launched the viewer plugin is available at http://localhost:8081/
+
+        The server is available at http://localhost:8080/, with available endpoints:
+
+        elements                                    - returns list of element ids
+        element?id=<element_id>                     - serves the element's json file
+        element?if=<element_id>&media=<media_file>  - serves the media file associated with element
+
+    """
+
+    folder = args.input
+    viewer = args.viewer
+
+    if args.input == None:
+        raise InvalidArgumentsError("No input directory supplied for viewer plugin.")
+
+    if args.viewer == None:
+        raise InvalidArgumentsError("No viewer plugin name supplied.")
+
+    if not os.path.exists(folder):
+        raise WorkingDirectorNotFoundError(folder)
+
+    shutil.rmtree("src/server/elements/")
+    os.makedirs("src/server/elements/")
+
+    element_folders = [f for f in os.listdir(folder) if os.path.isdir(folder + "/" + f)]
+
+    for e in element_folders:
+        f = str(folder) + "/" + str(e)
+        for file in os.listdir(f):
+            if not os.path.exists("src/server/elements/" + e):
+                os.makedirs("src/server/elements/" + e)
+            os.symlink(
+                "/mtriage/" + f + "/" + file, "src/server/elements/" + e + "/" + file
+            )
+
+    print("Creating container to build server...")
+    print("----------------------------------")
+    try:
+        sp.call(
+            [
+                "docker",
+                "build",
+                "-t",
+                "{}:dev".format(SERVER_NAME),
+                "-f",
+                "src/server/server.Dockerfile",
+                "src/server",
+            ]
+        )
+        print("Build successful, attempting to run")
+    except:
+        print("Something went wrong! EEK.")
+    print("----------------------------------")
+    print("Server build successful.")
+
+    print("Creating container to run server...")
+    print("----------------------------------")
+    sp.Popen(
+        [
+            "docker",
+            "run",
+            "-it",
+            "--name",
+            CONT_SERVER_NAME,
+            "-p",
+            "8080:8080",
+            "--rm",
+            "--privileged",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            "{}:dev".format(SERVER_NAME),
+        ],
+        shell=False,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        close_fds=True,
+    )
+    print("----------------------------------")
+    print("Server run successful.")
+
+    print("Creating container to build viewer plugin...")
+    print("----------------------------------")
+    try:
+        sp.call(
+            [
+                "docker",
+                "build",
+                "-t",
+                "{}:dev".format(VIEWER_NAME),
+                "-f",
+                "src/build/viewer.Dockerfile",
+                "src/lib/viewers/" + viewer,
+            ]
+        )
+        print("Build successful, attempting to run")
+    except:
+        print("Something went wrong! EEK.")
+    print("----------------------------------")
+    print("Viewer plugin build successful.")
+
+    print("Creating container to run viewer plugin...")
+    print("----------------------------------")
+    sp.call(
+        [
+            "docker",
+            "run",
+            "-it",
+            "--name",
+            CONT_VIEWER_NAME,
+            "-p",
+            "8081:80",
+            "--rm",
+            "--privileged",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            "{}:dev".format(VIEWER_NAME),
+        ]
+    )
+    print("----------------------------------")
+    print("Viewer plugin run successful")
+
+
 if __name__ == "__main__":
-    COMMANDS = {"build": build, "develop": develop, "test": test, "clean": clean}
+    COMMANDS = {
+        "build": build,
+        "develop": develop,
+        "test": test,
+        "clean": clean,
+        "viewer": viewer,
+    }
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     parser.add_argument("command", choices=COMMANDS.keys())
+    parser.add_argument("--input", "-i", help="Input Folder", required=False)
+    parser.add_argument("--viewer", "-v", help="Viewer Plugin Folder", required=False)
     parser.add_argument("--gpu", action="store_true")
 
     args = parser.parse_args()
-
     cmd = COMMANDS[args.command]
-    cmd(args.gpu)
+    cmd(args)
