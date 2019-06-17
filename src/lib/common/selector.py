@@ -94,16 +94,21 @@ class Selector(MTModule):
         self.__post_retrieve()
 
     def __attempt_retrieve(self, attempts, element):
+        if not os.path.exists(element["dest"]):
+            os.makedirs(element["dest"])
+
         try:
             return self.retrieve_element(element, self.CONFIG)
         except ElementShouldSkipError as e:
+            os.rmdir(element["dest"])
             self.error_logger(str(e), element)
             return
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
-                return self.attempt_retrieve(attempts - 1, element, self.CONFIG)
+                return self.__attempt_retrieve(attempts - 1, element)
             else:
+                os.rmdir(element["dest"])
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
                 )
