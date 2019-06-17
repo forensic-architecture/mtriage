@@ -26,12 +26,9 @@ GOOGLE_CREDS = service_account.Credentials.from_service_account_file(
 
 class YoutubeSelector(Selector):
     def index(self, config):
-        if not os.path.exists(self.SELECT_MAP):
-            df = self._run(config, self.FOLDER)
-            return df
-        else:
-            self.logger("File already exists for index--not running again.")
-            return None
+        # if not os.path.exists(self.SELECT_MAP):
+        df = self._run(config)
+        return df
 
     def pre_retrieve(self, config, element_dir):
         self.ydl = youtube_dl.YoutubeDL(
@@ -61,14 +58,13 @@ class YoutubeSelector(Selector):
                     f"Something went wrong downloading {vid_id}. It may have been deleted."
                 )
 
-    def _run(self, config, output_path):
+    def _run(self, config):
 
         results = []
 
         self.logger(f"Query: {config['search_term']}")
         self.logger(f"Start: {config['uploaded_after']}")
         self.logger(f"End: {config['uploaded_after']}")
-        self.logger(f"Output file: {output_path}")
 
         if config["daily"]:
             self.logger(
@@ -87,7 +83,7 @@ class YoutubeSelector(Selector):
         df = pd.DataFrame(results)
 
         self.logger("\n\n----------------")
-        self.logger(f"Scrape successful, {len(df) - 1} results in {output_path}")
+        self.logger(f"Scrape successful, {len(df) - 1} results.")
 
         return df
 
