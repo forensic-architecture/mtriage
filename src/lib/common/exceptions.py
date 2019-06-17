@@ -30,6 +30,7 @@ class InvalidAnalyserConfigError(Exception):
     def __init__(self, msg):
         super().__init__(f"Invalid analyser config - {msg}")
 
+
 class ElementShouldSkipError(Exception):
     def __init__(self, msg):
         super().__init__(f"{msg} - skipping element")

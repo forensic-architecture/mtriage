@@ -7,7 +7,6 @@ import torch.nn.functional as F
 import numpy as np
 
 
-
 def to_cpu(tensor):
     return tensor.detach().cpu()
 

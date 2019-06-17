@@ -125,7 +125,7 @@ class YoloV3Analyser(Analyser):
 
         try:
             out = vuevis_prepare_el(element)
-            out.update({ "labels": labels })
+            out.update({"labels": labels})
         except FileNotFoundError:
             self.logger(f"Could not find meta.json, skipping {element['id']}.")
 

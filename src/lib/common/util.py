@@ -1,6 +1,7 @@
 import ntpath
 import json
 
+
 def save_logs(logs, filepath):
     if len(logs) <= 0:
         return
@@ -27,11 +28,10 @@ def vuevis_prepare_el(element):
 
     return out
 
+
 def deduce_frame_no(path):
     # TODO: error handling
     head, tail = ntpath.split(path)
     f = tail or nt.basename(head)
     num = f.split(".")[0]
     return int(num)
-
-
