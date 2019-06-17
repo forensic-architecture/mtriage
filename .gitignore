@@ -16,6 +16,9 @@ __pycache__/
 build.Dockerfile
 build.requirements.txt
 
+# server symlinks
+src/server/elements/**
+
 # authentication files
 credentials/**
 .env
