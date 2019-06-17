@@ -1,16 +1,35 @@
+from lib.common.exceptions import InvalidAnalyserConfigError
 from lib.common.analyser import Analyser, get_img_paths
 from lib.common.util import vuevis_prepare_el, deduce_frame_no
-from keras.applications.resnet50 import ResNet50
 from keras.preprocessing import image
-from keras.applications.resnet50 import preprocess_input, decode_predictions
 import numpy as np
 import json
 
+from importlib import import_module
+
+SUPPORTED_MODELS = {
+    "ResNet50": {
+        "module": "resnet50",
+    },
+    "VGG16": {
+        "module": "vgg16",
+    },
+    "VGG19": {
+        "module": "vgg19",
+    },
+}
 
 class Resnet50Analyser(Analyser):
     def pre_analyse(self, config):
+        self.logger(config["model"])
+        MOD = SUPPORTED_MODELS.get(config["model"])
+        if MOD is None:
+            raise InvalidAnalyserConfigError(f"The module '{config['model']}' either does not exist, or is not yet supported.")
+
+        self.model_module= import_module(f"keras.applications.{MOD['module']}")
+        impmodel = getattr(self.model_module, config["model"])
         # NB: this downloads the weights if they don't exist
-        self.resnet50 = ResNet50(weights="imagenet")
+        self.model = impmodel(weights="imagenet")
 
 
     def analyse_element(self, element, config):
@@ -23,10 +42,10 @@ class Resnet50Analyser(Analyser):
             img = image.load_img(img_path, target_size=(224,224))
             x = image.img_to_array(img)
             x = np.expand_dims(x, axis=0)
-            x = preprocess_input(x)
-            preds = self.resnet50.predict(x)
+            x = self.model_module.preprocess_input(x)
+            preds = self.model.predict(x)
 
-            top5 = decode_predictions(preds, top=5)
+            top5 = self.model_module.decode_predictions(preds, top=5)
             frame_no = deduce_frame_no(img_path)
 
             for _, pred_label, pred_conf in top5[0]:
