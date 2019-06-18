@@ -2,11 +2,11 @@ from lib.common.analyser import Analyser
 from lib.common.analyser import paths_to_components
 from abc import ABC
 import os
-import numpy as np
 import shutil
 import unittest
 import operator
 from lib.common.mtmodule import MTModule
+from test.utils import listOfDictsEqual
 
 
 class EmptyAnalyser(Analyser):
@@ -113,7 +113,7 @@ class TestAnalyser(unittest.TestCase):
                 "dest": f"{outdir}/el2",
             },
         ]
-        self.assertTrue(np.array_equal(derived_elements, expected))
+        self.assertTrue(listOfDictsEqual(derived_elements, expected))
 
     # get elements
     def test_get_elements(self):
@@ -182,8 +182,7 @@ class TestAnalyser(unittest.TestCase):
         ]
 
         elements = self.emptyAnalyser._Analyser__get_elements(media)
-
-        self.assertTrue(np.array_equal(elements, expected))
+        self.assertTrue(listOfDictsEqual(elements, expected))
 
     def test_start_analysing(self):
         self.emptyAnalyser.start_analysing()

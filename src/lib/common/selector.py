@@ -1,6 +1,6 @@
 import os
+import csv
 from abc import abstractmethod
-import pandas as pd
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
 from lib.common.exceptions import ElementShouldRetryError, ElementShouldSkipError
@@ -65,21 +65,38 @@ class Selector(MTModule):
     # logged phases that this class manages
     @MTModule.logged_phase("index")
     def start_indexing(self):
-        df = self.index(self.CONFIG)
-        if df is not None:
-            df.to_csv(self.ELEMENT_MAP)
+        element_map = self.index(self.CONFIG)
+        if element_map is not None:
+            with open(self.ELEMENT_MAP, "w") as f:
+                writer = csv.writer(f, delimiter=",")
+                for line in element_map:
+                    writer.writerow(line)
 
     @MTModule.logged_phase("pre-retrieve")
     def __pre_retrieve(self):
-        df = pd.read_csv(self.ELEMENT_MAP, encoding="utf-8")
+        # open element_map in preparation for reading line-by-line
         self.pre_retrieve(self.CONFIG, self.ELEMENT_DIR)
-        return df
+
+    def __get_elements(self):
+        with open(self.ELEMENT_MAP, "r", encoding="utf-8") as f:
+            for el in csv.reader(f):
+                yield el
 
     @MTModule.logged_phase("retrieve")
-    def __retrieve(self, df):
-        for index, row in df.iterrows():
-            element = row.to_dict()
-            id = row["id"]
+    def __retrieve(self):
+        elements = self.__get_elements()
+        headers = next(elements)
+
+        def to_dict(el):
+            out = {}
+            for idx, item in enumerate(el):
+                attr = headers[idx]
+                out[attr] = item
+            return out
+
+        for row in elements:
+            element = to_dict(row)
+            id = element["id"]
             element["dest"] = f"{self.ELEMENT_DIR}/{id}"
             self.__attempt_retrieve(5, element)
 
@@ -89,8 +106,8 @@ class Selector(MTModule):
 
     # entrypoint
     def start_retrieving(self):
-        df = self.__pre_retrieve()
-        self.__retrieve(df)
+        self.__pre_retrieve()
+        self.__retrieve()
         self.__post_retrieve()
 
     def __attempt_retrieve(self, attempts, element):

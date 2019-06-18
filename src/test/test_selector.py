@@ -1,7 +1,8 @@
 from lib.common.selector import Selector
+from test.utils import scaffold_elementmap
 from abc import ABC
-import pandas as pd
 import os
+import csv
 import shutil
 import unittest
 from lib.common.exceptions import (
@@ -15,7 +16,7 @@ from test.utils import TEMP_ELEMENT_DIR, scaffold_empty, cleanup
 class EmptySelector(Selector):
     def index(self, config):
         if not os.path.exists(self.ELEMENT_MAP):
-            df = pd.DataFrame([{"id": "test"}])
+            df = scaffold_elementmap(["el1", "el2", "el3"])
             return df
         else:
             return None
@@ -32,7 +33,6 @@ class TestEmptySelector(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
         cleanup()
-        self.emptySelector = None
 
     def test_selector_imports(self):
         self.assertTrue(type(Selector) == type(ABC))
@@ -56,6 +56,11 @@ class TestEmptySelector(unittest.TestCase):
     def test_index(self):
         self.emptySelector.start_indexing()
         self.assertTrue(os.path.exists(self.emptySelector.ELEMENT_MAP))
+        # test element_map.csv is what it should be
+        with open(self.emptySelector.ELEMENT_MAP, "r") as f:
+            emreader = csv.reader(f, delimiter=",")
+            rows = [l for l in emreader]
+            self.assertEqual(rows, scaffold_elementmap(["el1", "el2", "el3"]))
 
     def test_start_retrieving(self):
         self.emptySelector.start_retrieving()
