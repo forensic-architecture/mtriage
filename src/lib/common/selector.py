@@ -4,6 +4,7 @@ from abc import abstractmethod
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
 from lib.common.exceptions import ElementShouldRetryError, ElementShouldSkipError
+from lib.common.etypes import cast_to_etype
 
 
 class Selector(MTModule):
@@ -98,7 +99,15 @@ class Selector(MTModule):
             element = to_dict(row)
             id = element["id"]
             element["dest"] = f"{self.ELEMENT_DIR}/{id}"
-            self.__attempt_retrieve(5, element)
+            success = self.__attempt_retrieve(5, element)
+            if success:
+                try:
+                    etype = cast_to_etype(element["dest"])
+                    if etype != self.get_out_etype():
+                        raise Exception("skip to cleanup")
+                except Exception as e:
+                    # TODO: cleanup the element and log an error
+                    pass
 
     @MTModule.logged_phase("post-retrieve")
     def __post_retrieve(self):
@@ -115,21 +124,23 @@ class Selector(MTModule):
             os.makedirs(element["dest"])
 
         try:
-            return self.retrieve_element(element, self.CONFIG)
+            self.retrieve_element(element, self.CONFIG)
+            return True
         except ElementShouldSkipError as e:
             os.rmdir(element["dest"])
             self.error_logger(str(e), element)
-            return
+            return False
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
-                return self.__attempt_retrieve(attempts - 1, element)
+                self.__attempt_retrieve(attempts - 1, element)
             else:
                 os.rmdir(element["dest"])
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
                 )
-                return
+                return False
+        # TODO: flag to turn this off during development should be passed during run
         except Exception as e:
             dev = self.CONFIG["dev"] if "dev" in self.CONFIG else False
             if dev:
@@ -138,4 +149,7 @@ class Selector(MTModule):
                 self.error_logger(
                     "unknown exception raised - skipping element", element
                 )
-                return
+                return False
+
+    def __is_valid_etype(self, element):
+        dest = element["dest"]

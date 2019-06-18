@@ -6,8 +6,14 @@ from shutil import copyfile, rmtree
 
 
 class MetaAnalyser(Analyser):
-    def pre_analyse(self, config):
+    # TODO: logic in pre_analyse needs to go to init, then etypes can be dynamic
+    def get_in_etype(self):
+        return Etype.Any
 
+    def get_out_etype(self):
+        return Etype.Any
+
+    def pre_analyse(self, config):
         self.child_analysers = []
         whitelist = self.CONFIG["elements_in"]
 

@@ -20,6 +20,11 @@ class YoloV3Analyser(Analyser):
     """ Adapted from eriklindernoren/PyTorch-YOLOv3. See https://github.com/breezykermo/PyTorch-YOLOv3
         for reference implementation.
     """
+    def get_in_etype(self):
+        return Etype.AnnotatedImageArray
+
+    def get_out_etype(self):
+        return Etype.Json
 
     def pre_analyse(self, config):
         RUN_DIR = os.path.dirname(os.path.realpath(__file__))

@@ -5,6 +5,7 @@ import argparse, os, sys
 import math
 from subprocess import call, STDOUT
 from lib.common.selector import Selector
+from lib.common.etypes import Etype
 
 # from .select import selector_run
 # from .retrieve import id_from_url, vid_exists, get_meta_path
@@ -25,6 +26,9 @@ GOOGLE_CREDS = service_account.Credentials.from_service_account_file(
 
 
 class YoutubeSelector(Selector):
+    def get_out_etype(self):
+        return Etype.VideoAndJson
+
     def index(self, config):
         # if not os.path.exists(self.SELECT_MAP):
         df = self._run(config)

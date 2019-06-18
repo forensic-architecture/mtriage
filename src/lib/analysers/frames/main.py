@@ -5,6 +5,7 @@ from imutils.video import FileVideoStream
 from subprocess import call, STDOUT
 from lib.common.analyser import Analyser
 from lib.common.exceptions import ElementShouldSkipError
+from lib.common.etypes import Etype
 
 
 def ffmpeg_frames(out_folder, fp, rate):
@@ -73,6 +74,12 @@ def opencv_frames(out_folder, fp, rate, threshold, sequential):
 
 
 class FramesAnalyser(Analyser):
+    def get_in_etype(self):
+        return Etype.AnnotatedVideo
+
+    def get_out_etype(self):
+        return Etype.AnnotatedImageArray
+
     def analyse_element(self, element, config):
         FPS_NUMBER = int(config["fps"])
         dest = element["dest"]

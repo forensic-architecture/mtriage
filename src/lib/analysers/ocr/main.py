@@ -1,4 +1,5 @@
 from lib.common.analyser import Analyser
+from lib.common.etypes import Etype
 import json
 import io
 import os
@@ -22,6 +23,10 @@ class OcrAnalyser(Analyser):
     You'll need to create a service account and put specify its absolute path in the '.env'
     the top of this repo, GOOGLE_APPLICATION_CREDENTIALS.
     """
+    def get_in_etype(self):
+        return Etype.ImageArray
+    def get_out_etype(self):
+        return Etype.Json
 
     def pre_analyse(self, config):
         # creds are interpolated from env variable, GOOGLE_APPLICATION_CREDENTIALS. See

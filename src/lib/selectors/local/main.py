@@ -1,4 +1,5 @@
 from lib.common.selector import Selector
+from lib.common.etypes import Etype
 import pandas as pd
 import os
 from shutil import copyfile
@@ -16,7 +17,6 @@ class LocalSelector(Selector):
     directory to be accessible inside the docker container (the temp
     folder is recommended).
     """
-
     def index(self, config):
 
         if not os.path.exists(self.ELEMENT_MAP):
