@@ -1,4 +1,5 @@
 from abc import ABC
+from test.utils import TEMP_ELEMENT_DIR, cleanup
 from lib.common.exceptions import ImproperLoggedPhaseError
 from lib.common.mtmodule import MTModule
 import os
@@ -13,12 +14,12 @@ class EmptyMTModule(MTModule):
 class TestEmptyMTModule(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.BASE_DIR = "../tempdir"
+        self.BASE_DIR = TEMP_ELEMENT_DIR
         self.mod = EmptyMTModule("empty", self.BASE_DIR)
 
     @classmethod
     def tearDownClass(self):
-        shutil.rmtree(self.BASE_DIR)
+        cleanup()
 
     def test_class_variables(self):
         self.assertEqual(self.mod.NAME, "empty")

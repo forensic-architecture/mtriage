@@ -7,12 +7,6 @@ TEMP_ELEMENT_DIR = "../temp/test"
 
 
 def scaffold_empty(selname, elements=[], analysers=[]):
-    print("scaffold run")
-    if not os.path.exists(TEMP_ELEMENT_DIR):
-        raise Exception(
-            "temp element dir doesn't exist - you need to instantiate it in a selector or analyser before using test methods."
-        )
-
     os.makedirs(f"{TEMP_ELEMENT_DIR}/{selname}/{Analyser.DERIVED_EXT}")
 
     for element in elements:

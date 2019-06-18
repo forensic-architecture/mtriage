@@ -6,7 +6,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from pathlib import Path
 from lib.common.util import save_logs
-from lib.common.exceptions import ElementShouldSkipError, ElementShouldRetryError
+from lib.common.exceptions import ElementShouldSkipError, ElementShouldRetryError, InvalidAnalyserConfigError
 from lib.common.mtmodule import MTModule
 
 
@@ -54,7 +54,22 @@ class Analyser(MTModule):
     DERIVED_EXT = "derived"
 
     def __init__(self, config, module, dir):
-        super().__init__(module, dir)
+        try:
+            super().__init__(module, dir)
+        except PermissionError as e:
+            raise InvalidAnalyserConfigError("You must provide a valid directory path")
+
+        if not "elements_in" in config:
+            raise InvalidAnalyserConfigError("The config must contain an 'elements_in' whitelist indicating the analyser's input.")
+        elif type(config["elements_in"]) is not list or len(config["elements_in"]) is 0:
+            raise InvalidAnalyserConfigError("The 'elements_in' whitelist must be a list containing at least one string")
+
+        if type(module) is not str or module == "":
+            raise InvalidAnalyserConfigError("You must provide a name for your analyser")
+
+        if type(dir) is not str:
+            raise InvalidAnalyserConfigError("You must provide a valid directory path")
+
         self.CONFIG = config
 
     @abstractmethod
