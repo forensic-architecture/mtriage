@@ -4,7 +4,11 @@ import pandas as pd
 import os
 import shutil
 import unittest
-from lib.common.exceptions import ElementShouldRetryError, ElementShouldSkipError, SelectorIndexError
+from lib.common.exceptions import (
+    ElementShouldRetryError,
+    ElementShouldSkipError,
+    SelectorIndexError,
+)
 from test.utils import TEMP_ELEMENT_DIR, scaffold_empty, cleanup
 
 
@@ -18,7 +22,6 @@ class EmptySelector(Selector):
 
     def retrieve_element(self, element, config):
         pass
-
 
 
 class TestEmptySelector(unittest.TestCase):
@@ -42,8 +45,12 @@ class TestEmptySelector(unittest.TestCase):
         self.assertEqual(TEMP_ELEMENT_DIR, self.emptySelector.BASE_DIR)
         self.assertEqual("empty", self.emptySelector.NAME)
         self.assertEqual(f"{TEMP_ELEMENT_DIR}/empty", self.emptySelector.DIR)
-        self.assertEqual(f"{TEMP_ELEMENT_DIR}/empty/data", self.emptySelector.ELEMENT_DIR)
-        self.assertEqual(f"{TEMP_ELEMENT_DIR}/empty/element_map.csv", self.emptySelector.ELEMENT_MAP)
+        self.assertEqual(
+            f"{TEMP_ELEMENT_DIR}/empty/data", self.emptySelector.ELEMENT_DIR
+        )
+        self.assertEqual(
+            f"{TEMP_ELEMENT_DIR}/empty/element_map.csv", self.emptySelector.ELEMENT_MAP
+        )
         self.assertTrue(os.path.exists(self.emptySelector.ELEMENT_DIR))
 
     def test_index(self):
