@@ -4,6 +4,12 @@ import pandas as pd
 import os
 import shutil
 import unittest
+from lib.common.exceptions import (
+    ElementShouldRetryError,
+    ElementShouldSkipError,
+    SelectorIndexError,
+)
+from test.utils import TEMP_ELEMENT_DIR, scaffold_empty, cleanup
 
 
 class EmptySelector(Selector):
@@ -21,11 +27,11 @@ class EmptySelector(Selector):
 class TestEmptySelector(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.emptySelector = EmptySelector({}, "empty", "test")
+        self.emptySelector = EmptySelector({}, "empty", TEMP_ELEMENT_DIR)
 
     @classmethod
     def tearDownClass(self):
-        shutil.rmtree(self.emptySelector.DIR)
+        cleanup()
         self.emptySelector = None
 
     def test_selector_imports(self):
@@ -33,14 +39,18 @@ class TestEmptySelector(unittest.TestCase):
 
     def test_cannot_instantiate(self):
         with self.assertRaises(TypeError):
-            Selector({}, "empty", "test")
+            Selector({}, "empty", TEMP_ELEMENT_DIR)
 
     def test_init(self):
-        self.assertEqual("test", self.emptySelector.BASE_DIR)
+        self.assertEqual(TEMP_ELEMENT_DIR, self.emptySelector.BASE_DIR)
         self.assertEqual("empty", self.emptySelector.NAME)
-        self.assertEqual("test/empty", self.emptySelector.DIR)
-        self.assertEqual("test/empty/data", self.emptySelector.ELEMENT_DIR)
-        self.assertEqual("test/empty/element_map.csv", self.emptySelector.ELEMENT_MAP)
+        self.assertEqual(f"{TEMP_ELEMENT_DIR}/empty", self.emptySelector.DIR)
+        self.assertEqual(
+            f"{TEMP_ELEMENT_DIR}/empty/data", self.emptySelector.ELEMENT_DIR
+        )
+        self.assertEqual(
+            f"{TEMP_ELEMENT_DIR}/empty/element_map.csv", self.emptySelector.ELEMENT_MAP
+        )
         self.assertTrue(os.path.exists(self.emptySelector.ELEMENT_DIR))
 
     def test_index(self):

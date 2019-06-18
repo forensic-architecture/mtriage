@@ -196,6 +196,9 @@ def build(args):
 
 
 def develop(args):
+    TAG_NAME = "dev-gpu" if args.gpu else "dev"
+    # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
+    # so that the call arguments are well formed.
     try:
         DOCKER.containers.get(CONT_NAME)
         print("Develop container already running. Stop it and try again.")
@@ -207,7 +210,7 @@ def develop(args):
                 "-it",
                 "--name",
                 CONT_NAME,
-                "--runtime=nvidia" if IS_GPU else "",
+                "--runtime=nvidia" if args.gpu else "--ipc=host",
                 "--env",
                 "BASE_DIR=/mtriage",
                 "--env-file={}".format(ENV_FILE),
