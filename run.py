@@ -246,6 +246,7 @@ def __run_lib_tests():
             "python",
             "-m",
             "pytest",
+            "test",
         ]
     )
     if returncode is 1:

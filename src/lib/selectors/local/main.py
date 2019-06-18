@@ -51,7 +51,7 @@ class LocalSelector(Selector):
                         "name": f[0],
                         "extension": f[1],
                         "path": os.path.join(root, file),
-                        "element_id": f"{f[0]}{f[1]}",
+                        "id": f"{f[0]}{f[1]}",
                     }
                 )
                 self.logger("indexed file: " + os.path.join(root, file))

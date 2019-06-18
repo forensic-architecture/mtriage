@@ -30,12 +30,12 @@ class ErrorThrowingSelector(Selector):
             return scaffold_elementmap(elements)
 
     def retrieve_element(self, element, config):
-        if element["element_id"] == "skip":
+        if element["id"] == "skip":
             raise ElementShouldSkipError("test")
-        elif element["element_id"] == "retry3" and self.retryCount < 3:
+        elif element["id"] == "retry3" and self.retryCount < 3:
             self.retryCount += 1
             raise ElementShouldRetryError("test")
-        elif element["element_id"] == "retryN":
+        elif element["id"] == "retryN":
             raise ElementShouldRetryError("test")
         else:
             pass
@@ -75,11 +75,11 @@ class TestSelectorErrors(unittest.TestCase):
 
     def test_retrieve_skip_error(self):
         with self.assertRaisesRegex(ElementShouldSkipError, "test - skipping element"):
-            self.retrieveErrorSelector.retrieve_element({"element_id": "skip"}, {})
+            self.retrieveErrorSelector.retrieve_element({"id": "skip"}, {})
 
     def test_retrieve_retry_error(self):
         with self.assertRaisesRegex(ElementShouldRetryError, "test - attempt retry"):
-            self.retrieveErrorSelector.retrieve_element({"element_id": "retryN"}, {})
+            self.retrieveErrorSelector.retrieve_element({"id": "retryN"}, {})
 
     def test_integration(self):
         self.assertEqual(self.retrieveErrorSelector.retryCount, 0)

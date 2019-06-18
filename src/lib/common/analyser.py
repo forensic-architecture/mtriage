@@ -6,7 +6,12 @@ import numpy as np
 from abc import ABC, abstractmethod
 from pathlib import Path
 from lib.common.util import save_logs
-from lib.common.exceptions import ElementShouldSkipError, ElementShouldRetryError
+from lib.common.exceptions import (
+    ElementShouldSkipError,
+    ElementShouldRetryError,
+    InvalidAnalyserConfigError,
+    MTriageStorageCorruptedError,
+)
 from lib.common.mtmodule import MTModule
 
 
@@ -54,7 +59,28 @@ class Analyser(MTModule):
     DERIVED_EXT = "derived"
 
     def __init__(self, config, module, dir):
-        super().__init__(module, dir)
+        try:
+            super().__init__(module, dir)
+        except PermissionError as e:
+            raise InvalidAnalyserConfigError("You must provide a valid directory path")
+
+        if not "elements_in" in config:
+            raise InvalidAnalyserConfigError(
+                "The config must contain an 'elements_in' whitelist indicating the analyser's input."
+            )
+        elif type(config["elements_in"]) is not list or len(config["elements_in"]) is 0:
+            raise InvalidAnalyserConfigError(
+                "The 'elements_in' whitelist must be a list containing at least one string"
+            )
+
+        if type(module) is not str or module == "":
+            raise InvalidAnalyserConfigError(
+                "You must provide a name for your analyser"
+            )
+
+        if type(dir) is not str:
+            raise InvalidAnalyserConfigError("You must provide a valid directory path")
+
         self.CONFIG = config
 
     @abstractmethod
@@ -69,10 +95,15 @@ class Analyser(MTModule):
         return NotImplemented
 
     def start_analysing(self):
-        self.__pre_analyse()
-        derived_dirs = self.__analyse()
-        self.__post_analyse(derived_dirs)
-        self.save_and_clear_logs()
+        # generic error handling protocol may get undescriptive in development
+        # should probably toggle off during development
+        try:
+            self.__pre_analyse()
+            derived_dirs = self.__analyse()
+            self.__post_analyse(derived_dirs)
+            self.save_and_clear_logs()
+        except:
+            raise MTriageStorageCorruptedError()
 
     def pre_analyse(self, config):
         """option to set up class variables"""
@@ -237,13 +268,15 @@ class Analyser(MTModule):
         try:
             self.analyse_element(element, config)
         except ElementShouldSkipError as e:
+            os.rmdir(element["dest"])
             self.error_logger(str(e), element)
             return
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
-                return self.attempt_analyse(attempts - 1, element, config)
+                return self.__attempt_analyse(attempts - 1, element, config)
             else:
+                os.rmdir(element["dest"])
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
                 )

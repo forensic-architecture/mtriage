@@ -57,3 +57,10 @@ class ImproperLoggedPhaseError(Exception):
             f"""The method '{fname}' does not belong to a class that inherits from MTModule. The
                         logged_phase decorator can only be applied to methods on such a class."""
         )
+
+
+class MTriageStorageCorruptedError(Exception):
+    def __init__(self, fname):
+        super().__init__(
+            "MTriage encountered an unexpected file structure in selectors or analysers. Ensure you specified the correct working directory."
+        )
