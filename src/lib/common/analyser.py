@@ -4,6 +4,7 @@ import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
 from lib.common.util import save_logs
+from lib.common.etypes import cast_to_etype
 from lib.common.exceptions import (
     ElementShouldSkipError,
     ElementShouldRetryError,
@@ -96,6 +97,7 @@ class Analyser(MTModule):
         # generic error handling protocol may get undescriptive in development
         # should probably toggle off during development
         try:
+            # cast to etype
             self.__pre_analyse()
             derived_dirs = self.__analyse()
             self.__post_analyse(derived_dirs)
@@ -123,6 +125,7 @@ class Analyser(MTModule):
 
         derived_dirs = set([])
         for element in elements:
+
             # TODO: create try/catch infrastructure to delete this dir if there is an error.
             if not os.path.exists(element["dest"]):
                 os.makedirs(element["dest"])

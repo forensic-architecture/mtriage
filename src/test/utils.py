@@ -39,11 +39,17 @@ def listOfDictsEqual(l1, l2):
     if len(l1) != len(l2):
         return False
 
-    _l1 = [json.dumps(x, sort_keys=True, indent=2) for x in l1]
-    _l2 = [json.dumps(x, sort_keys=True, indent=2) for x in l2]
-
-    for idx in range(len(_l1)):
-        if _l1[idx] != _l2[idx]:
+    for d1, d2 in zip(l1, l2):
+        if not dictsEqual(d1, d2):
             return False
 
     return True
+
+def dictsEqual(d1, d2):
+    if len(d1.keys()) != len(d2.keys()):
+        return False
+
+    d1json = json.dumps(d1, sort_keys=True, default=str)
+    d2json = json.dumps(d2, sort_keys=True, default=str)
+
+    return d1json == d2json

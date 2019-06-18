@@ -1,10 +1,12 @@
 from lib.common.selector import Selector
 import os
 import unittest
+from lib.common.etypes import cast_to_etype, Etype
 from lib.common.exceptions import (
     ElementShouldRetryError,
     ElementShouldSkipError,
     SelectorIndexError,
+    EtypeCastError,
 )
 from test.utils import (
     TEMP_ELEMENT_DIR,
@@ -12,10 +14,11 @@ from test.utils import (
     scaffold_elementmap,
     cleanup,
     get_element_path,
+    dictsEqual,
 )
 
 
-class ErrorThrowingSelector(Selector):
+class BasicErrorSelector(Selector):
     def __init__(self, *args):
         super().__init__(*args)
         self.retryCount = 0
@@ -39,6 +42,12 @@ class ErrorThrowingSelector(Selector):
         else:
             pass
 
+class RetrieveErrorSelector(BasicErrorSelector):
+    def retrieve_element(self, element, config):
+        super().retrieve_element(element, config)
+        with open(f"{element['base']}/out.txt", "w") as f:
+            f.write("something")
+
 
 class BadIndexSelector(Selector):
     def index(self, config):
@@ -54,13 +63,19 @@ class TestSelectorErrors(unittest.TestCase):
     def setUpClass(self):
         indexModule = "indexErrorSelector"
         indexConfig = {"error": "index"}
-        self.indexErrorSelector = ErrorThrowingSelector(
+        self.indexErrorSelector = BasicErrorSelector(
             indexConfig, indexModule, TEMP_ELEMENT_DIR
+        )
+
+        castModule = "castErrorSelector"
+        castConfig = {}
+        self.castErrorSelector = BasicErrorSelector(
+            castConfig, castModule, TEMP_ELEMENT_DIR
         )
 
         retrieveModule = "retrieveErrorSelector"
         retrieveConfig = {}
-        self.retrieveErrorSelector = ErrorThrowingSelector(
+        self.retrieveErrorSelector = RetrieveErrorSelector(
             retrieveConfig, retrieveModule, TEMP_ELEMENT_DIR
         )
 
@@ -74,14 +89,31 @@ class TestSelectorErrors(unittest.TestCase):
 
     def test_retrieve_skip_error(self):
         with self.assertRaisesRegex(ElementShouldSkipError, "test - skipping element"):
-            self.retrieveErrorSelector.retrieve_element({"id": "skip"}, {})
+            self.castErrorSelector.retrieve_element({"id": "skip"}, {})
 
     def test_retrieve_retry_error(self):
         with self.assertRaisesRegex(ElementShouldRetryError, "test - attempt retry"):
-            self.retrieveErrorSelector.retrieve_element({"id": "retryN"}, {})
+            self.castErrorSelector.retrieve_element({"id": "retryN"}, {})
 
-    def test_integration(self):
-        self.assertEqual(self.retrieveErrorSelector.retryCount, 0)
+    def test_integration_1(self):
+        self.assertEqual(self.castErrorSelector.retryCount, 0)
+        self.castErrorSelector.start_indexing()
+        self.castErrorSelector.start_retrieving()
+
+        skip_path = get_element_path("castErrorSelector", "skip")
+        self.assertFalse(os.path.exists(skip_path))
+
+        retryn_path = get_element_path("castErrorSelector", "retryN")
+        self.assertFalse(os.path.exists(retryn_path))
+
+        retry3_path = get_element_path("castErrorSelector", "retry3")
+        self.assertEqual(self.castErrorSelector.retryCount, 3)
+        self.assertFalse(os.path.exists(retry3_path))
+
+        pass_path = get_element_path("castErrorSelector", "pass")
+        self.assertFalse(os.path.exists(pass_path))
+
+    def test_integration_2(self):
         self.retrieveErrorSelector.start_indexing()
         self.retrieveErrorSelector.start_retrieving()
 
@@ -97,3 +129,18 @@ class TestSelectorErrors(unittest.TestCase):
 
         pass_path = get_element_path("retrieveErrorSelector", "pass")
         self.assertTrue(os.path.exists(pass_path))
+
+        etype = cast_to_etype(retry3_path, Etype.Any)
+        expected = {
+            "base": retry3_path,
+            "etype": Etype.Any,
+            "media": {
+                "all":[f"{retry3_path}/out.txt"]
+            }
+        }
+        self.assertTrue(dictsEqual(etype, expected))
+
+    # def test_etype_cast_error(self):
+    #     with self.assertRaisesRegex(EtypeCastError, "Failed to cast - retrieved element was not Etype.Any"):
+    #         # TODO:
+    #         pass

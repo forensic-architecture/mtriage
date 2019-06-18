@@ -9,8 +9,9 @@ from lib.common.exceptions import (
     ElementShouldRetryError,
     ElementShouldSkipError,
     SelectorIndexError,
+    EtypeCastError
 )
-from test.utils import TEMP_ELEMENT_DIR, scaffold_empty, cleanup
+from test.utils import TEMP_ELEMENT_DIR, scaffold_empty, cleanup, get_element_path
 
 
 class EmptySelector(Selector):
@@ -64,4 +65,9 @@ class TestEmptySelector(unittest.TestCase):
 
     def test_start_retrieving(self):
         self.emptySelector.start_retrieving()
-        # TODO: test something
+        path1 = get_element_path(self.emptySelector.NAME, "el1")
+        path2 = get_element_path(self.emptySelector.NAME, "el2")
+        path3 = get_element_path(self.emptySelector.NAME, "el3")
+        self.assertFalse(os.path.exists(path1))
+        self.assertFalse(os.path.exists(path2))
+        self.assertFalse(os.path.exists(path3))

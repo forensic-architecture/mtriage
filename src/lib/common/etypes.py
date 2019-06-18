@@ -54,10 +54,10 @@ def get_video_media(el_path):
 
 
 def get_audio_media(el_path):
-    return {"audio": globit(el_path, "*.([mM][pP][3])|([wW][aA][vV])"), is_single=True}
+    return {"audio": globit(el_path, "*.([mM][pP][3])|([wW][aA][vV])", is_single=True)}
 
 def get_json_media(el_path):
-    return {"json": globit(el_path, "*.[jJ][sS][oO][nN]"), is_single=True}
+    return {"json": globit(el_path, "*.[jJ][sS][oO][nN]", is_single=True)}
 
 def get_imagearray_media(el_path):
     return {"images": globit(el_path, "*.[bB][mM][pP]")}
