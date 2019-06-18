@@ -1,7 +1,6 @@
 import glob
 import os
 import shutil
-import numpy as np
 from abc import ABC, abstractmethod
 from pathlib import Path
 from lib.common.util import save_logs
@@ -151,7 +150,7 @@ class Analyser(MTModule):
                 "dest": f"{outdir}/{key}",
             }
 
-        return np.array(list(map(derive_el, list(data_obj.keys()))))
+        return list(map(derive_el, list(data_obj.keys())))
 
     def __get_elements(self, media):
         """ Derive which elements to use from available media base on the ELEMENTS_IN attr in self.CONFIG.
@@ -159,23 +158,21 @@ class Analyser(MTModule):
         whitelist = self.CONFIG["elements_in"]
         cmps = paths_to_components(whitelist)
 
-        elements = np.array([])
+        elements = []
         for _cmp in cmps:
             outdir = self.__get_derived_dir(_cmp[0])
 
             if _cmp[1] is None:
                 # None in component indicates that 'raw' data from selector should be used.
-                elements = np.append(
-                    elements,
-                    self.__derive_elements(media[_cmp[0]][self.DATA_EXT], outdir),
+                elements.extend(
+                    self.__derive_elements(media[_cmp[0]][self.DATA_EXT], outdir)
                 )
             else:
                 # component points to derived data
-                elements = np.append(
-                    elements,
+                elements.extend(
                     self.__derive_elements(
                         media[_cmp[0]][self.DERIVED_EXT][_cmp[1]], outdir
-                    ),
+                    )
                 )
 
         return elements
