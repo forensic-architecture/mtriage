@@ -30,8 +30,10 @@ def scaffold_elementmap(elements=[]):
     out.insert(0, ["id"])
     return out
 
+
 def cleanup():
     shutil.rmtree(TEMP_ELEMENT_DIR)
+
 
 def listOfDictsEqual(l1, l2):
     if len(l1) != len(l2):
