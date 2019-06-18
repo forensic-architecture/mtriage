@@ -14,7 +14,6 @@ from test.utils import (
     cleanup,
     get_element_path,
 )
-import pandas
 
 
 class ErrorThrowingAnalyser(Analyser):

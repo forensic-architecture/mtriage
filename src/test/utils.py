@@ -1,5 +1,4 @@
 import os
-import pandas as pd
 from lib.common.analyser import Analyser
 import shutil
 
@@ -26,9 +25,9 @@ def get_element_path(selname, elementId, analyser=None):
 
 
 def scaffold_elementmap(elements=[]):
-    rows = list(map(lambda elid: {"id": elid}, elements))
-    return pd.DataFrame(rows)
-
+    out = [[x] for x in elements]
+    out.insert(0, ["id"])
+    return out
 
 def cleanup():
     shutil.rmtree(TEMP_ELEMENT_DIR)
