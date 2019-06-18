@@ -61,6 +61,6 @@ class MTModule(ABC):
     def __get_context(self, element):
         context = f"{self.NAME}: {self.PHASE_KEY}: "
         if element != None:
-            el_id = element["element_id"]
+            el_id = element["id"]
             context = context + f"{el_id}: "
         return context

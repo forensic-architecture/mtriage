@@ -99,14 +99,14 @@ class YoutubeSelector(Selector):
             desc = search_result["snippet"]["description"]
             publishedAt = search_result["snippet"]["publishedAt"]
             url = f"https://www.youtube.com/watch?v={videoId}"
-            element_id = self._id_from_url(url)
+            id = self._id_from_url(url)
             csv_obj.append(
                 {
                     "url": url,
                     "title": title.replace(",", ";"),
                     "desc": desc.replace(",", ";"),
                     "published": publishedAt[0:10],
-                    "element_id": element_id,
+                    "id": id,
                 }
             )
         return csv_obj

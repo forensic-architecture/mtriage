@@ -26,7 +26,7 @@ def get_element_path(selname, elementId, analyser=None):
 
 
 def scaffold_elementmap(elements=[]):
-    rows = list(map(lambda elid: {"element_id": elid}, elements))
+    rows = list(map(lambda elid: {"id": elid}, elements))
     return pd.DataFrame(rows)
 
 

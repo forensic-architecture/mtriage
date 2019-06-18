@@ -15,7 +15,7 @@ from test.utils import TEMP_ELEMENT_DIR, scaffold_empty, cleanup
 class EmptySelector(Selector):
     def index(self, config):
         if not os.path.exists(self.ELEMENT_MAP):
-            df = pd.DataFrame([{"element_id": "test"}])
+            df = pd.DataFrame([{"id": "test"}])
             return df
         else:
             return None
