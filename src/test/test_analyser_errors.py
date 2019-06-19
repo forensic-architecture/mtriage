@@ -106,8 +106,8 @@ class TestAnalyserErrors(unittest.TestCase):
         pass_path = get_element_path(self.selname, "pass", analyser=self.an.NAME)
         self.assertTrue(os.path.exists(pass_path))
 
-    # def test_bad_whitelist(self):
-    #     badConfig = {"elements_in": ["sel1/an1/el1"]}
-    #     badAn = EmptyAnalyser(badConfig, "whitelistErrorAnalyser", TEMP_ELEMENT_DIR)
-    #     with self.assertRaisesRegex(InvalidElementsIn, "elements_in 'sel1/an1/el1' is not valid"):
-    #         badAn.start_analysing()
+    def test_bad_whitelist(self):
+        badConfig = {"elements_in": ["sel1/an1/el1"]}
+        badAn = EmptyAnalyser(badConfig, "whitelistErrorAnalyser", TEMP_ELEMENT_DIR)
+        with self.assertRaisesRegex(InvalidElementsIn, "elements_in 'sel1/an1/el1' is not valid"):
+            badAn.start_analysing()

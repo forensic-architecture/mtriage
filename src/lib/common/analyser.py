@@ -89,13 +89,10 @@ class Analyser(MTModule):
     def start_analysing(self):
         # NOTE: generic error handling protocol may get undescriptive in development
         # should probably toggle off during development
-        try:
-            self.__pre_analyse()
-            self.__analyse()
-            self.__post_analyse()
-            self.save_and_clear_logs()
-        except:
-            raise MTriageStorageCorruptedError()
+        self.__pre_analyse()
+        self.__analyse()
+        self.__post_analyse()
+        self.save_and_clear_logs()
 
     def pre_analyse(self, config):
         """option to set up class variables"""
@@ -145,17 +142,19 @@ class Analyser(MTModule):
         elements = self.__get_in_elements(all_media)
 
         for element in elements:
-            self.__attempt_analyse(5, element, self.CONFIG)
+            success = self.__attempt_analyse(5, element, self.CONFIG)
+            if not success:
+                shutil.rmtree(element["dest"])
 
     @MTModule.logged_phase("post-analyse")
     def __post_analyse(self):
         self.post_analyse(self.CONFIG, self.__get_out_dirs())
 
-    def __flatten_and_cast_elements(self, element_dict, outdir):
+    def __cast_elements(self, element_dict, outdir):
         def attempt_cast_el(key):
             el_path = element_dict[key]
             etyped_attrs = cast_to_etype(el_path, self.get_in_etype())
-            return {"id": key, "dest": outdir, **etyped_attrs}
+            return {"id": key, "dest": f"{outdir}/{key}", **etyped_attrs}
 
         els = []
         for key in element_dict.keys():
@@ -185,8 +184,9 @@ class Analyser(MTModule):
     def __get_in_elements(self, media):
         whitelist = self.CONFIG["elements_in"]
         etyped_elements = []
+        in_cmps = self.__get_in_cmps()
 
-        for _cmp in self.__get_in_cmps():
+        for _cmp in in_cmps:
             selname = _cmp[0]
             analysername = _cmp[1]
             outdir = self.__get_out_dir(selname)
@@ -197,7 +197,7 @@ class Analyser(MTModule):
                 if is_selector
                 else media[selname][self.DERIVED_EXT][analysername]
             )
-            _etyped_elements = self.__flatten_and_cast_elements( element_dict, outdir)
+            _etyped_elements = self.__cast_elements(element_dict, outdir)
             etyped_elements.extend(_etyped_elements)
 
         return etyped_elements
@@ -245,8 +245,6 @@ class Analyser(MTModule):
                 if os.path.isdir(os.path.join(data_pass, f))
             ]
 
-            print(_elements)
-
             for el_id in _elements:
                 all_media[selector][Analyser.DATA_EXT][el_id] = f"{data_pass}/{el_id}"
 
@@ -286,24 +284,24 @@ class Analyser(MTModule):
         return derived_dir
 
     def __attempt_analyse(self, attempts, element, config):
-        if not os.path.exists(element["base"]):
-            os.makedirs(element["base"])
+        dest = element["dest"]
+        if not os.path.exists(dest):
+            os.makedirs(dest)
         try:
             self.analyse_element(element, config)
+            return True
         except ElementShouldSkipError as e:
-            shutil.rmtree(element["base"])
             self.error_logger(str(e), element)
-            return
+            return False
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
                 return self.__attempt_analyse(attempts - 1, element, config)
             else:
-                shutil.rmtree(element["base"])
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
                 )
-                return
+                return False
         except Exception as e:
             dev = config["dev"] if "dev" in config else False
             if dev:
@@ -312,7 +310,7 @@ class Analyser(MTModule):
                 self.error_logger(
                     "unknown exception raised - skipping element", element
                 )
-                return
+                return False
 
     # STATIC METHODS
     @staticmethod
