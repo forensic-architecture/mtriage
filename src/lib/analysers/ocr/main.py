@@ -44,7 +44,7 @@ class OcrAnalyser(Analyser):
 
     def analyse_element(self, element, config):
         dest = element["dest"]
-        input_frames element["media"]["images"]
+        input_frames = element["media"]["images"]
 
         # NOTE: MAX_REQUESTS is mainly an optionality passed for debugging, so that we don't
         # run GCP analysis on all frames of a video when testing.
