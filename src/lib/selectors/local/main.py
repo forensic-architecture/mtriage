@@ -17,6 +17,7 @@ class LocalSelector(Selector):
     directory to be accessible inside the docker container (the temp
     folder is recommended).
     """
+
     def index(self, config):
 
         if not os.path.exists(self.ELEMENT_MAP):

@@ -3,7 +3,11 @@ import csv
 from abc import abstractmethod
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
-from lib.common.exceptions import ElementShouldRetryError, ElementShouldSkipError, EtypeCastError
+from lib.common.exceptions import (
+    ElementShouldRetryError,
+    ElementShouldSkipError,
+    EtypeCastError,
+)
 from lib.common.etypes import cast_to_etype
 import shutil
 
@@ -106,7 +110,9 @@ class Selector(MTModule):
                 try:
                     cast_to_etype(element["base"], etype)
                 except EtypeCastError:
-                    self.error_logger(f"Failed to cast - retrieved element was not {etype}", element)
+                    self.error_logger(
+                        f"Failed to cast - retrieved element was not {etype}", element
+                    )
                     shutil.rmtree(element["base"])
             else:
                 shutil.rmtree(element["base"])

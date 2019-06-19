@@ -41,7 +41,7 @@ def globit(path, regex, is_single=False, etype=None):
     elif is_single:
         return glob[0]
 
-    return glob
+    return [str(x) for x in glob]
 
 
 def get_any(el_path):

@@ -42,6 +42,7 @@ class BasicErrorSelector(Selector):
         else:
             pass
 
+
 class RetrieveErrorSelector(BasicErrorSelector):
     def retrieve_element(self, element, config):
         super().retrieve_element(element, config)
@@ -134,9 +135,7 @@ class TestSelectorErrors(unittest.TestCase):
         expected = {
             "base": retry3_path,
             "etype": Etype.Any,
-            "media": {
-                "all":[f"{retry3_path}/out.txt"]
-            }
+            "media": {"all": [f"{retry3_path}/out.txt"]},
         }
         self.assertTrue(dictsEqual(etype, expected))
 

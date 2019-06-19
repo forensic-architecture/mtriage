@@ -20,6 +20,7 @@ class YoloV3Analyser(Analyser):
     """ Adapted from eriklindernoren/PyTorch-YOLOv3. See https://github.com/breezykermo/PyTorch-YOLOv3
         for reference implementation.
     """
+
     def get_in_etype(self):
         return Etype.AnnotatedImageArray
 

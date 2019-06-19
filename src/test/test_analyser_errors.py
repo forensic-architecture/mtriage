@@ -39,7 +39,7 @@ class TestAnalyserErrors(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.selname = "stub_sel"
-        elements=["skip", "retry3", "retryN", "pass"]
+        elements = ["skip", "retry3", "retryN", "pass"]
         scaffold_empty(self.selname, elements=elements)
         for element in elements:
             with open(f"{get_element_path(self.selname, element)}/out.txt", "w") as f:
@@ -47,7 +47,9 @@ class TestAnalyserErrors(unittest.TestCase):
 
         goodConfig = {"elements_in": [self.selname]}
 
-        self.an = ErrorThrowingAnalyser(goodConfig, "analyserErrorSelector", TEMP_ELEMENT_DIR)
+        self.an = ErrorThrowingAnalyser(
+            goodConfig, "analyserErrorSelector", TEMP_ELEMENT_DIR
+        )
 
     @classmethod
     def tearDownClass(self):
@@ -68,7 +70,8 @@ class TestAnalyserErrors(unittest.TestCase):
         good = {"elements_in": ["selname"]}
 
         with self.assertRaisesRegex(
-            InvalidAnalyserConfigError, "must contain an 'elements_in' indicating the analyser's input"
+            InvalidAnalyserConfigError,
+            "must contain an 'elements_in' indicating the analyser's input",
         ):
             no_elements_in = ErrorThrowingAnalyser(bad0, "stub", TEMP_ELEMENT_DIR)
 
@@ -109,5 +112,7 @@ class TestAnalyserErrors(unittest.TestCase):
     def test_bad_whitelist(self):
         badConfig = {"elements_in": ["sel1/an1/el1"]}
         badAn = EmptyAnalyser(badConfig, "whitelistErrorAnalyser", TEMP_ELEMENT_DIR)
-        with self.assertRaisesRegex(InvalidElementsIn, "elements_in 'sel1/an1/el1' is not valid"):
+        with self.assertRaisesRegex(
+            InvalidElementsIn, "elements_in 'sel1/an1/el1' is not valid"
+        ):
             badAn.start_analysing()

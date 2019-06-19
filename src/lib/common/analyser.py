@@ -32,12 +32,14 @@ def get_img_paths(path):
 
 def check_valid_element_folder(comp, element_dir):
     try:
-        _,dirs,files = next(os.walk(element_dir))
+        _, dirs, files = next(os.walk(element_dir))
         if len(dirs) == 0 or len(files) > 0:
             raise Exception()
     except:
-        raise InvalidElementsIn(comp, "The folder it represents contains no elements or is otherwise corrupted.")
-
+        raise InvalidElementsIn(
+            comp,
+            "The folder it represents contains no elements or is otherwise corrupted.",
+        )
 
 
 class Analyser(MTModule):
@@ -120,14 +122,22 @@ class Analyser(MTModule):
                 all_parts.append((selname, None))
             elif len(parts) is 2:
                 if "" in parts:
-                    raise InvalidElementsIn(comp, "If you include a '/' in a component, it must be followed by an analyser")
+                    raise InvalidElementsIn(
+                        comp,
+                        "If you include a '/' in a component, it must be followed by an analyser",
+                    )
                 selname = parts[0]
                 analysername = parts[1]
-                element_dir = f"{self.BASE_DIR}/{selname}/{Analyser.DERIVED_EXT}/{analysername}"
+                element_dir = (
+                    f"{self.BASE_DIR}/{selname}/{Analyser.DERIVED_EXT}/{analysername}"
+                )
                 check_valid_element_folder(comp, element_dir)
                 all_parts.append((selname, analysername))
             else:
-                raise InvalidElementsIn(comp, "It must be a list of strings in the format 'selector_name/analyser_name', where the analyser_name is optional.")
+                raise InvalidElementsIn(
+                    comp,
+                    "It must be a list of strings in the format 'selector_name/analyser_name', where the analyser_name is optional.",
+                )
 
         return all_parts
 

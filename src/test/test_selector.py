@@ -9,7 +9,7 @@ from lib.common.exceptions import (
     ElementShouldRetryError,
     ElementShouldSkipError,
     SelectorIndexError,
-    EtypeCastError
+    EtypeCastError,
 )
 from test.utils import TEMP_ELEMENT_DIR, scaffold_empty, cleanup, get_element_path
 
