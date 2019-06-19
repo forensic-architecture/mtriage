@@ -1,4 +1,5 @@
 import os
+from shutil import copyfile
 import cv2
 import numpy as np
 from imutils.video import FileVideoStream
@@ -83,14 +84,10 @@ class FramesAnalyser(Analyser):
     def analyse_element(self, element, config):
         FPS_NUMBER = int(config["fps"])
         dest = element["dest"]
-        media = Analyser.find_video_paths(element["src"])
-
-        if len(media) is not 1:
-            raise ElementShouldSkipError(
-                "The frames analyser can only operate on elements that contain one and only one video."
-            )
-
-        video = media[0]
+        json = element["media"]["json"]
+        video = element["media"]["video"]
 
         ffmpeg_frames(dest, video, FPS_NUMBER)
+        copyfile(json, f"{dest}/meta.json")
+
         self.logger(f"Frames successfully created for element {element}.")

@@ -1,5 +1,5 @@
 from lib.common.exceptions import InvalidAnalyserConfigError
-from lib.common.analyser import Analyser, get_img_paths
+from lib.common.analyser import Analyser
 from lib.common.util import vuevis_prepare_el, deduce_frame_no
 from lib.common.etypes import Etype
 from keras.preprocessing import image
@@ -36,7 +36,7 @@ class Resnet50Analyser(Analyser):
         self.model = impmodel(weights="imagenet")
 
     def analyse_element(self, element, config):
-        imgs = get_img_paths(element["src"])
+        imgs = element["media"]["images"]
         labels = {}
 
         self.logger(f"Running inference on frames in {element['id']}...")

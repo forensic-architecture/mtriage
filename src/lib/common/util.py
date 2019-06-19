@@ -12,20 +12,17 @@ def save_logs(logs, filepath):
                 f.write("\n")
 
 
+# NOTE: this should go to a viewer's util
 def vuevis_prepare_el(element):
-    # NOTE: this logic hardcodes to videos produced from the youtube selector, which produces an accompanying
-    # meta.json with these fields (and many more)
-    out = {"id": element["id"]}
-    hacked_el_src = element["src"].replace("derived/frames", "data")
-
-    with open(f"{hacked_el_src}/meta.json", "r") as f:
+    el_meta = element["media"]["json"]
+    out = {}
+    with open(el_meta, "r") as f:
         f = json.load(f)
         out["title"] = f["title"]
         out["description"] = f["description"]
         out["webpage_url"] = f["webpage_url"]
         out["duration"] = f["duration"]
         out["upload_date"] = f["upload_date"]
-
     return out
 
 

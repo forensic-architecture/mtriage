@@ -72,6 +72,7 @@ class Selector(MTModule):
     @MTModule.logged_phase("index")
     def start_indexing(self):
         element_map = self.index(self.CONFIG)
+        # TODO: validate id column exists on csv for all rows
         if element_map is not None:
             with open(self.ELEMENT_MAP, "w") as f:
                 writer = csv.writer(f, delimiter=",")

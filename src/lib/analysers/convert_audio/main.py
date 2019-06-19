@@ -14,20 +14,11 @@ class ConvertAudioAnalyser(Analyser):
         return Etype.Audio
 
     def analyse_element(self, element, config):
-
-        src = element["src"]
         dest = element["dest"]
         key = element["id"]
         input_ext = config["input_ext"]
         output_ext = config["output_ext"]
-        media = list(Path(src).rglob(f"*.{input_ext}"))
-
-        if len(media) is not 1:
-            raise ElementShouldSkipError(
-                "The convert_audio analyser can only operate on elements that contain one and only one audio file."
-            )
-
-        audio = media[0]
+        audio = element["media"]["audio"]
 
         FNULL = open(os.devnull, "w")
         out = call(

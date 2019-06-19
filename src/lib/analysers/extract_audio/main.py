@@ -13,18 +13,9 @@ class ExtractAudioAnalyser(Analyser):
         return Etype.Audio
 
     def analyse_element(self, element, config):
-
         dest = element["dest"]
+        video = element["media"]["video"]
         key = element["id"]
-        media = Analyser.find_video_paths(element["src"])
-
-        if len(media) is not 1:
-            raise ElementShuoldSkipError(
-                "The strip_audio analyser can only operate on elements that contain one and only one video."
-            )
-
-        video = media[0]
-
         output_ext = config["output_ext"]
 
         FNULL = open(os.devnull, "w")

@@ -13,6 +13,7 @@ from torch.autograd import Variable
 from lib.analysers.yolov3.utils import *
 from lib.analysers.yolov3.models import Darknet
 from lib.common.analyser import Analyser
+from lib.common.etypes import Etype
 from lib.common.util import vuevis_prepare_el, deduce_frame_no
 
 
@@ -65,7 +66,7 @@ class YoloV3Analyser(Analyser):
             return
 
         dataloader = DataLoader(
-            ImageFolder(element["src"], img_size=self.IMG_SIZE),
+            ImageFolder(element["base"], img_size=self.IMG_SIZE),
             batch_size=self.BATCH_SIZE,
             shuffle=False,
             num_workers=self.N_CPU,
@@ -84,6 +85,7 @@ class YoloV3Analyser(Analyser):
         prev_time = time.time()
 
         # inference images in batches
+        # TODO: fix this loading
         for batch_i, (img_paths, input_imgs) in enumerate(dataloader):
             # Configure input
             input_imgs = Variable(input_imgs.type(Tensor))
