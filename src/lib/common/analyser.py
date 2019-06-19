@@ -10,8 +10,11 @@ from lib.common.exceptions import (
     ElementShouldRetryError,
     InvalidAnalyserConfigError,
     MTriageStorageCorruptedError,
+    InvalidWhitelist,
+    InvalidAnalyserElements,
 )
 from lib.common.mtmodule import MTModule
+from lib.common.etypes import Etype, cast_to_etype
 
 
 def get_json_paths(path):
@@ -26,25 +29,39 @@ def get_img_paths(path):
     return list(Path(path).rglob("*.[bB][mM][pP]"))
 
 
+def check_valid_element_folder(comp, dr):
+    _,dirs,files = os.walk(element_dir)[0]
+    if len(dirs) = 0 or len(files) > 0:
+        raise InvalidWhitelist(comp, "The folder it represents contains no elements or is otherwise corrupted.")
+
+
 def paths_to_components(whitelist):
     """ Take a list of input paths--of the form '{selector_name}/{?analyser_name}'-- and produces a list of components.
         Components are tuples whose first value is the name of a selector, and whose second value is either the name of
         an analyser, or None.
     """
-    all_cmps = []
-    for path in whitelist:
-        cmps = path.split("/")
+    all_parts = []
+    for comp in whitelist:
+        parts = comp.split("/")
 
-        if len(cmps) is 1:
-            all_cmps.append((cmps[0], None))
-        elif len(cmps) is 2:
-            all_cmps.append((cmps[0], cmps[1]))
+        if len(parts) is 1:
+            # check selector exists
+            selname = parts[0]
+            element_dir = f"{self.BASE}/{selname}/{Analyser.DATA_EXT}/"
+            check_valid_element_folder(comp, element_dir)
+            all_parts.append((selname, None))
+        elif len(parts) is 2:
+            if "" in parts:
+                raise InvalidWhitelist(comp, "If you include a '/' in a component, it must be followed by an analyser")
+            selname = parts[0]
+            analysername = parts[1]
+            element_dir = f"{self.BASE}/{selname}/{Analyser.DERIVED_EXT}/{analysername}"
+            check_valid_element_folder(comp, element_dir)
+            all_parts.append((selname, analysername))
         else:
-            # TODO: error handling...
-            raise Exception(
-                f"The path {path} in whitelist needs to be of the form '{{selector_name}}/{{analyser_name}}'."
-            )
-    return all_cmps
+            raise InvalidWhitelist(comp, "The whitelist must be a list of strings in the format 'selector_name/analyser_name', where the analyser_name is optional.")
+
+    return all_parts
 
 
 class Analyser(MTModule):
@@ -94,10 +111,9 @@ class Analyser(MTModule):
         return NotImplemented
 
     def start_analysing(self):
-        # generic error handling protocol may get undescriptive in development
+        # NOTE: generic error handling protocol may get undescriptive in development
         # should probably toggle off during development
         try:
-            # cast to etype
             self.__pre_analyse()
             derived_dirs = self.__analyse()
             self.__post_analyse(derived_dirs)
@@ -121,64 +137,92 @@ class Analyser(MTModule):
     @MTModule.logged_phase("analyse")
     def __analyse(self):
         all_media = self.__get_all_media()
-        elements = self.__get_elements(all_media)
+        elements = self.__get_whitelisted_elements(all_media)
 
-        derived_dirs = set([])
         for element in elements:
-
-            # TODO: create try/catch infrastructure to delete this dir if there is an error.
-            if not os.path.exists(element["dest"]):
-                os.makedirs(element["dest"])
-
             self.__attempt_analyse(5, element, self.CONFIG)
-            derived_dirs.add(element["derived_dir"])
-        return derived_dirs
 
     @MTModule.logged_phase("post-analyse")
     def __post_analyse(self, derived_dirs):
         self.post_analyse(self.CONFIG, derived_dirs)
 
-    def __derive_elements(self, data_obj, outdir):
-        """ An 'element' (as it is passed to the 'run_element' method that is exposed on analysers) is currently a
-            dictionary with the following attributes:
-                path: The path to the element that should be analysed.
-                dest: The path to the dir where element analysis should be printed.
-        """
+    def __flatten_and_cast_elements(self, element_dict, deriveddir):
+        def attempt_cast_el(key):
+            el_path = element_dict[key]
+            etyped_attrs = cast_to_etype(el_path, self.get_in_etype())
+            return {"id": key, **etyped_attrs}
 
-        def derive_el(key):
-            return {
-                "id": key,
-                "derived_dir": outdir,
-                "src": data_obj[key],
-                "dest": f"{outdir}/{key}",
-            }
+        els = []
+        for key in element_dict.keys():
+            try:
+                element = attempt_cast_el(key)
+                els.append(element)
+            except EtypeCastError as e:
+                self.error_logger(e.msg, element={"id": key})
 
-        return list(map(derive_el, list(data_obj.keys())))
+        if len(els) is 0:
+            raise InvalidAnalyserElements(
+                f"The elements in the whitelist you specified could not be cast to {self.get_in_etype()}, the input type for the {self.NAME} analyser."
+            )
 
-    def __get_elements(self, media):
-        """ Derive which elements to use from available media base on the ELEMENTS_IN attr in self.CONFIG.
-        """
+        return els
+
+    def __get_whitelisted_dirs(self, media):
         whitelist = self.CONFIG["elements_in"]
-        cmps = paths_to_components(whitelist)
+        dirs = set([])
+        for _cmp in paths_to_components(whitelist):
+            selname = _cmp[0]
+            analysername = _cmp[1]
+            deriveddir = self.__get_derived_dir(selname)
+            dirs.add(deriveddir)
+        return list(dirs)
 
-        elements = []
-        for _cmp in cmps:
-            outdir = self.__get_derived_dir(_cmp[0])
+    def __get_whitelisted_elements(self, media):
+        whitelist = self.CONFIG["elements_in"]
+        etyped_elements = []
 
-            if _cmp[1] is None:
-                # None in component indicates that 'raw' data from selector should be used.
-                elements.extend(
-                    self.__derive_elements(media[_cmp[0]][self.DATA_EXT], outdir)
-                )
-            else:
-                # component points to derived data
-                elements.extend(
-                    self.__derive_elements(
-                        media[_cmp[0]][self.DERIVED_EXT][_cmp[1]], outdir
-                    )
-                )
+        for _cmp in paths_to_components(whitelist):
+            selname = _cmp[0]
+            analysername = _cmp[1]
+            deriveddir = self.__get_derived_dir(selname)
+            is_selector = analysername is None
 
-        return elements
+            element_dict = (
+                media[selname][self.DATA_EXT]
+                if is_selector
+                else media[selname][self.DERIVED_EXT][analysername]
+            )
+            _etyped_elements = self.__flatten_and_cast_elements( element_dict, deriveddir)
+            etyped_elements.extend(_etyped_elements)
+
+        return etyped_elements
+
+    # def __get_elements(self, media):
+    #     """ Derive which elements to use from available media base on the ELEMENTS_IN attr in self.CONFIG.
+    #     """
+    #     whitelist = self.CONFIG["elements_in"]
+    #     cmps = paths_to_components(whitelist)
+    #
+    #     elements = []
+    #     for _cmp in cmps:
+    #         outdir = self.__get_derived_dir(_cmp[0])
+    #
+    #         if _cmp[1] is None:
+    #             # None in component indicates that 'raw' data from selector should be used.
+    #             elements.extend(
+    #                 self.__flatten_and_cast_elements(
+    #                     media[_cmp[0]][self.DATA_EXT], outdir
+    #                 )
+    #             )
+    #         else:
+    #             # component points to derived data
+    #             elements.extend(
+    #                 self.__flatten_and_cast_elements(
+    #                     media[_cmp[0]][self.DERIVED_EXT][_cmp[1]], outdir
+    #                 )
+    #             )
+    #
+    #     return elements
 
     def __get_all_media(self):
         """Get all available media by indexing the dir system from self.BASE_DIR.
@@ -223,6 +267,8 @@ class Analyser(MTModule):
                 if os.path.isdir(os.path.join(data_pass, f))
             ]
 
+            print(_elements)
+
             for el_id in _elements:
                 all_media[selector][Analyser.DATA_EXT][el_id] = f"{data_pass}/{el_id}"
 
@@ -258,16 +304,16 @@ class Analyser(MTModule):
     def __get_derived_dir(self, selector):
         """Returns the path to a derived dir from a string selector"""
         derived_dir = f"{self.BASE_DIR}/{selector}/{Analyser.DERIVED_EXT}/{self.NAME}"
-        if not os.path.exists(derived_dir):
-            os.makedirs(derived_dir)
 
         return derived_dir
 
     def __attempt_analyse(self, attempts, element, config):
+        if not os.path.exists(element["base"]):
+            os.makedirs(element["base"])
         try:
             self.analyse_element(element, config)
         except ElementShouldSkipError as e:
-            os.rmdir(element["dest"])
+            shutil.rmtree(element["base"])
             self.error_logger(str(e), element)
             return
         except ElementShouldRetryError as e:
@@ -275,7 +321,7 @@ class Analyser(MTModule):
             if attempts > 1:
                 return self.__attempt_analyse(attempts - 1, element, config)
             else:
-                os.rmdir(element["dest"])
+                shutil.rmtree(element["base"])
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
                 )

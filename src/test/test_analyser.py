@@ -1,5 +1,6 @@
 from lib.common.analyser import Analyser
 from lib.common.analyser import paths_to_components
+from test.utils import *
 from abc import ABC
 import os
 import shutil
@@ -13,6 +14,7 @@ class EmptyAnalyser(Analyser):
     def analyse_element(self, element, config):
         pass
 
+# TODO: test casting errors via an analyser with explicit etype
 
 class TestAnalyser(unittest.TestCase):
     @classmethod
@@ -21,22 +23,26 @@ class TestAnalyser(unittest.TestCase):
         self.DIR = "../tempdir"
         self.NAME = "empty"
         self.WHITELIST = ["sel1/an1", "sel1/an2", "sel2"]
-        os.makedirs(self.DIR)
-        os.makedirs(f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el1")
-        os.makedirs(f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el2")
-        os.makedirs(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1")
-        os.makedirs(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2")
-        os.makedirs(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el3")
-        os.makedirs(f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el4")
-        os.makedirs(f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el5")
-        os.makedirs(f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el6")
+        # os.makedirs(self.DIR)
+        # os.makedirs(f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el1")
+        # os.makedirs(f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el2")
+        # os.makedirs(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1")
+        # os.makedirs(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2")
+        # os.makedirs(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el1")
+        # os.makedirs(f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el4")
+        # os.makedirs(f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el5")
+        # os.makedirs(f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el6")
+        scaffold_empty("sel1", elements=["el1", "el2"], analysers=["an1", "an2"])
+        os.rmdir(get_element_path("sel1", "el1", analyser="an2"))
+        os.rmdir(get_element_path("sel1", "el2", analyser="an2"))
+        scaffold_empty("sel2", elements=["el4", "el5", "el6"])
+
         self.CONFIG = {"elements_in": self.WHITELIST}
         self.emptyAnalyser = EmptyAnalyser(self.CONFIG, self.NAME, self.DIR)
 
     @classmethod
     def tearDownClass(self):
-        self.emptyAnalyser = None
-        shutil.rmtree(self.DIR)
+        cleanup()
 
     def test_selector_imports(self):
         self.assertTrue(type(Analyser) == type(MTModule))
@@ -55,6 +61,8 @@ class TestAnalyser(unittest.TestCase):
         self.assertEqual(paths[1][0], "sel1")
         self.assertEqual(paths[1][1], "an2")
         self.assertEqual(paths[2][0], "sel2")
+        with self.assertRaisesRegex(InvalidWhitelist, "component 'sel1/an1/el1' is not a valid"):
+            paths_to_components(["sel1/an1/el1"])
 
     def test_get_all_media(self):
         cmpDict = {
@@ -89,8 +97,7 @@ class TestAnalyser(unittest.TestCase):
             derived_dir, f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}"
         )
 
-    # derive elements
-    def test_derive_elements(self):
+    def test_flatten_and_cast_elements(self):
         data_obj = {
             "el1": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el1",
             "el2": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el2",

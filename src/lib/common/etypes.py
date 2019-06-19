@@ -26,50 +26,75 @@ class Etype(Enum):
     AnnotatedImageArray = 8
 
 
-def globit(path, regex, is_single=False):
+def globit(path, regex, is_single=False, etype=None):
     glob = list(Path(path).rglob(regex))
 
     if len(glob) is 0:
-        raise EtypeCastError("Could not find appropriate media in element")
+        raise EtypeCastError(
+            "Could not cast to '{etype}' etype: no media found in directory"
+        )
 
     if is_single and len(glob) is not 1:
-        raise EtypeCastError("More than one image found in element")
+        raise EtypeCastError(
+            "Could not cast to '{etype}' etype: more than one media item found."
+        )
     elif is_single:
         return glob[0]
 
     return glob
 
 
-def get_any_media(el_path):
+def get_any(el_path):
     """ Return all files in the element """
-    return {"all": globit(el_path, "*.*")}
+    return {"all": globit(el_path, "*.*", etype="Any")}
 
 
-def get_image_media(el_path):
-    return {"image": globit(el_path, "*.[bB][mM][pP]", is_single=True)}
+def get_image(el_path):
+    return {"image": globit(el_path, "*.[bB][mM][pP]", is_single=True, etype="Image")}
 
 
-def get_video_media(el_path):
-    return {"video": globit(el_path, "*.[mM][pP][4]", is_single=True)}
+def get_video(el_path):
+    return {"video": globit(el_path, "*.[mM][pP][4]", is_single=True, etype="Video")}
 
 
-def get_audio_media(el_path):
-    return {"audio": globit(el_path, "*.([mM][pP][3])|([wW][aA][vV])", is_single=True)}
+def get_audio(el_path):
+    return {
+        "audio": globit(
+            el_path, "*.([mM][pP][3])|([wW][aA][vV])", is_single=True, etype="Audio"
+        )
+    }
 
-def get_json_media(el_path):
-    return {"json": globit(el_path, "*.[jJ][sS][oO][nN]", is_single=True)}
 
-def get_imagearray_media(el_path):
-    return {"images": globit(el_path, "*.[bB][mM][pP]")}
+def get_json(el_path):
+    return {"json": globit(el_path, "*.[jJ][sS][oO][nN]", is_single=True, etype="Json")}
 
-def get_jsonarray_media(el_path):
-    return {"jsons": globit(el_path, "*.[jJ][sS][oO][nN]")}
 
-def get_annotatedvideo_media(el_path):
-    return { **get_video_media(el_path), **get_json_media(el_path) }
+def get_imagearray(el_path):
+    return {"images": globit(el_path, "*.[bB][mM][pP]", etype="ImageArray")}
 
-def get_annotatedimagearray_media(el_path):
-    return { **get_imagearray_media(el_path), **get_json_media(el_path) }
+
+def get_jsonarray(el_path):
+    return {"jsons": globit(el_path, "*.[jJ][sS][oO][nN]", etype="JsonArray")}
+
+
+def get_annotatedvideo(el_path):
+    return {
+        "video": globit(
+            el_path, "*.[mM][pP][4]", is_single=True, etype="AnnotatedVideo"
+        ),
+        "json": globit(
+            el_path, "*.[jJ][sS][oO][nN]", is_single=True, etype="AnnotatedVideo"
+        ),
+    }
+
+
+def get_annotatedimagearray(el_path):
+    return {
+        "images": globit(el_path, "*.[bB][mM][pP]", etype="AnnotatedImageArray"),
+        "json": globit(
+            el_path, "*.[jJ][sS][oO][nN]", is_single=True, etype="AnnotatedImageArray"
+        ),
+    }
 
 
 def cast_to_etype(el_path, etype):
@@ -84,15 +109,15 @@ def cast_to_etype(el_path, etype):
         }
     """
     switcher = {
-        Etype.Any: get_any_media,
-        Etype.Image: get_image_media,
-        Etype.Video: get_video_media,
-        Etype.Audio: get_audio_media,
-        Etype.Json: get_json_media,
-        Etype.ImageArray: get_imagearray_media,
-        Etype.JsonArray: get_jsonarray_media,
-        Etype.AnnotatedVideo: get_annotatedvideo_media,
-        Etype.AnnotatedImageArray: get_annotatedimagearray_media,
+        Etype.Any: get_any,
+        Etype.Image: get_image,
+        Etype.Video: get_video,
+        Etype.Audio: get_audio,
+        Etype.Json: get_json,
+        Etype.ImageArray: get_imagearray,
+        Etype.JsonArray: get_jsonarray,
+        Etype.AnnotatedVideo: get_annotatedvideo,
+        Etype.AnnotatedImageArray: get_annotatedimagearray,
     }
 
     media = switcher.get(etype)(el_path)

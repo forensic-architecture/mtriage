@@ -69,3 +69,13 @@ class MTriageStorageCorruptedError(Exception):
 class EtypeCastError(Exception):
     def __init__(self, msg):
         super().__init__(f"Could not cast etype: {msg}")
+
+
+class InvalidWhitelist(Exception):
+    def __init__(self, comp, msg):
+        super().__init__(f"The component '{comp}' is not a valid component. {msg}")
+
+
+class InvalidAnalyserElements(Exception):
+    pass
+
