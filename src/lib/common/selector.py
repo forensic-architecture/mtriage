@@ -109,7 +109,6 @@ class Selector(MTModule):
                     self.error_logger(f"Failed to cast - retrieved element was not {etype}", element)
                     shutil.rmtree(element["base"])
             else:
-                print(f"Removing element: {element['id']}")
                 shutil.rmtree(element["base"])
 
     @MTModule.logged_phase("post-retrieve")

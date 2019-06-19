@@ -10,8 +10,9 @@ from lib.common.exceptions import (
     ElementShouldRetryError,
     InvalidAnalyserConfigError,
     MTriageStorageCorruptedError,
-    InvalidWhitelist,
+    InvalidElementsIn,
     InvalidAnalyserElements,
+    EtypeCastError,
 )
 from lib.common.mtmodule import MTModule
 from lib.common.etypes import Etype, cast_to_etype
@@ -29,39 +30,14 @@ def get_img_paths(path):
     return list(Path(path).rglob("*.[bB][mM][pP]"))
 
 
-def check_valid_element_folder(comp, dr):
-    _,dirs,files = os.walk(element_dir)[0]
-    if len(dirs) = 0 or len(files) > 0:
-        raise InvalidWhitelist(comp, "The folder it represents contains no elements or is otherwise corrupted.")
+def check_valid_element_folder(comp, element_dir):
+    try:
+        _,dirs,files = next(os.walk(element_dir))
+        if len(dirs) == 0 or len(files) > 0:
+            raise Exception()
+    except:
+        raise InvalidElementsIn(comp, "The folder it represents contains no elements or is otherwise corrupted.")
 
-
-def paths_to_components(whitelist):
-    """ Take a list of input paths--of the form '{selector_name}/{?analyser_name}'-- and produces a list of components.
-        Components are tuples whose first value is the name of a selector, and whose second value is either the name of
-        an analyser, or None.
-    """
-    all_parts = []
-    for comp in whitelist:
-        parts = comp.split("/")
-
-        if len(parts) is 1:
-            # check selector exists
-            selname = parts[0]
-            element_dir = f"{self.BASE}/{selname}/{Analyser.DATA_EXT}/"
-            check_valid_element_folder(comp, element_dir)
-            all_parts.append((selname, None))
-        elif len(parts) is 2:
-            if "" in parts:
-                raise InvalidWhitelist(comp, "If you include a '/' in a component, it must be followed by an analyser")
-            selname = parts[0]
-            analysername = parts[1]
-            element_dir = f"{self.BASE}/{selname}/{Analyser.DERIVED_EXT}/{analysername}"
-            check_valid_element_folder(comp, element_dir)
-            all_parts.append((selname, analysername))
-        else:
-            raise InvalidWhitelist(comp, "The whitelist must be a list of strings in the format 'selector_name/analyser_name', where the analyser_name is optional.")
-
-    return all_parts
 
 
 class Analyser(MTModule):
@@ -82,11 +58,11 @@ class Analyser(MTModule):
 
         if not "elements_in" in config:
             raise InvalidAnalyserConfigError(
-                "The config must contain an 'elements_in' whitelist indicating the analyser's input."
+                "The config must contain an 'elements_in' indicating the analyser's input."
             )
         elif type(config["elements_in"]) is not list or len(config["elements_in"]) is 0:
             raise InvalidAnalyserConfigError(
-                "The 'elements_in' whitelist must be a list containing at least one string"
+                "The 'elements_in' must be a list containing at least one string"
             )
 
         if type(module) is not str or module == "":
@@ -106,7 +82,7 @@ class Analyser(MTModule):
             An element is currently simply a path to the relevant media. TODO: elements should be a more structured
             type.
 
-            Should create a new element in the appropriate 'derived' dir.
+            Should create a new element in the appropriate element[]'base' dir.
         """
         return NotImplemented
 
@@ -115,8 +91,8 @@ class Analyser(MTModule):
         # should probably toggle off during development
         try:
             self.__pre_analyse()
-            derived_dirs = self.__analyse()
-            self.__post_analyse(derived_dirs)
+            self.__analyse()
+            self.__post_analyse()
             self.save_and_clear_logs()
         except:
             raise MTriageStorageCorruptedError()
@@ -129,6 +105,35 @@ class Analyser(MTModule):
         """option to perform any clear up"""
         pass
 
+    def __get_in_cmps(self):
+        """ Take a list of input paths--of the form '{selector_name}/{?analyser_name}'-- and produces a list of components.
+            Components are tuples whose first value is the name of a selector, and whose second value is either the name of
+            an analyser, or None.
+        """
+        whitelist = self.CONFIG["elements_in"]
+        all_parts = []
+        for comp in whitelist:
+            parts = comp.split("/")
+
+            if len(parts) is 1:
+                # check selector exists
+                selname = parts[0]
+                element_dir = f"{self.BASE_DIR}/{selname}/{Analyser.DATA_EXT}/"
+                check_valid_element_folder(comp, element_dir)
+                all_parts.append((selname, None))
+            elif len(parts) is 2:
+                if "" in parts:
+                    raise InvalidElementsIn(comp, "If you include a '/' in a component, it must be followed by an analyser")
+                selname = parts[0]
+                analysername = parts[1]
+                element_dir = f"{self.BASE_DIR}/{selname}/{Analyser.DERIVED_EXT}/{analysername}"
+                check_valid_element_folder(comp, element_dir)
+                all_parts.append((selname, analysername))
+            else:
+                raise InvalidElementsIn(comp, "It must be a list of strings in the format 'selector_name/analyser_name', where the analyser_name is optional.")
+
+        return all_parts
+
     # INTERNAL METHODS\
     @MTModule.logged_phase("pre-analyse")
     def __pre_analyse(self):
@@ -137,20 +142,20 @@ class Analyser(MTModule):
     @MTModule.logged_phase("analyse")
     def __analyse(self):
         all_media = self.__get_all_media()
-        elements = self.__get_whitelisted_elements(all_media)
+        elements = self.__get_in_elements(all_media)
 
         for element in elements:
             self.__attempt_analyse(5, element, self.CONFIG)
 
     @MTModule.logged_phase("post-analyse")
-    def __post_analyse(self, derived_dirs):
-        self.post_analyse(self.CONFIG, derived_dirs)
+    def __post_analyse(self):
+        self.post_analyse(self.CONFIG, self.__get_out_dirs())
 
-    def __flatten_and_cast_elements(self, element_dict, deriveddir):
+    def __flatten_and_cast_elements(self, element_dict, outdir):
         def attempt_cast_el(key):
             el_path = element_dict[key]
             etyped_attrs = cast_to_etype(el_path, self.get_in_etype())
-            return {"id": key, **etyped_attrs}
+            return {"id": key, "dest": outdir, **etyped_attrs}
 
         els = []
         for key in element_dict.keys():
@@ -158,33 +163,33 @@ class Analyser(MTModule):
                 element = attempt_cast_el(key)
                 els.append(element)
             except EtypeCastError as e:
-                self.error_logger(e.msg, element={"id": key})
+                self.error_logger(str(e), element={"id": key})
 
         if len(els) is 0:
             raise InvalidAnalyserElements(
-                f"The elements in the whitelist you specified could not be cast to {self.get_in_etype()}, the input type for the {self.NAME} analyser."
+                f"The elements_in you specified could not be cast to {self.get_in_etype()}, the input type for the {self.NAME} analyser."
             )
 
         return els
 
-    def __get_whitelisted_dirs(self, media):
+    def __get_out_dirs(self):
         whitelist = self.CONFIG["elements_in"]
         dirs = set([])
-        for _cmp in paths_to_components(whitelist):
+        for _cmp in self.__get_in_cmps():
             selname = _cmp[0]
             analysername = _cmp[1]
-            deriveddir = self.__get_derived_dir(selname)
-            dirs.add(deriveddir)
+            outdir = self.__get_out_dir(selname)
+            dirs.add(outdir)
         return list(dirs)
 
-    def __get_whitelisted_elements(self, media):
+    def __get_in_elements(self, media):
         whitelist = self.CONFIG["elements_in"]
         etyped_elements = []
 
-        for _cmp in paths_to_components(whitelist):
+        for _cmp in self.__get_in_cmps():
             selname = _cmp[0]
             analysername = _cmp[1]
-            deriveddir = self.__get_derived_dir(selname)
+            outdir = self.__get_out_dir(selname)
             is_selector = analysername is None
 
             element_dict = (
@@ -192,37 +197,10 @@ class Analyser(MTModule):
                 if is_selector
                 else media[selname][self.DERIVED_EXT][analysername]
             )
-            _etyped_elements = self.__flatten_and_cast_elements( element_dict, deriveddir)
+            _etyped_elements = self.__flatten_and_cast_elements( element_dict, outdir)
             etyped_elements.extend(_etyped_elements)
 
         return etyped_elements
-
-    # def __get_elements(self, media):
-    #     """ Derive which elements to use from available media base on the ELEMENTS_IN attr in self.CONFIG.
-    #     """
-    #     whitelist = self.CONFIG["elements_in"]
-    #     cmps = paths_to_components(whitelist)
-    #
-    #     elements = []
-    #     for _cmp in cmps:
-    #         outdir = self.__get_derived_dir(_cmp[0])
-    #
-    #         if _cmp[1] is None:
-    #             # None in component indicates that 'raw' data from selector should be used.
-    #             elements.extend(
-    #                 self.__flatten_and_cast_elements(
-    #                     media[_cmp[0]][self.DATA_EXT], outdir
-    #                 )
-    #             )
-    #         else:
-    #             # component points to derived data
-    #             elements.extend(
-    #                 self.__flatten_and_cast_elements(
-    #                     media[_cmp[0]][self.DERIVED_EXT][_cmp[1]], outdir
-    #                 )
-    #             )
-    #
-    #     return elements
 
     def __get_all_media(self):
         """Get all available media by indexing the dir system from self.BASE_DIR.
@@ -301,7 +279,7 @@ class Analyser(MTModule):
 
         return all_media
 
-    def __get_derived_dir(self, selector):
+    def __get_out_dir(self, selector):
         """Returns the path to a derived dir from a string selector"""
         derived_dir = f"{self.BASE_DIR}/{selector}/{Analyser.DERIVED_EXT}/{self.NAME}"
 

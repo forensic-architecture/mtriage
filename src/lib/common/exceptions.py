@@ -71,11 +71,10 @@ class EtypeCastError(Exception):
         super().__init__(f"Could not cast etype: {msg}")
 
 
-class InvalidWhitelist(Exception):
+class InvalidElementsIn(Exception):
     def __init__(self, comp, msg):
-        super().__init__(f"The component '{comp}' is not a valid component. {msg}")
+        super().__init__(f"The elements_in '{comp}' is not valid. {msg}")
 
 
 class InvalidAnalyserElements(Exception):
     pass
-

@@ -1,11 +1,13 @@
 from lib.common.analyser import Analyser
 import os
 import unittest
+from test.test_analyser import EmptyAnalyser
 from lib.common.exceptions import (
     ElementShouldRetryError,
     ElementShouldSkipError,
     InvalidAnalyserConfigError,
     MTriageStorageCorruptedError,
+    InvalidElementsIn,
 )
 from test.utils import (
     TEMP_ELEMENT_DIR,
@@ -37,11 +39,15 @@ class TestAnalyserErrors(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.selname = "stub_sel"
+        elements=["skip", "retry3", "retryN", "pass"]
+        scaffold_empty(self.selname, elements=elements)
+        for element in elements:
+            with open(f"{get_element_path(self.selname, element)}/out.txt", "w") as f:
+                f.write("something")
 
-        scaffold_empty(self.selname, elements=["skip", "retry3", "retryN", "pass"])
-        good = {"elements_in": [self.selname]}
+        goodConfig = {"elements_in": [self.selname]}
 
-        self.an = ErrorThrowingAnalyser(good, "analyserErrorSelector", TEMP_ELEMENT_DIR)
+        self.an = ErrorThrowingAnalyser(goodConfig, "analyserErrorSelector", TEMP_ELEMENT_DIR)
 
     @classmethod
     def tearDownClass(self):
@@ -62,19 +68,19 @@ class TestAnalyserErrors(unittest.TestCase):
         good = {"elements_in": ["selname"]}
 
         with self.assertRaisesRegex(
-            InvalidAnalyserConfigError, "must contain an 'elements_in' whitelist"
+            InvalidAnalyserConfigError, "must contain an 'elements_in' indicating the analyser's input"
         ):
             no_elements_in = ErrorThrowingAnalyser(bad0, "stub", TEMP_ELEMENT_DIR)
 
         with self.assertRaisesRegex(
             InvalidAnalyserConfigError,
-            "The 'elements_in' whitelist must be a list containing at least one string",
+            "The 'elements_in' must be a list containing at least one string",
         ):
             empty_elements_in = ErrorThrowingAnalyser(bad1, "stub", TEMP_ELEMENT_DIR)
 
         with self.assertRaisesRegex(
             InvalidAnalyserConfigError,
-            "The 'elements_in' whitelist must be a list containing at least one string",
+            "The 'elements_in' must be a list containing at least one string",
         ):
             empty_elements_in = ErrorThrowingAnalyser(bad2, "stub", TEMP_ELEMENT_DIR)
 
@@ -99,3 +105,9 @@ class TestAnalyserErrors(unittest.TestCase):
 
         pass_path = get_element_path(self.selname, "pass", analyser=self.an.NAME)
         self.assertTrue(os.path.exists(pass_path))
+
+    # def test_bad_whitelist(self):
+    #     badConfig = {"elements_in": ["sel1/an1/el1"]}
+    #     badAn = EmptyAnalyser(badConfig, "whitelistErrorAnalyser", TEMP_ELEMENT_DIR)
+    #     with self.assertRaisesRegex(InvalidElementsIn, "elements_in 'sel1/an1/el1' is not valid"):
+    #         badAn.start_analysing()
