@@ -32,24 +32,14 @@ class MetaAnalyser(Analyser):
 
         self.children = [createChild(x) for x in config["children"]]
 
-        print("init finished, children: " + str(len(self.children)))
-
     def pre_analyse(self, config):
-        print("pre-analyse")
         for child in self.children:
-            print("pre-analyse: " + child.NAME)
             child.PHASE_KEY = "pre-analyse"
             child.pre_analyse(child.CONFIG)
             self._extract_logs_from(child)
             self.logger(f"Setup child analyser {child.NAME}")
-        print("finish pre-analyse")
 
     def analyse_element(self, element, config):
-
-        print("-------------------------")
-        print("analyse element:")
-        print(element)
-        print("-------------------------")
 
         src = None
         child_element = None
