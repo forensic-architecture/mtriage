@@ -1,6 +1,6 @@
 from lib.common.analyser import Analyser
 from lib.common.exceptions import ElementShouldSkipError
-from lib.common.etype import Etype
+from lib.common.etypes import Etype
 from subprocess import call, STDOUT
 from pathlib import Path
 import os
