@@ -6,7 +6,6 @@ from lib.common.etypes import Etype, cast_to_etype
 
 
 class MetaAnalyser(Analyser):
-
     def get_in_etype(self):
         return self.children[0].get_in_etype()
 
@@ -55,9 +54,7 @@ class MetaAnalyser(Analyser):
         src = None
         child_element = None
         for index, child in enumerate(self.children):
-            child_element = self._derive_child_element(
-                index, element, src, child
-            )
+            child_element = self._derive_child_element(index, element, src, child)
             child.PHASE_KEY = "analyse"
             child.analyse_element(child_element, child.CONFIG)
             el_id = element["id"]
@@ -85,7 +82,6 @@ class MetaAnalyser(Analyser):
 
         out_element = cast_to_etype(src, etype)
 
-
         el_id = element["id"]
         out_element["id"] = el_id
 
@@ -99,7 +95,6 @@ class MetaAnalyser(Analyser):
             os.makedirs(dest)
 
         return out_element
-
 
     def _finalise_element(self, config, last_child_element, element):
 
