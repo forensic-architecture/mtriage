@@ -1,52 +1,63 @@
 from lib.common.analyser import Analyser
-from lib.common.analyser import paths_to_components
 from lib.common.get_module import get_module
 import os
 from shutil import copyfile, rmtree
+from lib.common.etypes import Etype, cast_to_etype
 
 
 class MetaAnalyser(Analyser):
-    def pre_analyse(self, config):
+    def get_in_etype(self):
+        return self.children[0].get_in_etype()
 
-        self.child_analysers = []
-        whitelist = self.CONFIG["elements_in"]
+    def get_out_etype(self):
+        return self.children[-1].get_out_etype()
 
-        child_module = config["children"]
-        for module in child_module:
+    def __init__(self, config, module, dir):
+        super().__init__(config, module, dir)
+
+        def createChild(module):
             child_name = module["name"]
             child_config = module["config"]
+
+            # this is going to break everything?
+            child_config["elements_in"] = ["thisisahack"]
+
             ChildAnalyser = get_module("analyser", child_name)
             if ChildAnalyser is None:
+                # TODO: there should be a typed error here
                 raise Exception(
                     f"The module you have specified, {child_name}, does not exist"
                 )
-            child_analyser = ChildAnalyser(child_config, child_name, self.BASE_DIR)
-            child_analyser.PHASE_KEY = "pre-analyse"
-            child_analyser.pre_analyse(child_config)
-            self._extract_logs_from(child_analyser)
-            self.child_analysers.append(child_analyser)
-            self.logger(f"Setup child analyser {child_name}")
+            return ChildAnalyser(child_config, child_name, dir)
+
+        self.children = [createChild(x) for x in config["children"]]
+
+    def pre_analyse(self, config):
+        for child in self.children:
+            child.PHASE_KEY = "pre-analyse"
+            child.pre_analyse(child.CONFIG)
+            self._extract_logs_from(child)
+            self.logger(f"Setup child analyser {child.NAME}")
 
     def analyse_element(self, element, config):
+
         src = None
         child_element = None
-        for index, child_analyser in enumerate(self.child_analysers):
-            child_element = self._derive_child_element(
-                index, element, src, child_analyser
-            )
-            child_analyser.PHASE_KEY = "analyse"
-            child_analyser.analyse_element(child_element, child_analyser.CONFIG)
+        for index, child in enumerate(self.children):
+            child_element = self._derive_child_element(index, element, src, child)
+            child.PHASE_KEY = "analyse"
+            child.analyse_element(child_element, child.CONFIG)
             el_id = element["id"]
-            self.logger(f"Analysed element {el_id} in {child_analyser.NAME}")
+            self.logger(f"Analysed element {el_id} in {child.NAME}")
             src = child_element["dest"]
-            self._extract_logs_from(child_analyser)
+            self._extract_logs_from(child)
         self._finalise_element(config, child_element, element)
 
     def post_analyse(self, config, derived_dirs):
-        for child_analyser in self.child_analysers:
-            child_analyser.PHASE_KEY = "post-analyse"
-            child_analyser.post_analyse(config, derived_dirs)
-            self._extract_logs_from(child_analyser)
+        for child in self.children:
+            child.PHASE_KEY = "post-analyse"
+            child.post_analyse(config, derived_dirs)
+            self._extract_logs_from(child)
         delete_cache = config["delete_cache"]
         if delete_cache:
             for derived_dir in derived_dirs:
@@ -54,14 +65,26 @@ class MetaAnalyser(Analyser):
                 self.logger("deleting cache: " + cache)
                 rmtree(cache)
 
-    def _derive_child_element(self, child_index, element, child_src, analyser):
-        derived_dir = element["derived_dir"]
+    def _derive_child_element(self, child_index, element, child_base, analyser):
+
+        src = child_base if child_base != None else element["base"]
+        etype = self.children[child_index].get_in_etype()
+
+        out_element = cast_to_etype(src, etype)
+
         el_id = element["id"]
+        out_element["id"] = el_id
+
+        meta_dest = element["dest"]
+        rpl = "/" + el_id
+        derived_dir = meta_dest.replace(rpl, "")
         dest = f"{derived_dir}/cache/meta_{child_index}_{analyser.NAME}/{el_id}"
+        out_element["dest"] = dest
+
         if not os.path.exists(dest):
             os.makedirs(dest)
-        src = child_src if child_src != None else element["src"]
-        return {"id": el_id, "derived_dir": derived_dir, "src": src, "dest": dest}
+
+        return out_element
 
     def _finalise_element(self, config, last_child_element, element):
 

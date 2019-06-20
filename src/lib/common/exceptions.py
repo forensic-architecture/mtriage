@@ -64,3 +64,17 @@ class MTriageStorageCorruptedError(Exception):
         super().__init__(
             "MTriage encountered an unexpected file structure in selectors or analysers. Ensure you specified the correct working directory."
         )
+
+
+class EtypeCastError(Exception):
+    def __init__(self, msg):
+        super().__init__(f"Could not cast etype: {msg}")
+
+
+class InvalidElementsIn(Exception):
+    def __init__(self, comp, msg):
+        super().__init__(f"The elements_in '{comp}' is not valid. {msg}")
+
+
+class InvalidAnalyserElements(Exception):
+    pass

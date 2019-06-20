@@ -5,11 +5,11 @@ import argparse, os, sys
 import math
 from subprocess import call, STDOUT
 from lib.common.selector import Selector
+from lib.common.etypes import Etype
 
 # from .select import selector_run
 # from .retrieve import id_from_url, vid_exists, get_meta_path
 from datetime import datetime, timedelta
-import pandas as pd
 
 import googleapiclient.discovery
 from googleapiclient.errors import HttpError
@@ -25,10 +25,17 @@ GOOGLE_CREDS = service_account.Credentials.from_service_account_file(
 
 
 class YoutubeSelector(Selector):
+    def get_out_etype(self):
+        return Etype.AnnotatedVideo
+
     def index(self, config):
-        # if not os.path.exists(self.SELECT_MAP):
-        df = self._run(config)
-        return df
+        results = self._run(config)
+        if len(results) > 0:
+            out = []
+            out.append(list(results[0].keys()))
+            out.extend([x.values() for x in results])
+            return out
+        return None
 
     def pre_retrieve(self, config, element_dir):
         self.ydl = youtube_dl.YoutubeDL(
@@ -39,7 +46,7 @@ class YoutubeSelector(Selector):
         )
 
     def retrieve_element(self, element, config):
-        dest = element["dest"]
+        dest = element["base"]
         url = element["url"]
         ydl = self.ydl
         with ydl:
@@ -79,13 +86,12 @@ class YoutubeSelector(Selector):
                 args_obj["q"] = config["search_term"]
                 args_obj["before"] = before
                 args_obj["after"] = after
-                results = results + self._add_search_to_obj(args_obj, results)
-        df = pd.DataFrame(results)
-
+                new_results = self._add_search_to_obj(args_obj, results)
+                results = results + new_results
         self.logger("\n\n----------------")
-        self.logger(f"Scrape successful, {len(df) - 1} results.")
+        self.logger(f"Scrape successful, {len(results) - 1} results.")
 
-        return df
+        return results
 
     def _add_search_to_obj(self, args, results):
         new_results = self._youtube_search_all_pages(args)

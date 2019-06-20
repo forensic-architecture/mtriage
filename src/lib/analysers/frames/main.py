@@ -1,10 +1,12 @@
 import os
+from shutil import copyfile
 import cv2
 import numpy as np
 from imutils.video import FileVideoStream
 from subprocess import call, STDOUT
 from lib.common.analyser import Analyser
 from lib.common.exceptions import ElementShouldSkipError
+from lib.common.etypes import Etype
 
 
 def ffmpeg_frames(out_folder, fp, rate):
@@ -73,17 +75,19 @@ def opencv_frames(out_folder, fp, rate, threshold, sequential):
 
 
 class FramesAnalyser(Analyser):
+    def get_in_etype(self):
+        return Etype.AnnotatedVideo
+
+    def get_out_etype(self):
+        return Etype.AnnotatedImageArray
+
     def analyse_element(self, element, config):
         FPS_NUMBER = int(config["fps"])
         dest = element["dest"]
-        media = Analyser.find_video_paths(element["src"])
-
-        if len(media) is not 1:
-            raise ElementShouldSkipError(
-                "The frames analyser can only operate on elements that contain one and only one video."
-            )
-
-        video = media[0]
+        json = element["media"]["json"]
+        video = element["media"]["video"]
 
         ffmpeg_frames(dest, video, FPS_NUMBER)
+        copyfile(json, f"{dest}/meta.json")
+
         self.logger(f"Frames successfully created for element {element}.")

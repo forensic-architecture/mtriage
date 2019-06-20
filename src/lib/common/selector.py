@@ -3,7 +3,13 @@ import csv
 from abc import abstractmethod
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
-from lib.common.exceptions import ElementShouldRetryError, ElementShouldSkipError
+from lib.common.exceptions import (
+    ElementShouldRetryError,
+    ElementShouldSkipError,
+    EtypeCastError,
+)
+from lib.common.etypes import cast_to_etype
+import shutil
 
 
 class Selector(MTModule):
@@ -66,6 +72,7 @@ class Selector(MTModule):
     @MTModule.logged_phase("index")
     def start_indexing(self):
         element_map = self.index(self.CONFIG)
+        # TODO: validate id column exists on csv for all rows
         if element_map is not None:
             with open(self.ELEMENT_MAP, "w") as f:
                 writer = csv.writer(f, delimiter=",")
@@ -97,8 +104,19 @@ class Selector(MTModule):
         for row in elements:
             element = to_dict(row)
             id = element["id"]
-            element["dest"] = f"{self.ELEMENT_DIR}/{id}"
-            self.__attempt_retrieve(5, element)
+            element["base"] = f"{self.ELEMENT_DIR}/{id}"
+            success = self.__attempt_retrieve(5, element)
+            if success:
+                etype = self.get_out_etype()
+                try:
+                    cast_to_etype(element["base"], etype)
+                except EtypeCastError:
+                    self.error_logger(
+                        f"Failed to cast - retrieved element was not {etype}", element
+                    )
+                    shutil.rmtree(element["base"])
+            else:
+                shutil.rmtree(element["base"])
 
     @MTModule.logged_phase("post-retrieve")
     def __post_retrieve(self):
@@ -111,25 +129,25 @@ class Selector(MTModule):
         self.__post_retrieve()
 
     def __attempt_retrieve(self, attempts, element):
-        if not os.path.exists(element["dest"]):
-            os.makedirs(element["dest"])
+        if not os.path.exists(element["base"]):
+            os.makedirs(element["base"])
 
         try:
-            return self.retrieve_element(element, self.CONFIG)
+            self.retrieve_element(element, self.CONFIG)
+            return True
         except ElementShouldSkipError as e:
-            os.rmdir(element["dest"])
             self.error_logger(str(e), element)
-            return
+            return False
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
                 return self.__attempt_retrieve(attempts - 1, element)
             else:
-                os.rmdir(element["dest"])
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
                 )
-                return
+                return False
+        # TODO: flag to turn this off during development should be passed during run
         except Exception as e:
             dev = self.CONFIG["dev"] if "dev" in self.CONFIG else False
             if dev:
@@ -138,4 +156,4 @@ class Selector(MTModule):
                 self.error_logger(
                     "unknown exception raised - skipping element", element
                 )
-                return
+                return False

@@ -1,26 +1,24 @@
 from lib.common.analyser import Analyser
 from lib.common.exceptions import ElementShouldSkipError
+from lib.common.etypes import Etype
 from subprocess import call, STDOUT
 from pathlib import Path
 import os
 
 
 class ConvertAudioAnalyser(Analyser):
-    def analyse_element(self, element, config):
+    def get_in_etype(self):
+        return Etype.Audio
 
-        src = element["src"]
+    def get_out_etype(self):
+        return Etype.Audio
+
+    def analyse_element(self, element, config):
         dest = element["dest"]
         key = element["id"]
         input_ext = config["input_ext"]
         output_ext = config["output_ext"]
-        media = list(Path(src).rglob(f"*.{input_ext}"))
-
-        if len(media) is not 1:
-            raise ElementShouldSkipError(
-                "The convert_audio analyser can only operate on elements that contain one and only one audio file."
-            )
-
-        audio = media[0]
+        audio = element["media"]["audio"]
 
         FNULL = open(os.devnull, "w")
         out = call(

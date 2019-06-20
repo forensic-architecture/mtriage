@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from lib.common.util import save_logs
 from lib.common.exceptions import ImproperLoggedPhaseError
+from lib.common.etypes import Etype
 from functools import partial, wraps
 import os
 
@@ -16,6 +17,13 @@ class MTModule(ABC):
 
         if not os.path.exists(self.__LOGS_DIR):
             os.makedirs(self.__LOGS_DIR)
+
+    def get_in_etype(self):
+        """ Note that only analysers implement this method, as selectors do not need to know their input type"""
+        return Etype.Any
+
+    def get_out_etype(self):
+        return Etype.Any
 
     @staticmethod
     def logged_phase(phase_key):

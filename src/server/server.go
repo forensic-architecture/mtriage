@@ -22,7 +22,6 @@ func main() {
 }
 
 func handleElements(w http.ResponseWriter, r *http.Request) {
-
   var files []string
   root := "elements"
   err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {

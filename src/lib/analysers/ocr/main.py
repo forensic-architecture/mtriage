@@ -1,4 +1,5 @@
 from lib.common.analyser import Analyser
+from lib.common.etypes import Etype
 import json
 import io
 import os
@@ -23,6 +24,12 @@ class OcrAnalyser(Analyser):
     the top of this repo, GOOGLE_APPLICATION_CREDENTIALS.
     """
 
+    def get_in_etype(self):
+        return Etype.ImageArray
+
+    def get_out_etype(self):
+        return Etype.Json
+
     def pre_analyse(self, config):
         # creds are interpolated from env variable, GOOGLE_APPLICATION_CREDENTIALS. See
         # https://cloud.google.com/docs/authentication/getting-started
@@ -37,7 +44,7 @@ class OcrAnalyser(Analyser):
 
     def analyse_element(self, element, config):
         dest = element["dest"]
-        input_frames = Analyser.find_img_paths(element["src"])
+        input_frames = element["media"]["images"]
 
         # NOTE: MAX_REQUESTS is mainly an optionality passed for debugging, so that we don't
         # run GCP analysis on all frames of a video when testing.
@@ -45,7 +52,7 @@ class OcrAnalyser(Analyser):
         if MAX_REQUESTS > 0:
             input_frames = input_frames[0:MAX_REQUESTS]
 
-        self.logger(f"OCRing frames in element: {element}")
+        self.logger(f"OCRing frames in element: {element['id']}")
 
         responses = [self.__analyse_text(t) for t in input_frames]
 

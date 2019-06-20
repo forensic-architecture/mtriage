@@ -1,9 +1,12 @@
 from lib.common.analyser import Analyser
-from lib.common.analyser import paths_to_components
+from lib.common.exceptions import InvalidAnalyserElements
+from lib.common.etypes import Etype
+from test.utils import *
 from abc import ABC
 import os
 import shutil
 import unittest
+import pytest
 import operator
 from lib.common.mtmodule import MTModule
 from test.utils import listOfDictsEqual
@@ -14,42 +17,40 @@ class EmptyAnalyser(Analyser):
         pass
 
 
+# TODO: test casting errors via an analyser with explicit etype
+
+
 class TestAnalyser(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.maxDiff = None
-        self.DIR = "../tempdir"
-        self.NAME = "empty"
+        self.emptyAnalyserName = "empty"
         self.WHITELIST = ["sel1/an1", "sel1/an2", "sel2"]
-        os.makedirs(self.DIR)
-        os.makedirs(f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el1")
-        os.makedirs(f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el2")
-        os.makedirs(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1")
-        os.makedirs(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2")
-        os.makedirs(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el3")
-        os.makedirs(f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el4")
-        os.makedirs(f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el5")
-        os.makedirs(f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el6")
+        scaffold_empty("sel1", elements=["el1", "el2"], analysers=["an1", "an2"])
+        os.rmdir(get_element_path("sel1", "el1", analyser="an2"))
+        scaffold_empty("sel2", elements=["el4", "el5", "el6"])
+
         self.CONFIG = {"elements_in": self.WHITELIST}
-        self.emptyAnalyser = EmptyAnalyser(self.CONFIG, self.NAME, self.DIR)
+        self.emptyAnalyser = EmptyAnalyser(
+            self.CONFIG, self.emptyAnalyserName, TEMP_ELEMENT_DIR
+        )
 
     @classmethod
     def tearDownClass(self):
-        self.emptyAnalyser = None
-        shutil.rmtree(self.DIR)
+        cleanup()
 
     def test_selector_imports(self):
         self.assertTrue(type(Analyser) == type(MTModule))
 
     def test_cannot_instantiate(self):
         with self.assertRaises(TypeError):
-            Analyser({}, "empty", self.DIR)
+            Analyser({}, "empty", TEMP_ELEMENT_DIR)
 
     def test_init(self):
         self.assertEqual(self.CONFIG, self.emptyAnalyser.CONFIG)
 
-    def test_paths_to_components(self):
-        paths = paths_to_components(self.WHITELIST)
+    def test_get_in_cmps(self):
+        paths = self.emptyAnalyser._Analyser__get_in_cmps()
         self.assertEqual(paths[0][0], "sel1")
         self.assertEqual(paths[0][1], "an1")
         self.assertEqual(paths[1][0], "sel1")
@@ -60,83 +61,186 @@ class TestAnalyser(unittest.TestCase):
         cmpDict = {
             "sel1": {
                 f"{Analyser.DATA_EXT}": {
-                    "el1": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el1",
-                    "el2": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el2",
+                    "el1": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DATA_EXT}/el1",
+                    "el2": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DATA_EXT}/el2",
                 },
                 f"{Analyser.DERIVED_EXT}": {
                     "an1": {
-                        "el1": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
-                        "el2": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
+                        "el1": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
+                        "el2": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
                     },
-                    "an2": {"el3": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el3"},
+                    "an2": {
+                        "el2": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el2"
+                    },
                 },
             },
             "sel2": {
                 f"{Analyser.DATA_EXT}": {
-                    "el4": f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el4",
-                    "el5": f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el5",
-                    "el6": f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el6",
+                    "el4": f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el4",
+                    "el5": f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el5",
+                    "el6": f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el6",
                 },
                 f"{Analyser.DERIVED_EXT}": {},
             },
         }
         mediaDict = self.emptyAnalyser._Analyser__get_all_media()
-        self.assertEqual(cmpDict, mediaDict)
+        self.assertTrue(dictsEqual(cmpDict, mediaDict))
 
-    def test_get_derived_dir(self):
-        derived_dir = self.emptyAnalyser._Analyser__get_derived_dir("sel1")
+    def test_get_out_dir(self):
+        out_dir = self.emptyAnalyser._Analyser__get_out_dir("sel1")
         self.assertEqual(
-            derived_dir, f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}"
+            out_dir,
+            f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/{self.emptyAnalyserName}",
         )
 
-    # derive elements
-    def test_derive_elements(self):
-        data_obj = {
-            "el1": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el1",
-            "el2": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el2",
+    def test_cast_elements(self):
+        print("WERUUU")
+        # setup
+        sel1an1_element_dict = {
+            "el1": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
+            "el2": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
         }
-        outdir = f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}"
-        derived_elements = self.emptyAnalyser._Analyser__derive_elements(
-            data_obj, outdir
+        sel1an2_element_dict = {
+            "el2": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el2"
+        }
+        sel2_element_dict = {
+            "el4": f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el4",
+            "el5": f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el5",
+            "el6": f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el6",
+        }
+        sel1outdir = (
+            f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/{self.emptyAnalyserName}"
         )
-        expected = [
+        sel2outdir = (
+            f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DERIVED_EXT}/{self.emptyAnalyserName}"
+        )
+        sel1_base = f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DATA_EXT}"
+        sel2_base = f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}"
+
+        with self.assertRaisesRegex(
+            InvalidAnalyserElements, "elements_in you specified could not be cast"
+        ):
+            sel1an1_cast_elements = self.emptyAnalyser._Analyser__cast_elements(
+                sel1an1_element_dict, sel1outdir
+            )
+
+        with self.assertRaisesRegex(
+            InvalidAnalyserElements, "elements_in you specified could not be cast"
+        ):
+            sel1an2_cast_elements = self.emptyAnalyser._Analyser__cast_elements(
+                sel1an2_element_dict, sel1outdir
+            )
+
+        with self.assertRaisesRegex(
+            InvalidAnalyserElements, "elements_in you specified could not be cast"
+        ):
+            sel2_cast_elements = self.emptyAnalyser._Analyser__cast_elements(
+                sel2_element_dict, sel2outdir
+            )
+
+        for el in ["el4", "el5", "el6"]:
+            with open(f"{get_element_path('sel2', el)}/out.txt", "w") as f:
+                f.write("analysed")
+
+        sel2expected = [
+            {
+                "id": "el4",
+                "base": f"{sel2_base}/el4",
+                "dest": f"{sel2outdir}/el4",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel2_base}/el4/out.txt"]},
+            },
+            {
+                "id": "el5",
+                "base": f"{sel2_base}/el5",
+                "dest": f"{sel2outdir}/el5",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel2_base}/el5/out.txt"]},
+            },
+            {
+                "id": "el6",
+                "base": f"{sel2_base}/el6",
+                "dest": f"{sel2outdir}/el6",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel2_base}/el6/out.txt"]},
+            },
+        ]
+        sel2_cast_elements = self.emptyAnalyser._Analyser__cast_elements(
+            sel2_element_dict, sel2outdir
+        )
+        self.assertTrue(listOfDictsEqual(sel2expected, sel2_cast_elements))
+
+        for el in ["el1", "el2"]:
+            with open(
+                f"{get_element_path('sel1', el, analyser='an1')}/out.txt", "w"
+            ) as f:
+                f.write("analysed")
+
+        sel1an1base = f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1"
+        sel1an1expected = [
             {
                 "id": "el1",
-                "derived_dir": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}",
-                "src": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el1",
-                "dest": f"{outdir}/el1",
+                "base": f"{sel1an1base}/el1",
+                "dest": f"{sel1outdir}/el1",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel1an1base}/el1/out.txt"]},
             },
             {
                 "id": "el2",
-                "derived_dir": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}",
-                "src": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el2",
-                "dest": f"{outdir}/el2",
+                "base": f"{sel1an1base}/el2",
+                "dest": f"{sel1outdir}/el2",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel1an1base}/el2/out.txt"]},
             },
         ]
-        self.assertTrue(listOfDictsEqual(derived_elements, expected))
 
-    # get elements
-    def test_get_elements(self):
+        sel1an1_cast_elements = self.emptyAnalyser._Analyser__cast_elements(
+            sel1an1_element_dict, sel1outdir
+        )
+        self.assertTrue(listOfDictsEqual(sel1an1expected, sel1an1_cast_elements))
+
+        with open(
+            f"{get_element_path('sel1', 'el2', analyser='an2')}/out.txt", "w"
+        ) as f:
+            f.write("analysed")
+
+        sel1an2base = f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an2"
+        sel1an2expected = [
+            {
+                "id": "el2",
+                "base": f"{sel1an2base}/el2",
+                "dest": f"{sel1outdir}/el2",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel1an2base}/el2/out.txt"]},
+            }
+        ]
+
+        sel1an2_cast_elements = self.emptyAnalyser._Analyser__cast_elements(
+            sel1an2_element_dict, sel1outdir
+        )
+        self.assertTrue(listOfDictsEqual(sel1an2expected, sel1an2_cast_elements))
 
         media = {
             "sel1": {
                 f"{Analyser.DATA_EXT}": {
-                    "el1": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el1",
-                    "el2": f"{self.DIR}/sel1/{Analyser.DATA_EXT}/el2",
+                    "el1": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DATA_EXT}/el1",
+                    "el2": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DATA_EXT}/el2",
                 },
                 f"{Analyser.DERIVED_EXT}": {
                     "an1": {
-                        "el1": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
-                        "el2": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
+                        "el1": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
+                        "el2": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
                     },
-                    "an2": {"el3": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el3"},
+                    "an2": {
+                        "el2": f"{TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el2"
+                    },
                 },
             },
             "sel2": {
                 f"{Analyser.DATA_EXT}": {
-                    "el4": f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el4",
-                    "el5": f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el5",
-                    "el6": f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el6",
+                    "el4": f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el4",
+                    "el5": f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el5",
+                    "el6": f"{TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el6",
                 },
                 f"{Analyser.DERIVED_EXT}": {},
             },
@@ -145,62 +249,47 @@ class TestAnalyser(unittest.TestCase):
         expected = [
             {
                 "id": "el1",
-                "derived_dir": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}",
-                "src": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
-                "dest": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}/el1",
+                "base": f"{sel1an1base}/el1",
+                "dest": f"{sel1outdir}/el1",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel1an1base}/el1/out.txt"]},
             },
             {
                 "id": "el2",
-                "derived_dir": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}",
-                "src": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
-                "dest": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}/el2",
+                "base": f"{sel1an1base}/el2",
+                "dest": f"{sel1outdir}/el2",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel1an1base}/el2/out.txt"]},
             },
             {
-                "id": "el3",
-                "derived_dir": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}",
-                "src": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el3",
-                "dest": f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}/el3",
+                "id": "el2",
+                "base": f"{sel1an2base}/el2",
+                "dest": f"{sel1outdir}/el2",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel1an2base}/el2/out.txt"]},
             },
             {
                 "id": "el4",
-                "derived_dir": f"{self.DIR}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}",
-                "src": f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el4",
-                "dest": f"{self.DIR}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}/el4",
+                "base": f"{sel2_base}/el4",
+                "dest": f"{sel2outdir}/el4",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel2_base}/el4/out.txt"]},
             },
             {
                 "id": "el5",
-                "derived_dir": f"{self.DIR}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}",
-                "src": f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el5",
-                "dest": f"{self.DIR}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}/el5",
+                "base": f"{sel2_base}/el5",
+                "dest": f"{sel2outdir}/el5",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel2_base}/el5/out.txt"]},
             },
             {
                 "id": "el6",
-                "derived_dir": f"{self.DIR}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}",
-                "src": f"{self.DIR}/sel2/{Analyser.DATA_EXT}/el6",
-                "dest": f"{self.DIR}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}/el6",
+                "base": f"{sel2_base}/el6",
+                "dest": f"{sel2outdir}/el6",
+                "etype": Etype.Any,
+                "media": {"all": [f"{sel2_base}/el6/out.txt"]},
             },
         ]
 
-        elements = self.emptyAnalyser._Analyser__get_elements(media)
+        elements = self.emptyAnalyser._Analyser__get_in_elements(media)
         self.assertTrue(listOfDictsEqual(elements, expected))
-
-    def test_start_analysing(self):
-        self.emptyAnalyser.start_analysing()
-        self.assertTrue(
-            os.path.exists(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}/el1")
-        )
-        self.assertTrue(
-            os.path.exists(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}/el2")
-        )
-        self.assertTrue(
-            os.path.exists(f"{self.DIR}/sel1/{Analyser.DERIVED_EXT}/{self.NAME}/el3")
-        )
-        self.assertTrue(
-            os.path.exists(f"{self.DIR}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}/el4")
-        )
-        self.assertTrue(
-            os.path.exists(f"{self.DIR}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}/el5")
-        )
-        self.assertTrue(
-            os.path.exists(f"{self.DIR}/sel2/{Analyser.DERIVED_EXT}/{self.NAME}/el6")
-        )
