@@ -8,7 +8,7 @@ import argparse
 import shutil
 import subprocess as sp
 import webbrowser
-
+import json
 
 NAME = "forensicarchitecture/mtriage"
 CONT_NAME = NAME.replace("/", "_")  # docker doesn't allow slashes in cont names
@@ -37,10 +37,11 @@ def get_subdirs(d):
 class InvalidPipDep(Exception):
     pass
 
-
 class InvalidArgumentsError(Exception):
     pass
 
+class InvalidViewerConfigError(Exception):
+    pass
 
 def name_and_ver(pipdep):
     """ Return the name and version from a string that expresses a pip dependency.
@@ -276,32 +277,45 @@ def viewer(args):
 
             python run.py viewer -i <derived_folder> -v <viewer_plugin>
 
-        Server requires that input folder contains directories corresponsing to elements (where directory names
-        are element ids.) Each element directory must contain a json file containing:
-
-        {
-            "id": <element_id>,
-            "media": [
-                <media1.mp3>
-                <media1.mp4>,
-                <media1.png>,
-                etc.
-            ]
-        }
-
-        As well as any other data to be consumed by the viewr-plugin. Media are any other files
-        in the element folder that need to be available to the viewer-plugin.
+        Server requires that input folder contain directories corresponsing to elements (where directory names
+        are element ids.)
 
         Viewers must be yarn buildable apps living in the src/lib/viewers folder. Their name is taken to be the name
-        of their outer directory.
+        of their outer directory. Viewers must specify which etype they accept in their config.yml file.
 
         Once launched the viewer plugin is available at http://localhost:8081/
 
         The server is available at http://localhost:8080/, with available endpoints:
 
         elements                                    - returns list of element ids
-        element?id=<element_id>                     - serves the element's json file
+        element?id=<element_id>                     - serves the element's etype data
         element?if=<element_id>&media=<media_file>  - serves the media file associated with element
+
+        Example response for 'elements':
+
+        {
+            "Elements": [
+                <el1_name>,
+                <el2_name>,
+                <el3_name>,
+                etc
+            ]
+        }
+
+        and 'element?id=<element_id>':
+
+        {
+            "Id": <element_id>,
+            "Etype": <viewer_accepted_etype>,
+            "Media": {
+                <mediatype>: [
+                    <media1>,
+                    <media2>,
+                    <media3>,
+                ]
+                etc.
+            }
+        }
 
     """
 
@@ -317,6 +331,17 @@ def viewer(args):
     if not os.path.exists(folder):
         raise WorkingDirectorNotFoundError(folder)
 
+    viewerDir = "src/lib/viewers/" + viewer
+    # print(viewerDir)
+
+    if not os.path.exists(viewerDir):
+        raise InvalidArgumentsError("Viewer plugin requested does not exists.")
+
+    viewerConfigPath = viewerDir + "/config.json"
+    with open(viewerConfigPath, 'r') as f:
+        viewerConfig = json.load(f)
+        viewerEType = viewerConfig["etype"]
+
     shutil.rmtree("src/server/elements/")
     os.makedirs("src/server/elements/")
 
@@ -326,10 +351,20 @@ def viewer(args):
         f = str(folder) + "/" + str(e)
         for file in os.listdir(f):
             if not os.path.exists("src/server/elements/" + e):
-                os.makedirs("src/server/elements/" + e)
+                dirpath = "src/server/elements/" + e + "/media"
+                os.makedirs(dirpath)
             os.symlink(
-                "/mtriage/" + f + "/" + file, "src/server/elements/" + e + "/" + file
+                "/mtriage/" + f + "/" + file, "src/server/elements/" + e + "/media/" + file
             )
+
+    serverConfig = {
+        "port": 8080,
+        "etype": viewerEType,
+    }
+
+    serverConfigPath = "src/server/config.json"
+    with open(serverConfigPath, "w") as config:
+        json.dump(serverConfig, config)
 
     print("Creating container to build server...")
     print("----------------------------------")
