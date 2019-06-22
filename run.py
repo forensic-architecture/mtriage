@@ -37,11 +37,14 @@ def get_subdirs(d):
 class InvalidPipDep(Exception):
     pass
 
+
 class InvalidArgumentsError(Exception):
     pass
 
+
 class InvalidViewerConfigError(Exception):
     pass
+
 
 def name_and_ver(pipdep):
     """ Return the name and version from a string that expresses a pip dependency.
@@ -338,7 +341,7 @@ def viewer(args):
         raise InvalidArgumentsError("Viewer plugin requested does not exists.")
 
     viewerConfigPath = viewerDir + "/config.json"
-    with open(viewerConfigPath, 'r') as f:
+    with open(viewerConfigPath, "r") as f:
         viewerConfig = json.load(f)
         viewerEType = viewerConfig["etype"]
 
@@ -354,13 +357,11 @@ def viewer(args):
                 dirpath = "src/server/elements/" + e + "/media"
                 os.makedirs(dirpath)
             os.symlink(
-                "/mtriage/" + f + "/" + file, "src/server/elements/" + e + "/media/" + file
+                "/mtriage/" + f + "/" + file,
+                "src/server/elements/" + e + "/media/" + file,
             )
 
-    serverConfig = {
-        "port": 8080,
-        "etype": viewerEType,
-    }
+    serverConfig = {"port": 8080, "etype": viewerEType}
 
     serverConfigPath = "src/server/config.json"
     with open(serverConfigPath, "w") as config:
