@@ -275,7 +275,6 @@ def test(args):
 
 
 def viewer(args):
-
     """ Must be invoked with an input folder and viewer-plugin e.g.:
 
             python run.py viewer -i <derived_folder> -v <viewer_plugin>
@@ -321,51 +320,64 @@ def viewer(args):
         }
 
     """
-
-    folder = args.input
-    viewer = args.viewer
-
+    # setup variables
     if args.input == None:
         raise InvalidArgumentsError("No input directory supplied for viewer plugin.")
 
     if args.viewer == None:
         raise InvalidArgumentsError("No viewer plugin name supplied.")
 
-    if not os.path.exists(folder):
-        raise WorkingDirectorNotFoundError(folder)
+    inputElementsDir = args.input
+    serverElementsDir = "src/server/elements"
+    viewer = args.viewer
+    viewerDir = "src/lib/viewers/{}".format(viewer)
+    viewerConfigPath = "{}/config.json".format(viewerDir)
+    serverConfigPath = "src/server/config.json"
 
-    viewerDir = "src/lib/viewers/" + viewer
-    # print(viewerDir)
+    if not os.path.exists(inputElementsDir):
+        raise WorkingDirectorNotFoundError(inputElementsDir)
 
     if not os.path.exists(viewerDir):
-        raise InvalidArgumentsError("Viewer plugin requested does not exists.")
+        raise InvalidArgumentsError(
+            "The viewer plugin '{}' does not exist.".format(viewer)
+        )
 
-    viewerConfigPath = viewerDir + "/config.json"
+    if not os.path.isfile(viewerConfigPath):
+        raise InvalidArgumentsError(
+            "Viewer config does not exist in the folder {}".format(viewerConfigPath)
+        )
+
     with open(viewerConfigPath, "r") as f:
         viewerConfig = json.load(f)
         viewerEType = viewerConfig["etype"]
 
-    shutil.rmtree("src/server/elements/")
-    os.makedirs("src/server/elements/")
-
-    element_folders = [f for f in os.listdir(folder) if os.path.isdir(folder + "/" + f)]
-
-    for e in element_folders:
-        f = str(folder) + "/" + str(e)
-        for file in os.listdir(f):
-            if not os.path.exists("src/server/elements/" + e):
-                dirpath = "src/server/elements/" + e + "/media"
-                os.makedirs(dirpath)
-            os.symlink(
-                "/mtriage/" + f + "/" + file,
-                "src/server/elements/" + e + "/media/" + file,
-            )
-
     serverConfig = {"port": 8080, "etype": viewerEType}
+    el_ids = [
+        f
+        for f in os.listdir(inputElementsDir)
+        if os.path.isdir("{}/{}".format(inputElementsDir, f))
+    ]
 
-    serverConfigPath = "src/server/config.json"
+    # clean if exists
+    shutil.rmtree(serverElementsDir)
+    os.makedirs(serverElementsDir)
+
+    # setup server
     with open(serverConfigPath, "w") as config:
         json.dump(serverConfig, config)
+
+    # create symlinks for input elements
+    for el_id in el_ids:
+        folder_in = "{}/{}".format(inputElementsDir, el_id)
+        for element_path in os.listdir(folder_in):
+            folder_out = "{}/{}".format(serverElementsDir, el_id)
+            folder_out_media = "{}/media".format(folder_out)
+            if not os.path.exists(folder_out):
+                os.makedirs(folder_out_media)
+            os.symlink(
+                "{}/{}".format(folder_in, element_path),
+                "{}/{}".format(folder_out_media, element_path),
+            )
 
     print("Creating container to build server...")
     print("----------------------------------")
@@ -381,11 +393,11 @@ def viewer(args):
                 "src/server",
             ]
         )
-        print("Build successful, attempting to run")
     except:
+        # TODO
         print("Something went wrong! EEK.")
-    print("----------------------------------")
     print("Server build successful.")
+    print("----------------------------------")
 
     print("Creating container to run server...")
     print("----------------------------------")
@@ -410,8 +422,8 @@ def viewer(args):
         stderr=None,
         close_fds=True,
     )
+    print("Server running successfully in a container.")
     print("----------------------------------")
-    print("Server run successful.")
 
     print("Creating container to build viewer plugin...")
     print("----------------------------------")
@@ -430,8 +442,8 @@ def viewer(args):
         print("Build successful, attempting to run")
     except:
         print("Something went wrong! EEK.")
-    print("----------------------------------")
     print("Viewer plugin build successful.")
+    print("----------------------------------")
 
     print("Creating container to run viewer plugin...")
     print("----------------------------------")
@@ -451,8 +463,8 @@ def viewer(args):
             "{}:dev".format(VIEWER_NAME),
         ]
     )
+    print("Viewer plugin successfully running in container.")
     print("----------------------------------")
-    print("Viewer plugin run successful")
 
 
 if __name__ == "__main__":
