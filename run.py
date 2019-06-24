@@ -46,6 +46,10 @@ class InvalidViewerConfigError(Exception):
     pass
 
 
+class WorkingDirectorNotFoundError(Exception):
+    pass
+
+
 def name_and_ver(pipdep):
     """ Return the name and version from a string that expresses a pip dependency.
         Raises an InvalidPipDep exception if the string is an invalid dependency.
@@ -274,6 +278,71 @@ def test(args):
     print("All tests for mtriage done.")
 
 
+def verify_viewer_args(inputDir, viewersDir, viewerName):
+    if inputDir == None:
+        raise InvalidArgumentsError("No input directory supplied for viewer plugin.")
+
+    if viewerName == None:
+        raise InvalidArgumentsError("No viewer plugin name supplied.")
+
+    if not os.path.exists(inputDir):
+        raise WorkingDirectorNotFoundError(
+            "The input directory {} does not exist. ".format(inputDir)
+        )
+
+    viewerDir = "{}/{}".format(viewersDir, viewerName)
+    viewerConfigPath = "{}/config.json".format(viewerDir)
+
+    if not os.path.exists(viewerDir):
+        raise InvalidArgumentsError(
+            "The viewer plugin '{}' does not exist.".format(viewerName)
+        )
+
+    if not os.path.isfile(viewerConfigPath):
+        raise InvalidArgumentsError(
+            "Viewer config does not exist in the folder {}".format(viewerConfigPath)
+        )
+
+    return viewerDir, viewerConfigPath
+
+
+def create_symlinks(inputElementsDir, serverElementsDir):
+    # clean if exists
+    shutil.rmtree(serverElementsDir)
+    os.makedirs(serverElementsDir)
+
+    el_ids = [
+        f
+        for f in os.listdir(inputElementsDir)
+        if os.path.isdir("{}/{}".format(inputElementsDir, f))
+    ]
+
+    # create symlinks for input elements
+    for el_id in el_ids:
+        folder_in = "{}/{}".format(inputElementsDir, el_id)
+        for element_path in os.listdir(folder_in):
+            folder_out = "{}/{}".format(serverElementsDir, el_id)
+            folder_out_media = "{}/media".format(folder_out)
+            if not os.path.exists(folder_out):
+                os.makedirs(folder_out_media)
+            os.symlink(
+                "{}/{}".format(folder_in, element_path),
+                "{}/{}".format(folder_out_media, element_path),
+            )
+
+
+def get_viewer_etype(viewerConfigPath):
+    with open(viewerConfigPath, "r") as f:
+        viewerConfig = json.load(f)
+        viewerEType = viewerConfig["etype"]
+        return viewerEType
+
+
+def create_server_config(configPath, configDict):
+    with open(configPath, "w") as config:
+        json.dump(configDict, config)
+
+
 def viewer(args):
     """ Must be invoked with an input folder and viewer-plugin e.g.:
 
@@ -322,63 +391,20 @@ def viewer(args):
 
     """
     # setup variables
-    if args.input == None:
-        raise InvalidArgumentsError("No input directory supplied for viewer plugin.")
-
-    if args.viewer == None:
-        raise InvalidArgumentsError("No viewer plugin name supplied.")
-
     inputElementsDir = args.input
-    serverElementsDir = "src/server/elements"
     viewer = args.viewer
-    viewerDir = "src/lib/viewers/{}".format(viewer)
-    viewerConfigPath = "{}/config.json".format(viewerDir)
+    viewersDir = "src/lib/viewers"
+    viewerDir, viewerConfigPath = verify_viewer_args(
+        inputElementsDir, viewersDir, viewer
+    )
+    serverElementsDir = "src/server/elements"
     serverConfigPath = "src/server/config.json"
+    viewerEtype = get_viewer_etype(viewerConfigPath)
 
-    if not os.path.exists(inputElementsDir):
-        raise WorkingDirectorNotFoundError(inputElementsDir)
+    serverConfig = {"port": 8080, "etype": viewerEtype}
 
-    if not os.path.exists(viewerDir):
-        raise InvalidArgumentsError(
-            "The viewer plugin '{}' does not exist.".format(viewer)
-        )
-
-    if not os.path.isfile(viewerConfigPath):
-        raise InvalidArgumentsError(
-            "Viewer config does not exist in the folder {}".format(viewerConfigPath)
-        )
-
-    with open(viewerConfigPath, "r") as f:
-        viewerConfig = json.load(f)
-        viewerEType = viewerConfig["etype"]
-
-    serverConfig = {"port": 8080, "etype": viewerEType}
-    el_ids = [
-        f
-        for f in os.listdir(inputElementsDir)
-        if os.path.isdir("{}/{}".format(inputElementsDir, f))
-    ]
-
-    # clean if exists
-    shutil.rmtree(serverElementsDir)
-    os.makedirs(serverElementsDir)
-
-    # setup server
-    with open(serverConfigPath, "w") as config:
-        json.dump(serverConfig, config)
-
-    # create symlinks for input elements
-    for el_id in el_ids:
-        folder_in = "{}/{}".format(inputElementsDir, el_id)
-        for element_path in os.listdir(folder_in):
-            folder_out = "{}/{}".format(serverElementsDir, el_id)
-            folder_out_media = "{}/media".format(folder_out)
-            if not os.path.exists(folder_out):
-                os.makedirs(folder_out_media)
-            os.symlink(
-                "{}/{}".format(folder_in, element_path),
-                "{}/{}".format(folder_out_media, element_path),
-            )
+    create_server_config(serverConfigPath, serverConfig)
+    create_symlinks(inputElementsDir, serverElementsDir)
 
     print("Creating container to build server...")
     print("----------------------------------")
