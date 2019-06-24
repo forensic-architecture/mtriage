@@ -37,11 +37,14 @@ def get_subdirs(d):
 class InvalidPipDep(Exception):
     pass
 
+
 class InvalidArgumentsError(Exception):
     pass
 
+
 class InvalidViewerConfigError(Exception):
     pass
+
 
 def name_and_ver(pipdep):
     """ Return the name and version from a string that expresses a pip dependency.
@@ -287,17 +290,18 @@ def viewer(args):
 
         The server is available at http://localhost:8080/, with available endpoints:
 
-        elements                                    - returns list of element ids
+        elementIndex                                - return an array of all element ids
+        elements                                    - returns an array of all etyped elements (n.b. potentially slow)
         element?id=<element_id>                     - serves the element's etype data
         element?if=<element_id>&media=<media_file>  - serves the media file associated with element
 
-        Example response for 'elements':
+        Example response for 'elementIndex':
 
         {
             "Elements": [
-                <el1_name>,
-                <el2_name>,
-                <el3_name>,
+                <el1_id>,
+                <el2_id>,
+                <el3_id>,
                 etc
             ]
         }
@@ -332,13 +336,12 @@ def viewer(args):
         raise WorkingDirectorNotFoundError(folder)
 
     viewerDir = "src/lib/viewers/" + viewer
-    # print(viewerDir)
 
     if not os.path.exists(viewerDir):
         raise InvalidArgumentsError("Viewer plugin requested does not exists.")
 
     viewerConfigPath = viewerDir + "/config.json"
-    with open(viewerConfigPath, 'r') as f:
+    with open(viewerConfigPath, "r") as f:
         viewerConfig = json.load(f)
         viewerEType = viewerConfig["etype"]
 
@@ -354,13 +357,11 @@ def viewer(args):
                 dirpath = "src/server/elements/" + e + "/media"
                 os.makedirs(dirpath)
             os.symlink(
-                "/mtriage/" + f + "/" + file, "src/server/elements/" + e + "/media/" + file
+                "/mtriage/" + f + "/" + file,
+                "src/server/elements/" + e + "/media/" + file,
             )
 
-    serverConfig = {
-        "port": 8080,
-        "etype": viewerEType,
-    }
+    serverConfig = {"port": 8080, "etype": viewerEType}
 
     serverConfigPath = "src/server/config.json"
     with open(serverConfigPath, "w") as config:
