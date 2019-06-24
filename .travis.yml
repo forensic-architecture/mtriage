@@ -2,12 +2,12 @@ language: python
 services: docker
 before_install:
 - pip install -r requirements.txt
-- python run.py build
-- python run.py build --gpu
+- ./mtriage build
+- ./mtriage build --gpu
 script:
 - cp .env.example .env
-- python run.py test
-- black --check run.py
+- ./mtriage test
+- black --check mtriage
 - black --check test/
 - black --check src/
 after_success:
