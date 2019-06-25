@@ -275,54 +275,54 @@ def test(args):
     print("All tests for mtriage done.")
 
 
-def verify_viewer_args(inputDir, viewersDir, viewerName):
-    if inputDir == None:
+def verify_viewer_args(input_dir, all_viewers_dir, viewer_name):
+    if input_dir == None:
         raise InvalidArgumentsError("No input directory supplied for viewer plugin.")
 
-    if viewerName == None:
+    if viewer_name == None:
         raise InvalidArgumentsError("No viewer plugin name supplied.")
 
-    if not os.path.exists(inputDir):
+    if not os.path.exists(input_dir):
         raise WorkingDirectorNotFoundError(
-            "The input directory {} does not exist. ".format(inputDir)
+            "The input directory {} does not exist. ".format(input_dir)
         )
 
-    viewerDir = "{}/{}".format(viewersDir, viewerName)
-    viewerConfigPath = "{}/config.json".format(viewerDir)
+    viewer_dir = "{}/{}".format(all_viewers_dir, viewer_name)
+    viewer_config_path = "{}/config.json".format(viewer_dir)
 
-    if not os.path.exists(viewerDir):
+    if not os.path.exists(viewer_dir):
         raise InvalidArgumentsError(
-            "The viewer plugin '{}' does not exist.".format(viewerName)
+            "The viewer plugin '{}' does not exist.".format(viewer_name)
         )
 
-    if not os.path.isfile(viewerConfigPath):
+    if not os.path.isfile(viewer_config_path):
         raise InvalidArgumentsError(
-            "Viewer config does not exist in the folder {}".format(viewerConfigPath)
+            "Viewer config does not exist in the folder {}".format(viewer_config_path)
         )
 
-    return viewerDir, viewerConfigPath
+    return viewer_dir, viewer_config_path
 
 
-def create_symlinks(inputElementsDir, serverElementsDir):
+def create_symlinks(input_elements_dir, server_elements_dir):
     # clean if exists
-    if not os.path.exists(inputElementsDir):
+    if not os.path.exists(input_elements_dir):
         raise OSError("Server elements dir does not exist")
 
     # make it empty
-    shutil.rmtree(serverElementsDir)
-    os.makedirs(serverElementsDir)
+    shutil.rmtree(server_elements_dir)
+    os.makedirs(server_elements_dir)
 
     el_ids = [
         f
-        for f in os.listdir(inputElementsDir)
-        if os.path.isdir("{}/{}".format(inputElementsDir, f))
+        for f in os.listdir(input_elements_dir)
+        if os.path.isdir("{}/{}".format(input_elements_dir, f))
     ]
 
     # create symlinks for input elements
     for el_id in el_ids:
-        folder_in = "{}/{}".format(inputElementsDir, el_id)
+        folder_in = "{}/{}".format(input_elements_dir, el_id)
         for element_path in os.listdir(folder_in):
-            folder_out = "{}/{}".format(serverElementsDir, el_id)
+            folder_out = "{}/{}".format(server_elements_dir, el_id)
             folder_out_media = "{}/media".format(folder_out)
             if not os.path.exists(folder_out):
                 os.makedirs(folder_out_media)
@@ -332,11 +332,11 @@ def create_symlinks(inputElementsDir, serverElementsDir):
             )
 
 
-def get_viewer_etype(viewerConfigPath):
-    with open(viewerConfigPath, "r") as f:
-        viewerConfig = json.load(f)
-        viewerEType = viewerConfig["etype"]
-        return viewerEType
+def get_viewer_etype(viewer_config_path):
+    with open(viewer_config_path, "r") as f:
+        viewer_config = json.load(f)
+        viewer_etype = viewer_config["etype"]
+        return viewer_etype
 
 
 def create_server_config(configPath, configDict):
@@ -344,7 +344,51 @@ def create_server_config(configPath, configDict):
         json.dump(configDict, config)
 
 
-def viewer(args):
+def __build_viewer_server():
+    server_img_name = "{}:dev".format(SERVER_NAME)
+    print("Creating container to build server...")
+    print("----------------------------------")
+    try:
+        sp.call(
+            [
+                "docker",
+                "build",
+                "-t",
+                server_img_name,
+                "-f",
+                "src/server/server.Dockerfile",
+                "src/server",
+            ]
+        )
+    except:
+        print("__build_viewer_server: Something went wrong! EEK.")
+    print("Server build successful.")
+    print("----------------------------------")
+
+
+def __build_viewer_client(viewer_name):
+    viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
+    print("Creating container to build viewer plugin...")
+    print("----------------------------------")
+    try:
+        sp.call(
+            [
+                "docker",
+                "build",
+                "-t",
+                viewer_img_name,
+                "-f",
+                "src/build/viewer.Dockerfile",
+                "src/lib/viewers/" + viewer_name,
+            ]
+        )
+    except:
+        print("__build_viewer_client: Something went wrong! EEK.")
+    print("Viewer plugin build successful.")
+    print("----------------------------------")
+
+
+def view(args):
     """ Must be invoked with an input folder and viewer-plugin e.g.:
 
             ./mtriage view -i <derived_folder> -v <viewer_plugin>
@@ -391,43 +435,28 @@ def viewer(args):
         }
 
     """
-    # setup variables
-    inputElementsDir = args.input
-    viewer = args.viewer
-    viewersDir = "src/lib/viewers"
-    viewerDir, viewerConfigPath = verify_viewer_args(
-        inputElementsDir, viewersDir, viewer
+    input_elements_dir = args.input
+    viewer_name = args.viewer
+    all_viewers_dir = "src/lib/viewers"
+    viewer_dir, viewer_config_path = verify_viewer_args(
+        input_elements_dir, all_viewers_dir, viewer_name
     )
-    serverElementsDir = "src/server/elements"
-    serverConfigPath = "src/server/config.json"
-    viewerEtype = get_viewer_etype(viewerConfigPath)
+    server_elements_dir = "src/server/elements"
+    server_config_path = "src/server/config.json"
+    viewer_etype = get_viewer_etype(viewer_config_path)
 
-    serverConfig = {"port": 8080, "etype": viewerEtype}
-    viewerImgName = "{}:{}".format(VIEWER_NAME, viewer)
-    serverImgName = "{}:dev".format(SERVER_NAME)
+    server_config = {"port": 8080, "etype": viewer_etype}
+    viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
 
-    create_server_config(serverConfigPath, serverConfig)
-    create_symlinks(inputElementsDir, serverElementsDir)
+    create_server_config(server_config_path, server_config)
+    create_symlinks(input_elements_dir, server_elements_dir)
 
-    print("Creating container to build server...")
-    print("----------------------------------")
-    try:
-        sp.call(
-            [
-                "docker",
-                "build",
-                "-t",
-                serverImgName,
-                "-f",
-                "src/server/server.Dockerfile",
-                "src/server",
-            ]
-        )
-    except:
-        # TODO
-        print("Something went wrong! EEK.")
-    print("Server build successful.")
-    print("----------------------------------")
+    is_local = False
+    server_img_name = "{}:dev".format(SERVER_NAME)
+    viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
+
+    if is_local:
+        __build_viewer_server()
 
     print("Creating container to run server...")
     sp.Popen(
@@ -441,30 +470,14 @@ def viewer(args):
             "--rm",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
-            serverImgName,
+            server_img_name,
         ]
     )
     print("Server running successfully in a container.")
     print("----------------------------------")
 
-    print("Creating container to build viewer plugin...")
-    print("----------------------------------")
-    try:
-        sp.call(
-            [
-                "docker",
-                "build",
-                "-t",
-                viewerImgName,
-                "-f",
-                "src/build/viewer.Dockerfile",
-                "src/lib/viewers/" + viewer,
-            ]
-        )
-    except:
-        print("Something went wrong! EEK.")
-    print("Viewer plugin build successful.")
-    print("----------------------------------")
+    if is_local:
+        __build_viewer_client(viewer_name)
 
     print("Creating container to run viewer plugin...")
     sp.Popen(
@@ -478,14 +491,16 @@ def viewer(args):
             "--rm",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
-            viewerImgName,
+            viewer_img_name,
         ]
     )
     print("Viewer plugin successfully running in container.")
     print("----------------------------------")
+
+    # block, and stop containers on ctrl c
     print("The viewer is running at: http://localhost:8081")
     webbrowser.open("http://localhost:8081")
-    # block, and stop containers on ctrl c
+
     def signal_handler(sig, frame):
         print("Removing containers...")
         sys.exit(0)
@@ -500,7 +515,7 @@ if __name__ == "__main__":
         "develop": develop,
         "test": test,
         "clean": clean,
-        "view": viewer,
+        "view": view,
     }
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     parser.add_argument("command", choices=COMMANDS.keys())
