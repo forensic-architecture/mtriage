@@ -1,5 +1,5 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import docker
 import inspect
 import pytest
 import os
@@ -22,7 +22,6 @@ CONT_VIEWER_NAME = VIEWER_NAME.replace("/", "_")
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 ENV_FILE = "{}/.env".format(DIR_PATH)
 HOME_PATH = os.path.expanduser("~")
-DOCKER = docker.from_env()
 
 
 def get_subdirs(d):
@@ -199,30 +198,26 @@ def develop(args):
     TAG_NAME = "dev-gpu" if args.gpu else "dev"
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
     # so that the call arguments are well formed.
-    try:
-        DOCKER.containers.get(CONT_NAME)
-        print("Develop container already running. Stop it and try again.")
-    except docker.errors.NotFound:
-        sp.call(
-            [
-                "docker",
-                "run",
-                "-it",
-                "--name",
-                CONT_NAME,
-                "--runtime=nvidia" if args.gpu else "--ipc=host",
-                "--env",
-                "BASE_DIR=/mtriage",
-                "--env-file={}".format(ENV_FILE),
-                "--rm",
-                "--privileged",
-                "-v",
-                "{}:/mtriage".format(DIR_PATH),
-                "-v",
-                "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
-                "{}:{}".format(NAME, TAG_NAME),
-            ]
-        )
+    sp.call(
+        [
+            "docker",
+            "run",
+            "-it",
+            "--name",
+            CONT_NAME,
+            "--runtime=nvidia" if args.gpu else "--ipc=host",
+            "--env",
+            "BASE_DIR=/mtriage",
+            "--env-file={}".format(ENV_FILE),
+            "--rm",
+            "--privileged",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            "-v",
+            "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
+            "{}:{}".format(NAME, TAG_NAME),
+        ]
+    )
 
 
 def clean(args):
