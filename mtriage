@@ -388,6 +388,22 @@ def __build_viewer_client(viewer_name):
     print("----------------------------------")
 
 
+def __setup_symlinks(input_elements_dir, viewer_name):
+    all_viewers_dir = "src/lib/viewers"
+    viewer_config_path = verify_viewer_args(
+        input_elements_dir, all_viewers_dir, viewer_name
+    )
+    server_elements_dir = "src/server/elements"
+    server_config_path = "src/server/config.json"
+    viewer_etype = get_viewer_etype(viewer_config_path)
+
+    server_config = {"port": 8080, "etype": viewer_etype}
+    viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
+
+    create_server_config(server_config_path, server_config)
+    create_symlinks(input_elements_dir, server_elements_dir)
+
+
 def view(args):
     """ Must be invoked with an input folder and viewer-plugin e.g.:
 
@@ -406,7 +422,7 @@ def view(args):
         elementIndex                                - return an array of all element ids
         elements                                    - returns an array of all etyped elements (n.b. potentially slow)
         element?id=<element_id>                     - serves the element's etype data
-        element?if=<element_id>&media=<media_file>  - serves the media file associated with element
+        element?id=<element_id>&media=<media_file>  - serves the media file associated with element
 
         Example response for 'elementIndex':
 
@@ -437,21 +453,9 @@ def view(args):
     """
     input_elements_dir = args.input
     viewer_name = args.viewer
-    all_viewers_dir = "src/lib/viewers"
-    viewer_config_path = verify_viewer_args(
-        input_elements_dir, all_viewers_dir, viewer_name
-    )
-    server_elements_dir = "src/server/elements"
-    server_config_path = "src/server/config.json"
-    viewer_etype = get_viewer_etype(viewer_config_path)
+    __setup_symlinks(input_elements_dir, viewer_name)
 
-    server_config = {"port": 8080, "etype": viewer_etype}
-    viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
-
-    create_server_config(server_config_path, server_config)
-    create_symlinks(input_elements_dir, server_elements_dir)
-
-    is_local = False
+    is_local = True
     server_img_name = "{}:dev".format(SERVER_NAME)
     viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
 
@@ -508,7 +512,12 @@ def view(args):
     signal.signal(signal.SIGINT, signal_handler)
     signal.pause()
 
+
 def dev_viewerserver(args):
+    input_elements_dir = args.input
+    viewer_name = args.viewer
+    __setup_symlinks(input_elements_dir, viewer_name)
+
     server_img_name = "{}:dev".format(SERVER_NAME)
     print("Creating container to run server...")
     sp.Popen(
@@ -527,13 +536,13 @@ def dev_viewerserver(args):
     )
     print("Server running successfully in a container.")
     print("----------------------------------")
+
     def signal_handler(sig, frame):
         print("Removing containers...")
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.pause()
-
 
 
 if __name__ == "__main__":
