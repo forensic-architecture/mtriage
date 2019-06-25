@@ -101,7 +101,7 @@ class YoloV3Analyser(Analyser):
             current_time = time.time()
             inference_time = datetime.timedelta(seconds=current_time - prev_time)
             prev_time = current_time
-            # self.logger("\t+ Batch %d, Inference Time: %s" % (batch_i, inference_time))
+            self.logger("\t+ Batch %d, Inference Time: %s" % (batch_i, inference_time))
 
             # Save image and detections
             imgs.extend(img_paths)
