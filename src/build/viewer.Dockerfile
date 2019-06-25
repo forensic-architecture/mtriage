@@ -1,4 +1,4 @@
-FROM node:lts-alpine as builder
+FROM node:alpine as builder
 WORKDIR /app
 RUN npm install -g yarn
 ADD package.json package.json
