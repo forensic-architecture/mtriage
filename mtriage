@@ -347,7 +347,7 @@ def create_server_config(configPath, configDict):
 def viewer(args):
     """ Must be invoked with an input folder and viewer-plugin e.g.:
 
-            python run.py viewer -i <derived_folder> -v <viewer_plugin>
+            ./mtriage view -i <derived_folder> -v <viewer_plugin>
 
         Server requires that input folder contain directories corresponsing to elements (where directory names
         are element ids.)
@@ -499,7 +499,7 @@ if __name__ == "__main__":
         "develop": develop,
         "test": test,
         "clean": clean,
-        "viewer": viewer,
+        "view": viewer,
     }
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     parser.add_argument("command", choices=COMMANDS.keys())
