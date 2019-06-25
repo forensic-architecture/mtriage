@@ -9,6 +9,8 @@ import shutil
 import subprocess as sp
 import webbrowser
 import json
+import signal
+import sys
 
 NAME = "forensicarchitecture/mtriage"
 CONT_NAME = NAME.replace("/", "_")  # docker doesn't allow slashes in cont names
@@ -308,6 +310,10 @@ def verify_viewer_args(inputDir, viewersDir, viewerName):
 
 def create_symlinks(inputElementsDir, serverElementsDir):
     # clean if exists
+    if not os.path.exists(inputElementsDir):
+        raise OSError("Server elements dir does not exist")
+
+    # make it empty
     shutil.rmtree(serverElementsDir)
     os.makedirs(serverElementsDir)
 
@@ -402,6 +408,8 @@ def viewer(args):
     viewerEtype = get_viewer_etype(viewerConfigPath)
 
     serverConfig = {"port": 8080, "etype": viewerEtype}
+    viewerImgName = "{}:{}".format(VIEWER_NAME, viewer)
+    serverImgName = "{}:dev".format(SERVER_NAME)
 
     create_server_config(serverConfigPath, serverConfig)
     create_symlinks(inputElementsDir, serverElementsDir)
@@ -414,7 +422,7 @@ def viewer(args):
                 "docker",
                 "build",
                 "-t",
-                "{}:dev".format(SERVER_NAME),
+                serverImgName,
                 "-f",
                 "src/server/server.Dockerfile",
                 "src/server",
@@ -427,27 +435,19 @@ def viewer(args):
     print("----------------------------------")
 
     print("Creating container to run server...")
-    print("----------------------------------")
     sp.Popen(
         [
             "docker",
             "run",
-            "-it",
             "--name",
             CONT_SERVER_NAME,
             "-p",
             "8080:8080",
             "--rm",
-            "--privileged",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
-            "{}:dev".format(SERVER_NAME),
-        ],
-        shell=False,
-        stdin=None,
-        stdout=None,
-        stderr=None,
-        close_fds=True,
+            serverImgName,
+        ]
     )
     print("Server running successfully in a container.")
     print("----------------------------------")
@@ -460,38 +460,42 @@ def viewer(args):
                 "docker",
                 "build",
                 "-t",
-                "{}:dev".format(VIEWER_NAME),
+                viewerImgName,
                 "-f",
                 "src/build/viewer.Dockerfile",
                 "src/lib/viewers/" + viewer,
             ]
         )
-        print("Build successful, attempting to run")
     except:
         print("Something went wrong! EEK.")
     print("Viewer plugin build successful.")
     print("----------------------------------")
 
     print("Creating container to run viewer plugin...")
-    print("----------------------------------")
-    sp.call(
+    sp.Popen(
         [
             "docker",
             "run",
-            "-it",
             "--name",
             CONT_VIEWER_NAME,
             "-p",
             "8081:80",
             "--rm",
-            "--privileged",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
-            "{}:dev".format(VIEWER_NAME),
+            viewerImgName,
         ]
     )
     print("Viewer plugin successfully running in container.")
     print("----------------------------------")
+    print("The viewer is running at: http://localhost:8081")
+    webbrowser.open("http://localhost:8081")
+    # block, and stop containers on ctrl c
+    def signal_handler(sig, frame):
+        print("Removing containers...")
+        sys.exit(0)
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.pause()
 
 
 if __name__ == "__main__":

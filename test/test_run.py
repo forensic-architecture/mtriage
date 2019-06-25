@@ -102,7 +102,6 @@ class TestRunpy(unittest.TestCase):
         self.assertFalse(should_add_dockerline("RUN curl -o https://smthn", p3))
 
     def test_create_server_config(self):
-
         validConfig = {"port": 8080, "etype": "Any"}
         badJsonConfig = "amnotthejsons"
         badConfigPath = "temp/test/baddir/pathpath"
@@ -146,7 +145,6 @@ class TestRunpy(unittest.TestCase):
         self.assertEqual(etype, "Any")
 
     def test_verify_viewer_args(self):
-
         with self.assertRaises(InvalidArgumentsError):
             verify_viewer_args(None, "aViewersDir", "aViewerName")
 
