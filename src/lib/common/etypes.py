@@ -2,7 +2,6 @@ from enum import Enum
 from pathlib import Path
 from lib.common.exceptions import EtypeCastError
 
-
 class Etype(Enum):
     """ The 'Any' etype returns all paths to all media in an element
     { "media": { "paths": [ /* all paths as strings */ ] } }
@@ -24,24 +23,33 @@ class Etype(Enum):
     # a video + a json describing the video
     AnnotatedVideo = 7
     AnnotatedImageArray = 8
+    # an audio + a json describing the audio
+    AnnotatedAudio = 9
 
 
-def globit(path, regex, is_single=False, etype=None):
-    glob = list(Path(path).rglob(regex))
-
-    if len(glob) is 0:
+def globit(path, patterns, is_single=False, etype=None):
+    print("path: " + path)
+    print(patterns)
+    files = []
+    for pattern in patterns:
+        glob = list(Path(path).rglob(pattern))
+        files = files + glob
+    if len(files) is 0:
         raise EtypeCastError(
             "Could not cast to '{etype}' etype: no media found in directory"
         )
 
-    if is_single and len(glob) is not 1:
+    print(files)
+
+    if is_single and len(files) is not 1:
         raise EtypeCastError(
             "Could not cast to '{etype}' etype: more than one media item found."
         )
     elif is_single:
-        return glob[0]
+        print("single")
+        return files[0]
 
-    return [str(x) for x in glob]
+    return [str(x) for x in files]
 
 
 def get_any(el_path):
@@ -50,49 +58,57 @@ def get_any(el_path):
 
 
 def get_image(el_path):
-    return {"image": globit(el_path, "*.[bB][mM][pP]", is_single=True, etype="Image")}
+    return {"image": globit(el_path, ["*.[bB][mM][pP]"], is_single=True, etype="Image")}
 
 
 def get_video(el_path):
-    return {"video": globit(el_path, "*.[mM][pP][4]", is_single=True, etype="Video")}
+    return {"video": globit(el_path, ["*.[mM][pP][4]"], is_single=True, etype="Video")}
 
 
 def get_audio(el_path):
     return {
         "audio": globit(
-            el_path, "*.([mM][pP][3])|([wW][aA][vV])", is_single=True, etype="Audio"
+            el_path, ["*.[mM][pP][3]","*.[wW][aA][vV]"], is_single=True, etype="Audio"
         )
     }
 
-
 def get_json(el_path):
-    return {"json": globit(el_path, "*.[jJ][sS][oO][nN]", is_single=True, etype="Json")}
+    return {"json": globit(el_path, ["*.[jJ][sS][oO][nN]"], is_single=True, etype="Json")}
 
 
 def get_imagearray(el_path):
-    return {"images": globit(el_path, "*.[bB][mM][pP]", etype="ImageArray")}
+    return {"images": globit(el_path, ["*.[bB][mM][pP]"], etype="ImageArray")}
 
 
 def get_jsonarray(el_path):
-    return {"jsons": globit(el_path, "*.[jJ][sS][oO][nN]", etype="JsonArray")}
+    return {"jsons": globit(el_path, ["*.[jJ][sS][oO][nN]"], etype="JsonArray")}
 
 
 def get_annotatedvideo(el_path):
     return {
         "video": globit(
-            el_path, "*.[mM][pP][4]", is_single=True, etype="AnnotatedVideo"
+            el_path, ["*.[mM][pP][4]"], is_single=True, etype="AnnotatedVideo"
         ),
         "json": globit(
-            el_path, "*.[jJ][sS][oO][nN]", is_single=True, etype="AnnotatedVideo"
+            el_path, ["*.[jJ][sS][oO][nN]"], is_single=True, etype="AnnotatedVideo"
         ),
     }
 
+def get_annotatedaudio(el_path):
+    return {
+        "video": globit(
+            el_path, ["*.[mM][pP][3]","*.[wW][aA][vV]"], is_single=True, etype="AnnotatedAudio"
+        ),
+        "json": globit(
+            el_path, ["*.[jJ][sS][oO][nN]"], is_single=True, etype="AnnotatedAudio"
+        ),
+    }
 
 def get_annotatedimagearray(el_path):
     return {
-        "images": globit(el_path, "*.[bB][mM][pP]", etype="AnnotatedImageArray"),
+        "images": globit(el_path, ["*.[bB][mM][pP]"], etype="AnnotatedImageArray"),
         "json": globit(
-            el_path, "*.[jJ][sS][oO][nN]", is_single=True, etype="AnnotatedImageArray"
+            el_path, ["*.[jJ][sS][oO][nN]"], is_single=True, etype="AnnotatedImageArray"
         ),
     }
 
@@ -118,6 +134,7 @@ def cast_to_etype(el_path, etype):
         Etype.JsonArray: get_jsonarray,
         Etype.AnnotatedVideo: get_annotatedvideo,
         Etype.AnnotatedImageArray: get_annotatedimagearray,
+        Etype.AnnotatedAudio: get_annotatedaudio,
     }
 
     media = switcher.get(etype)(el_path)

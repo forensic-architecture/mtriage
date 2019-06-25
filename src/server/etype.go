@@ -21,6 +21,7 @@ const (
   JsonArray
   AnnotatedVideo
   AnnotatedImageArray
+  AnnotatedAudio
 )
 
 func (etype Etype) String() string {
@@ -34,6 +35,7 @@ func (etype Etype) String() string {
     "JsonArray",
     "AnnotatedVideo",
     "AnnotatedImageArray",
+    "AnnotatedAudio",
   }
   if etype < Any || etype > AnnotatedImageArray {
     panic("Unrecognised Etype")
@@ -55,6 +57,8 @@ func (etype Etype) MediaTypes() []MediaType {
     []MediaType{ MediaType{ Key: "video", Regex: ".[mM][pP][4]" },
                   MediaType{ Key: "json", Regex: ".[jJ][sS][oO][nN]" }},
     []MediaType{ MediaType{ Key: "image", Regex: ".[bB][mM][pP]" },
+                  MediaType{ Key: "json", Regex: ".[jJ][sS][oO][nN]" }},
+    []MediaType{ MediaType{ Key: "audio", Regex: ".([mM][pP][3])|([wW][aA][vV])" },
                   MediaType{ Key: "json", Regex: ".[jJ][sS][oO][nN]" }},
   }
 
@@ -82,6 +86,8 @@ func getEtype(name string) Etype {
         return AnnotatedVideo
       case "AnnotatedImageArray":
         return AnnotatedImageArray
+      case "AnnotatedAudio":
+        return AnnotatedAudio
       default:
         panic("Unrecognised Etype")
     }
