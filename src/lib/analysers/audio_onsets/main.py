@@ -7,7 +7,6 @@ import json
 
 
 class AudioOnsetAnalyser(Analyser):
-
     def get_in_etype(self):
         return Etype.Audio
 
@@ -24,10 +23,7 @@ class AudioOnsetAnalyser(Analyser):
         duration, onset_times = self.extract(audiofile)
 
         json_dest = os.path.join(dest, "onsets.json")
-        data = {
-            "duration": duration,
-            "onsets": onset_times
-        }
+        data = {"duration": duration, "onsets": onset_times}
 
         with open(json_dest, "w") as fp:
             json.dump(data, fp)

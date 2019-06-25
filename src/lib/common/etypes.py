@@ -2,6 +2,7 @@ from enum import Enum
 from pathlib import Path
 from lib.common.exceptions import EtypeCastError
 
+
 class Etype(Enum):
     """ The 'Any' etype returns all paths to all media in an element
     { "media": { "paths": [ /* all paths as strings */ ] } }
@@ -68,12 +69,15 @@ def get_video(el_path):
 def get_audio(el_path):
     return {
         "audio": globit(
-            el_path, ["*.[mM][pP][3]","*.[wW][aA][vV]"], is_single=True, etype="Audio"
+            el_path, ["*.[mM][pP][3]", "*.[wW][aA][vV]"], is_single=True, etype="Audio"
         )
     }
 
+
 def get_json(el_path):
-    return {"json": globit(el_path, ["*.[jJ][sS][oO][nN]"], is_single=True, etype="Json")}
+    return {
+        "json": globit(el_path, ["*.[jJ][sS][oO][nN]"], is_single=True, etype="Json")
+    }
 
 
 def get_imagearray(el_path):
@@ -94,15 +98,20 @@ def get_annotatedvideo(el_path):
         ),
     }
 
+
 def get_annotatedaudio(el_path):
     return {
         "video": globit(
-            el_path, ["*.[mM][pP][3]","*.[wW][aA][vV]"], is_single=True, etype="AnnotatedAudio"
+            el_path,
+            ["*.[mM][pP][3]", "*.[wW][aA][vV]"],
+            is_single=True,
+            etype="AnnotatedAudio",
         ),
         "json": globit(
             el_path, ["*.[jJ][sS][oO][nN]"], is_single=True, etype="AnnotatedAudio"
         ),
     }
+
 
 def get_annotatedimagearray(el_path):
     return {
