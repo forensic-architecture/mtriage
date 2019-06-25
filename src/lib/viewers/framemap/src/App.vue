@@ -90,7 +90,6 @@ body {
     background-color: transparent;
     padding: 0 1em;
     h2 {
-      // text-transform: uppercase;
       color: white;
     }
   }

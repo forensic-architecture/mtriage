@@ -300,7 +300,7 @@ def verify_viewer_args(input_dir, all_viewers_dir, viewer_name):
             "Viewer config does not exist in the folder {}".format(viewer_config_path)
         )
 
-    return viewer_dir, viewer_config_path
+    return viewer_config_path
 
 
 def create_symlinks(input_elements_dir, server_elements_dir):
@@ -438,7 +438,7 @@ def view(args):
     input_elements_dir = args.input
     viewer_name = args.viewer
     all_viewers_dir = "src/lib/viewers"
-    viewer_dir, viewer_config_path = verify_viewer_args(
+    viewer_config_path = verify_viewer_args(
         input_elements_dir, all_viewers_dir, viewer_name
     )
     server_elements_dir = "src/server/elements"
@@ -508,6 +508,33 @@ def view(args):
     signal.signal(signal.SIGINT, signal_handler)
     signal.pause()
 
+def dev_viewerserver(args):
+    server_img_name = "{}:dev".format(SERVER_NAME)
+    print("Creating container to run server...")
+    sp.Popen(
+        [
+            "docker",
+            "run",
+            "--name",
+            CONT_SERVER_NAME,
+            "-p",
+            "8080:8080",
+            "--rm",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            server_img_name,
+        ]
+    )
+    print("Server running successfully in a container.")
+    print("----------------------------------")
+    def signal_handler(sig, frame):
+        print("Removing containers...")
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.pause()
+
+
 
 if __name__ == "__main__":
     COMMANDS = {
@@ -516,6 +543,7 @@ if __name__ == "__main__":
         "test": test,
         "clean": clean,
         "view": view,
+        "dev:viewerserver": dev_viewerserver,
     }
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     parser.add_argument("command", choices=COMMANDS.keys())

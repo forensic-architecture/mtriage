@@ -2,12 +2,12 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import types from './mutation-types'
 import api from './lib/api'
-import exampleData from './assets/test.json'
+// import exampleData from './assets/test.json'
 import { ranker, rankByFrameCount } from './lib/rank';
 
 Vue.use(Vuex)
 
-const stubData = rankByFrameCount(exampleData.videos)
+// const stubData = rankByFrameCount(exampleData.videos)
 
 export default new Vuex.Store({
   state: {
@@ -15,8 +15,8 @@ export default new Vuex.Store({
     fetching: true,
     meta: null,
     error: null,
-    pages: [stubData]
-    // pages: []
+    // pages: [stubData]
+    pages: []
   },
   mutations: {
     [types.FETCH_ITEMS_ATTEMPT] (state) {
