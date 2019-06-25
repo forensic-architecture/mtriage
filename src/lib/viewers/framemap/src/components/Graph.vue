@@ -1,63 +1,36 @@
 <template>
-  <div class="table">
-    <GraphItems :items="items" />
-    <Loading v-if="!fetching" />
-    <div v-if="!!error" class="flexc">
-      <h1>A network connection occurred. Make sure you are correctly configured with a running backend.</h1>
+  <div class="graph-container">
+    <div
+      v-for="(el, key) in elements"
+    >
+      {{el}}
     </div>
+    <!-- <VideoCell -->
+    <!--   v&#45;for="(video, key) in elements" -->
+    <!--   :key="key" -->
+    <!--   :video_id="video.id" -->
+    <!--   :title="video.title" -->
+    <!--   :uploadDate="video.upload_date" -->
+    <!--   :webpageUrl="video.webpage_url" -->
+    <!--   :description="video.description" -->
+    <!--   :duration="video.duration" -->
+    <!--   :frames="video.frames" -->
+    <!--   :scores="video.scores" -->
+    <!-- ></VideoCell> -->
   </div>
 </template>
 
 <script>
-import Loading from './Loading.vue'
-import { mapState, mapActions } from 'vuex'
+  // import { rankByFrameCount } from '../lib/rank'
+  import VideoCell from './VideoCell.vue'
 
-export default {
-  name: 'Graph',
-  components: {
-    Loading,
-    'GraphItems': () => import('./GraphItems.vue')
-  },
-  methods: {
-    ...mapActions([
-      'fetchItems'
-    ])
-  },
-  computed: {
-    ...mapState({
-      fetching: 'fetching',
-      items: state => state.pages ? state.pages[0] : [],
-      error: 'error'
-    })
-  },
-  mounted: function () {
-    // this.fetchItems()
+  export default {
+    name: 'Graph',
+    components: {
+      VideoCell
+    },
+    props: {
+      elements: Array
+    },
   }
-}
 </script>
-
-<style lang="scss">
-$primary-color: #e2e2e2;
-
-h1 {
-  color: white;
-  max-width: 800px;
-}
-
-.table {
-  display: flex;
-  justify-content: flex-start;
-  flex-direction: column;
-  flex: 1;
-  min-height: 100%;
-}
-
-.graph-container {
-  text-align: left;
-}
-
-.hidden {
-  display: none;
-}
-
-</style>

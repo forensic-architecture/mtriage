@@ -7,7 +7,7 @@
         <!--   <Controls /> -->
         <!-- </div> -->
         <div class="content-case">
-          <Graph />
+          <Container />
         </div>
       </div>
     </div>
@@ -17,7 +17,7 @@
 <script>
 import { mapState } from 'vuex'
 import Header from './components/Header.vue'
-import Graph from './components/Graph.vue'
+import Container from './components/Container.vue'
 import Controls from './components/Controls.vue'
 
 export default {
@@ -27,7 +27,7 @@ export default {
   }),
   components: {
     Header,
-    Graph,
+    Container,
     Controls
   }
 }

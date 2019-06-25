@@ -30,6 +30,7 @@
 
 <script>
 import { fmtMinSec } from '../lib/util'
+
 export default {
   name: 'FrameMap',
   props: {
@@ -55,8 +56,8 @@ export default {
     getFrameColor: function(idx) {
       const _idx = this.frames.indexOf(idx)
       return `background-color: rgb(${100 + 155 * (this.scores[_idx] / 40)}, 0, 0)`
-    }
-  }
+    },
+  },
 }
 </script>
 
@@ -76,7 +77,6 @@ $frame-color: #cc1616;
   .on {
     display: flex;
     flex: 1;
-    // background-color: $frame-color;
     &:hover {
       background-color: red;
       cursor: pointer;
