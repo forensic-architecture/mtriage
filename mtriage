@@ -326,10 +326,11 @@ def create_symlinks(inputElementsDir, serverElementsDir):
             folder_out_media = "{}/media".format(folder_out)
             if not os.path.exists(folder_out):
                 os.makedirs(folder_out_media)
-            os.symlink(
-                "{}/{}".format(folder_in, element_path),
-                "{}/{}".format(folder_out_media, element_path),
-            )
+            symfrom = "/mtriage/{}/{}".format(folder_in, element_path)
+            symto = "{}/{}".format(folder_out_media, element_path)
+            print("symlink from: " + symfrom)
+            print("-------   to: " + symto)
+            os.symlink(symfrom, symto)
 
 
 def get_viewer_etype(viewerConfigPath):
@@ -447,45 +448,45 @@ def viewer(args):
     print("Server running successfully in a container.")
     print("----------------------------------")
 
-    print("Creating container to build viewer plugin...")
-    print("----------------------------------")
-    try:
-        sp.call(
-            [
-                "docker",
-                "build",
-                "-t",
-                viewerImgName,
-                "-f",
-                "src/build/viewer.Dockerfile",
-                "src/lib/viewers/" + viewer,
-            ]
-        )
-    except:
-        print("Something went wrong! EEK.")
-    print("Viewer plugin build successful.")
-    print("----------------------------------")
-
-    print("Creating container to run viewer plugin...")
-    sp.Popen(
-        [
-            "docker",
-            "run",
-            "--name",
-            CONT_VIEWER_NAME,
-            "-p",
-            "8081:80",
-            "--rm",
-            "-v",
-            "{}:/mtriage".format(DIR_PATH),
-            viewerImgName,
-        ]
-    )
-    print("Viewer plugin successfully running in container.")
-    print("----------------------------------")
-    print("The viewer is running at: http://localhost:8081")
-    webbrowser.open("http://localhost:8081")
-    # block, and stop containers on ctrl c
+    # print("Creating container to build viewer plugin...")
+    # print("----------------------------------")
+    # try:
+    #     sp.call(
+    #         [
+    #             "docker",
+    #             "build",
+    #             "-t",
+    #             viewerImgName,
+    #             "-f",
+    #             "src/build/viewer.Dockerfile",
+    #             "src/lib/viewers/" + viewer,
+    #         ]
+    #     )
+    # except:
+    #     print("Something went wrong! EEK.")
+    # print("Viewer plugin build successful.")
+    # print("----------------------------------")
+    #
+    # print("Creating container to run viewer plugin...")
+    # sp.Popen(
+    #     [
+    #         "docker",
+    #         "run",
+    #         "--name",
+    #         CONT_VIEWER_NAME,
+    #         "-p",
+    #         "8081:80",
+    #         "--rm",
+    #         "-v",
+    #         "{}:/mtriage".format(DIR_PATH),
+    #         viewerImgName,
+    #     ]
+    # )
+    # print("Viewer plugin successfully running in container.")
+    # print("----------------------------------")
+    # print("The viewer is running at: http://localhost:8081")
+    # webbrowser.open("http://localhost:8081")
+    # # block, and stop containers on ctrl c
     def signal_handler(sig, frame):
         print("Removing containers...")
         sys.exit(0)

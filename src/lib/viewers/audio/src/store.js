@@ -11,7 +11,7 @@ export default new Vuex.Store({
     fetching: true,
     error: null,
     elementIndex: [],
-    elements: {}
+    elements: []
   },
   mutations: {
     [types.FETCH_ELEMENT_INDEX_ATTEMPT] (state) {
@@ -35,6 +35,16 @@ export default new Vuex.Store({
     },
     [types.FETCH_ELEMENT_ERROR] (state, msg) {
       state.error = msg
+    },
+    [types.FETCH_ELEMENTS_ATTEMPT] (state) {
+      state.fetching = true
+    },
+    [types.FETCH_ELEMENTS] (state, elements) {
+      state.elements = elements
+      state.fetching = false
+    },
+    [types.FETCH_ELEMENTS_ERROR] (state, msg) {
+      state.error = msg
     }
   },
   actions: {
@@ -48,7 +58,18 @@ export default new Vuex.Store({
           commit(types.FETCH_ELEMENT_INDEX_ERROR, err.message)
         })
     },
+    fetchElements ({ commit, state }, elements) {
+      commit(types.FETCH_ELEMENTS_ATTEMPT)
+      api.fetchElements()
+        .then(result => {
+          commit(types.FETCH_ELEMENTS, result.data)
+        })
+        .catch(err => {
+          commit(types.FETCH_ELEMENTS_ERROR, err.message)
+        })
+    },
     fetchElement ({ commit, state }, element) {
+      commit(types.FETCH_ELEMENT_ATTEMPT)
       api.fetchElement(element)
         .then(result => {
           commit(types.FETCH_ELEMENT, result.data)

@@ -29,8 +29,7 @@ class Etype(Enum):
 
 
 def globit(path, patterns, is_single=False, etype=None):
-    print("path: " + path)
-    print(patterns)
+
     files = []
     for pattern in patterns:
         glob = list(Path(path).rglob(pattern))
@@ -40,14 +39,11 @@ def globit(path, patterns, is_single=False, etype=None):
             "Could not cast to '{etype}' etype: no media found in directory"
         )
 
-    print(files)
-
     if is_single and len(files) is not 1:
         raise EtypeCastError(
             "Could not cast to '{etype}' etype: more than one media item found."
         )
     elif is_single:
-        print("single")
         return files[0]
 
     return [str(x) for x in files]
@@ -63,7 +59,11 @@ def get_image(el_path):
 
 
 def get_video(el_path):
-    return {"video": globit(el_path, ["*.[mM][pP][4]"], is_single=True, etype="Video")}
+    return {
+        "video": globit(
+            el_path, ["*.[mM][pP][4]", "*.[mM][oO][vV]"], is_single=True, etype="Video"
+        )
+    }
 
 
 def get_audio(el_path):
@@ -91,7 +91,10 @@ def get_jsonarray(el_path):
 def get_annotatedvideo(el_path):
     return {
         "video": globit(
-            el_path, ["*.[mM][pP][4]"], is_single=True, etype="AnnotatedVideo"
+            el_path,
+            ["*.[mM][pP][4]", "*.[mM][oO][vV]"],
+            is_single=True,
+            etype="AnnotatedVideo",
         ),
         "json": globit(
             el_path, ["*.[jJ][sS][oO][nN]"], is_single=True, etype="AnnotatedVideo"

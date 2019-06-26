@@ -18,11 +18,7 @@ CONFIG=$( jq -n \
 		children: [
 			{
 				"name" : "extract_audio",
-				"config" : { "output_ext" : "mp3" }
-			},
-			{
-				"name" : "convert_audio",
-				"config" : { "input_ext" : "mp3", "output_ext" : "wav" }
+				"config" : { "output_ext" : "wav" }
 			},
       {
 				"name" : "audio_onsets",

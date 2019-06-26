@@ -21,18 +21,18 @@ export default {
   },
   methods: {
     ...mapActions([
-      'fetchElementIndex'
+      'fetchElements'
     ])
   },
   computed: {
     ...mapState({
       fetching: state => state.fetching,
-      elements: state => state.elementIndex,
+      elements: state => state.elements,
       error: state => state.error
     })
   },
   mounted: function () {
-    this.fetchElementIndex()
+    this.fetchElements()
   }
 }
 </script>

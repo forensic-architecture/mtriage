@@ -89,6 +89,7 @@ func handleElement(w http.ResponseWriter, r *http.Request) {
   path := ELEMENTS_DIR + "/" + id + "/"
   if media != "" {
     path = path + "media/" + media
+    log.Println("path: " + path)
     serveSymlink(path, w, r)
   } else {
     path = path + id + ".json"
@@ -104,12 +105,18 @@ func enableCors(w *http.ResponseWriter) {
 
 func serveJson(file string, w http.ResponseWriter, r *http.Request) {
   enableCors(&w)
+  w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(http.StatusCreated)
   http.ServeFile(w, r, file)
 }
 
 func serveSymlink(link string, w http.ResponseWriter, r *http.Request) {
   file := resolveSymlink(link)
+  log.Println(file)
+
   enableCors(&w)
+  // w.Header().Set("Content-Type", "application/json")
+  // w.WriteHeader(http.StatusCreated)
   http.ServeFile(w, r, file)
 }
 
