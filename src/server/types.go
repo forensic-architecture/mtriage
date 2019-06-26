@@ -20,22 +20,24 @@ type Dir struct {
 	Kind ElementDirKind
 }
 
-type ElementMap struct {
-	Selected []EtypedDir
-	Analysed []EtypedDir
-}
-
-// RESPONSE DATA TYPES
-
-type EtypedDir struct {
-	Path string
-	Name string
-	Kind ElementDirKind
-	Elements []EtypedElement
-}
-
 type EtypedElement struct {
 	Id string
 	Etype string
 	Media map[string][]string
 }
+
+type EtypedDir struct {
+	Path string
+	ComponentName string
+	Elements []EtypedElement
+}
+
+type SelectedDir EtypedDir
+type AnalysedDir EtypedDir
+
+type ElementMap struct {
+	Selected []SelectedDir
+	Analysed []AnalysedDir
+}
+
+

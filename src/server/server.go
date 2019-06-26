@@ -24,13 +24,19 @@ func main() {
 		os.Exit(1)
 	}
 	port := ":8080"
-	ELEMENT_MAP = indexAndCastElements(workingDir)
+	// NOTE: populates ELEMENT_MAP synchronously
+	err = indexComponentDirs(workingDir)
 
-	// http.HandleFunc("/elementIndex", handleElementIndex)
+	if err != nil {
+		panic("Could not index")
+		os.Exit(1)
+	}
+
 	http.HandleFunc("/elementmap", handleElementMap)
 	http.HandleFunc("/elements", handleElements)
 	http.HandleFunc("/element", handleElement)
 
+	log.Println(ELEMENT_MAP)
 	log.Println("Listening on port 8080...")
 	http.ListenAndServe(port, nil)
 }
@@ -39,8 +45,6 @@ func main() {
 func handleElementMap(w http.ResponseWriter, r *http.Request) {
 	serveJsonData(ELEMENT_MAP, w)
 }
-
-
 
 func handleElements(w http.ResponseWriter, r *http.Request) {
 	// elementDirs := getDirsInDir(ELEMENTS_DIR, []string{"media", "elements"})
@@ -68,30 +72,3 @@ func handleElement(w http.ResponseWriter, r *http.Request) {
 	// 	serveJson(path, w, r)
 	// }
 }
-
-
-
-// func handleElementIndex(w http.ResponseWriter, r *http.Request) {
-// 	elementDirs := getDirsInDir(ELEMENTS_DIR, []string{"media", "elements"})
-// 	var elementNames []string
-// 	for i := range elementDirs {
-// 		elementNames = append(elementNames, elementDirs[i].Name)
-// 	}
-// 	elementsData := ElementIndex{ Elements: elementNames }
-// 	serveJsonData(elementsData, w)
-// }
-
-// func castElements(config Config) {
-// 	elementDirs := getDirsInDir(ELEMENTS_DIR, []string{"media", "elements"})
-// 	for i := 0; i < len(elementDirs); i++ {
-// 		elementDir := elementDirs[i]
-// 		elementId := strings.Replace(elementDir.Path, "/media", "", -1)
-// 		elementId = strings.Replace(elementId, ELEMENTS_DIR + "/", "", -1)
-// 		etype := getEtype(config.Etype)
-// 		typedElement := castToEtype(elementDir.Path + "/media", etype, elementId)
-// 		filepath := ELEMENTS_DIR + "/" + elementId + "/" + elementId + ".json"
-// 		writeToJsonFile(filepath, typedElement)
-// 	}
-// }
-
-

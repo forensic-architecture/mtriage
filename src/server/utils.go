@@ -1,15 +1,61 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"path/filepath"
 	"os"
 	"encoding/json"
 	"io/ioutil"
 	"strings"
-
 )
+
+// run on server start
+func indexComponentDirs(dir string) error {
+	DATA_DIR := "data"
+	DERIVED_DIR := "derived"
+	ELEMENT_MAP = ElementMap{ Selected: []SelectedDir{}, Analysed: []AnalysedDir{} }
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		// skip files
+		if !info.IsDir() {
+			return nil
+		}
+		name := info.Name()
+		// append all selector elements
+		if name == DATA_DIR {
+			elements, err := getChildDirsEtyped(path)
+			if err != nil {
+				panic("somthing")
+			}
+			dir := SelectedDir{ Path: path, ComponentName: name, Elements: elements }
+			ELEMENT_MAP.Selected = append(ELEMENT_MAP.Selected, dir)
+		}
+		// append all derived folders
+		if name == DERIVED_DIR {
+			childDirs, err := getChildDirs(path)
+			if err != nil {
+				panic("somthng")
+			}
+			for i := 0; i < len(childDirs); i++ {
+				dir := childDirs[i]
+				elements, err := getChildDirsEtyped(dir.Path)
+				if err != nil {
+					panic("somthing")
+				}
+				edir := AnalysedDir{
+					Path: dir.Path,
+					ComponentName: dir.Name,
+					Elements: elements,
+				}
+				ELEMENT_MAP.Analysed = append(ELEMENT_MAP.Analysed, edir)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	return nil
+}
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -48,25 +94,7 @@ func getRequestValue(param string, r *http.Request) string {
 	return values[0]
 }
 
-func indexAndCastElements(workingDir string) ElementMap {
-	componentDirs := getComponentDirs(workingDir)
-	for i := 0; i < len(componentDirs); i++ {
-		elementDir := componentDirs[i]
-		childDirs, _ := getChildDirs(elementDir.Path)
-		// TODO: heuristic for deciding how to cast elements...
-		for i := 0; i < len(childDirs); i++ {
-			log.Println(childDirs[i])
-		}
-		// elementId := strings.Replace(elementDir.Path, "/media", "", -1)
-		// elementId = strings.Replace(elementId, ELEMENTS_DIR + "/", "", -1)
-		// etype := getEtype(config.Etype)
-		// typedElement := castToEtype(elementDir.Path + "/media", etype, elementId)
-		// filepath := ELEMENTS_DIR + "/" + elementId + "/" + elementId + ".json"
-		// writeToJsonFile(filepath, typedElement)
-	}
 
-	return ElementMap{ Selected: []EtypedDir{}, Analysed: []EtypedDir{} }
-}
 // FILE PATHS
 func dirExists(path string) (bool, error) {
 	_, err := os.Stat(path)
@@ -117,83 +145,66 @@ func getChildDirs(path string) ([]Dir, error) {
 	return dirs, nil
 }
 
-
-func getComponentDirs(dir string) []Dir {
-	DATA_DIR := "data"
-	DERIVED_DIR := "derived"
-	var dirs []Dir
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		// skip files
-		if !info.IsDir() {
-			return nil
-		}
-		name := info.Name()
-		// append all selector elements
-		if name == DATA_DIR {
-			dirs = append(dirs, Dir{ Path: path, Name: name, Kind: Selected })
-		}
-		// append all derived folders
-		if name == DERIVED_DIR {
-			childDirs, err := getChildDirs(path)
-			if err != nil {
-				// NOTE: fail silently...
-				panic("somthng")
-			}
-			for i := 0; i < len(childDirs); i++ {
-				dir := childDirs[i]
-				dir.Kind = Analysed
-				dirs = append(dirs, dir)
-			}
-		}
-		return nil
-	})
+func getChildDirsEtyped(path string) ([]EtypedElement, error) {
+	var els []EtypedElement
+	childDirs, err := ioutil.ReadDir(path)
 	if err != nil {
-		panic(err)
+		return els, err
 	}
-	return dirs
-}
-
-func getDirsInDir(dir string, skips []string) []Dir {
-	var dirs []Dir
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			return nil
+	for i := 0; i < len(childDirs); i++ {
+		dir := childDirs[i]
+		if !dir.IsDir() {
+			continue
 		}
-		for i := 0; i < len(skips); i++ {
-			if info.Name() == skips[i] {
-				return nil
-			}
-		}
-		name := info.Name()
-		dirs = append(dirs, Dir{ Path: path, Name: name })
-		return nil
-	})
-	if err != nil {
-		panic(err)
+		var str strings.Builder
+		str.WriteString(path)
+		str.WriteString("/")
+		str.WriteString(dir.Name())
+		elPath := str.String()
+		// TODO: attempt other casts
+		etypedEl := castToEtype(elPath, getEtype("Any"), dir.Name())
+		els = append(els, etypedEl)
 	}
-	return dirs
+	return els, nil
+
 }
 
-func getPathBases(paths []string) []string {
-	var bases []string
-	for i := 0; i < len(paths); i++ {
-		base := filepath.Base(paths[i])
-		bases = append(bases, base)
-	}
-	return bases
-}
 
-func getPathBase(path string) string {
-	return filepath.Base(path)
-}
 
-func resolveSymlink(symlink string) string {
-	file, err := os.Readlink(symlink)
-	if err != nil {
-		// TODO - throw
-	}
-	return file
-}
+
+// func getDirsInDir(dir string, skips []string) []Dir {
+// 	var dirs []Dir
+// 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+// 		if !info.IsDir() {
+// 			return nil
+// 		}
+// 		for i := 0; i < len(skips); i++ {
+// 			if info.Name() == skips[i] {
+// 				return nil
+// 			}
+// 		}
+// 		name := info.Name()
+// 		dirs = append(dirs, Dir{ Path: path, Name: name })
+// 		return nil
+// 	})
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return dirs
+// }
+
+// func getPathBases(paths []string) []string {
+// 	var bases []string
+// 	for i := 0; i < len(paths); i++ {
+// 		base := filepath.Base(paths[i])
+// 		bases = append(bases, base)
+// 	}
+// 	return bases
+// }
+
+// func getPathBase(path string) string {
+// 	return filepath.Base(path)
+// }
 
 // IO
 
