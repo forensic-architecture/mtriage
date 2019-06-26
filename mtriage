@@ -514,12 +514,11 @@ def view(args):
 
 
 def dev_viewerserver(args):
-    input_elements_dir = args.input
-    viewer_name = args.viewer
-    __setup_symlinks(input_elements_dir, viewer_name)
-
-    server_img_name = "{}:dev".format(SERVER_NAME)
     print("Creating container to run server...")
+    # __build_viewer_server()
+    working_dir = args.input
+    if not os.path.exists(working_dir):
+        raise Exception("Not a valid directory.")
     sp.Popen(
         [
             "docker",
@@ -531,7 +530,10 @@ def dev_viewerserver(args):
             "--rm",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
-            server_img_name,
+            "-v",
+            # NOTE: assumes path is relative from the mtriage folder
+            "{}/{}:/workingdir".format(DIR_PATH, working_dir),
+            "{}:dev".format(SERVER_NAME),
         ]
     )
     print("Server running successfully in a container.")

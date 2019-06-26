@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"strings"
-	"fmt"
+	"os"
 )
 
 // INTERNAL TYPES
@@ -22,12 +22,32 @@ type File struct {
 	Ext string
 }
 
+type ElementDirKind int
+const (
+	Unspecified ElementDirKind = 0
+	Selected	ElementDirKind = 1
+	Analysed	ElementDirKind = 2
+)
+
 type Dir struct {
 	Path string
 	Name string
+	Kind ElementDirKind
+}
+
+type ElementMap struct {
+	Selected []EtypedDir
+	Analysed []EtypedDir
 }
 
 // RESPONSE DATA TYPES
+
+type EtypedDir struct {
+	Path string
+	Name string
+	Kind ElementDirKind
+	Elements []EtypedElement
+}
 
 type EtypedElement struct {
 	Id string
@@ -44,13 +64,23 @@ type ElementsData struct {
 
 // ENTRYPOINT
 func main() {
-	config := loadConfig(CONFIG_FILE)
-	port := fmt.Sprintf(":%d", config.Port)
-	castElements(config)
+	if len(os.Args) != 2 {
+		log.Println("You need to pass the working directory context as the first argument to mserver")
+		os.Exit(1)
+	}
+	workingDir := os.Args[1]
+	exists, err := dirExists(workingDir)
+	if !exists || err != nil {
+		log.Println("You need to pass a working directory that exists.")
+		os.Exit(1)
+	}
+	port := ":8080"
+	elementMap := indexAndCastElements(workingDir)
+	log.Println(elementMap)
 
-	http.HandleFunc("/elementIndex", handleElementIndex)
-	http.HandleFunc("/elements", handleElements)
-	http.HandleFunc("/element", handleElement)
+	// http.HandleFunc("/elementIndex", handleElementIndex)
+	// http.HandleFunc("/elements", handleElements)
+	// http.HandleFunc("/element", handleElement)
 
 	log.Println("Listening on port 8080...")
 	http.ListenAndServe(port, nil)
@@ -82,7 +112,9 @@ func handleElement(w http.ResponseWriter, r *http.Request) {
 	id := getRequestValue("id", r)
 	media := getRequestValue("media", r)
 	path := ELEMENTS_DIR + "/" + id + "/"
+	log.Println(path)
 	if media != "" {
+		log.Println("we here")
 		path = path + "media/" + media
 		serveSymlink(path, w, r)
 	} else {
@@ -160,4 +192,24 @@ func castElements(config Config) {
 		filepath := ELEMENTS_DIR + "/" + elementId + "/" + elementId + ".json"
 		writeToJsonFile(filepath, typedElement)
 	}
+}
+
+func indexAndCastElements(workingDir string) ElementMap {
+	componentDirs := getComponentDirs(workingDir)
+	for i := 0; i < len(componentDirs); i++ {
+		elementDir := componentDirs[i]
+		childDirs, _ := getChildDirs(elementDir.Path)
+		// TODO: heuristic for deciding how to cast elements...
+		for i := 0; i < len(childDirs); i++ {
+			log.Println(childDirs[i])
+		}
+		// elementId := strings.Replace(elementDir.Path, "/media", "", -1)
+		// elementId = strings.Replace(elementId, ELEMENTS_DIR + "/", "", -1)
+		// etype := getEtype(config.Etype)
+		// typedElement := castToEtype(elementDir.Path + "/media", etype, elementId)
+		// filepath := ELEMENTS_DIR + "/" + elementId + "/" + elementId + ".json"
+		// writeToJsonFile(filepath, typedElement)
+	}
+
+	return ElementMap{ Selected: []EtypedDir{}, Analysed: []EtypedDir{} }
 }
