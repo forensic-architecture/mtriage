@@ -24,6 +24,7 @@ func main() {
 		os.Exit(1)
 	}
 	port := ":8080"
+
 	// NOTE: populates ELEMENT_MAP synchronously
 	err = indexComponentDirs(workingDir)
 
@@ -36,7 +37,6 @@ func main() {
 	http.HandleFunc("/elements", handleElements)
 	http.HandleFunc("/element", handleElement)
 
-	log.Println(ELEMENT_MAP)
 	log.Println("Listening on port 8080...")
 	http.ListenAndServe(port, nil)
 }

@@ -9,10 +9,11 @@ import (
 	"strings"
 )
 
+const DATA_DIR = "data"
+const DERIVED_DIR = "derived"
+
 // run on server start
 func indexComponentDirs(dir string) error {
-	DATA_DIR := "data"
-	DERIVED_DIR := "derived"
 	ELEMENT_MAP = ElementMap{ Selected: []SelectedDir{}, Analysed: []AnalysedDir{} }
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		// skip files
