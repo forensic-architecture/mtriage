@@ -1,18 +1,72 @@
 package main
 
 import (
+	"log"
+	"net/http"
 	"path/filepath"
 	"os"
 	"encoding/json"
 	"io/ioutil"
 	"strings"
+
 )
 
-// CONSTANTS
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
 
-const ELEMENTS_DIR string = "elements"
-const CONFIG_FILE string = "config.json"
+func serveJson(file string, w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	http.ServeFile(w, r, file)
+}
 
+func serveJsonData(data interface{}, w http.ResponseWriter) {
+	enableCors(&w)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(data)
+}
+
+func loadTypedElement(path string) EtypedElement {
+	file, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	element := EtypedElement{}
+	err = json.Unmarshal([]byte(file), &element)
+	if err != nil {
+		panic(err)
+	}
+	return element
+}
+
+func getRequestValue(param string, r *http.Request) string {
+	values, ok := r.URL.Query()[param]
+	if !ok || len(values[0]) < 1 {
+		return ""
+	}
+	return values[0]
+}
+
+func indexAndCastElements(workingDir string) ElementMap {
+	componentDirs := getComponentDirs(workingDir)
+	for i := 0; i < len(componentDirs); i++ {
+		elementDir := componentDirs[i]
+		childDirs, _ := getChildDirs(elementDir.Path)
+		// TODO: heuristic for deciding how to cast elements...
+		for i := 0; i < len(childDirs); i++ {
+			log.Println(childDirs[i])
+		}
+		// elementId := strings.Replace(elementDir.Path, "/media", "", -1)
+		// elementId = strings.Replace(elementId, ELEMENTS_DIR + "/", "", -1)
+		// etype := getEtype(config.Etype)
+		// typedElement := castToEtype(elementDir.Path + "/media", etype, elementId)
+		// filepath := ELEMENTS_DIR + "/" + elementId + "/" + elementId + ".json"
+		// writeToJsonFile(filepath, typedElement)
+	}
+
+	return ElementMap{ Selected: []EtypedDir{}, Analysed: []EtypedDir{} }
+}
 // FILE PATHS
 func dirExists(path string) (bool, error) {
 	_, err := os.Stat(path)
