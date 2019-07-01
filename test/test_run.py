@@ -3,7 +3,7 @@ import docker
 import os
 import shutil
 import json
-from run import (
+from mtriage import (
     name_and_ver,
     InvalidPipDep,
     should_add_pipdep,
@@ -18,8 +18,8 @@ from run import (
 )
 
 
-class TestRunpy(unittest.TestCase):
-    """ Tests the run.py file that orchestrates mtriage.
+class TestMtriage(unittest.TestCase):
+    """ Tests the file that orchestrates mtriage.
     """
 
     @classmethod

@@ -493,6 +493,34 @@ def viewer(args):
     signal.signal(signal.SIGINT, signal_handler)
     signal.pause()
 
+def run(args):
+    TAG_NAME = "dev-gpu" if args.gpu else "dev"
+    # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
+    # so that the call arguments are well formed.
+    sp.call(
+        [
+            "docker",
+            "run",
+            "--name",
+            CONT_NAME,
+            "--runtime=nvidia" if args.gpu else "--ipc=host",
+            "--env",
+            "BASE_DIR=/mtriage",
+            "--env-file={}".format(ENV_FILE),
+            "--rm",
+            "--privileged",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            "-v",
+            "{}:/run_args.yaml".format(os.path.abspath(args.yaml)),
+            "-v",
+            "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
+            "{}:{}".format(NAME, TAG_NAME),
+            "python3", "/mtriage/src/run.py"
+
+        ]
+    )
+    print("TODO: spin up docker etc")
 
 if __name__ == "__main__":
     COMMANDS = {
@@ -501,13 +529,36 @@ if __name__ == "__main__":
         "test": test,
         "clean": clean,
         "view": viewer,
+        "run": run,
     }
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
-    parser.add_argument("command", choices=COMMANDS.keys())
-    parser.add_argument("--input", "-i", help="Input Folder", required=False)
-    parser.add_argument("--viewer", "-v", help="Viewer Plugin Folder", required=False)
-    parser.add_argument("--gpu", action="store_true")
+    # parser.add_argument("toplevel", choices=["run", "dev"])
+
+    subparsers = parser.add_subparsers(dest="__base")
+
+    run_p = subparsers.add_parser('run')
+
+    def yaml_type(fname):
+        ext = os.path.splitext(fname)[1][1:]
+        if ext not in ("yaml"):
+            run_p.error("The file you specify to run mtriage must be a YAML file")
+        if not os.path.exists(fname):
+            run_p.error("Cannot find a file at {}.".format(fname))
+        return fname
+
+    run_p.add_argument("yaml", type=yaml_type)
+    run_p.add_argument("--gpu", action="store_true")
+    # TODO: accept an interactive option at -i
+
+    dev_p = subparsers.add_parser('dev')
+    dev_p.add_argument("command", choices=COMMANDS.keys())
+    dev_p.add_argument("--input", "-i", help="Input Folder", required=False)
+    dev_p.add_argument("--viewer", "-v", help="Viewer Plugin Folder", required=False)
+    dev_p.add_argument("--gpu", action="store_true")
 
     args = parser.parse_args()
-    cmd = COMMANDS[args.command]
-    cmd(args)
+
+    if args.__base == "dev":
+        COMMANDS[args.command](args)
+    else:
+        COMMANDS["run"](args)
