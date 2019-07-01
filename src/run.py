@@ -43,11 +43,7 @@ from lib.common.exceptions import (
 
 CONFIG_PATH = "/run_args.yaml"
 
-
-def _run_yaml(dry_run=False):
-    with open(CONFIG_PATH, "r") as c:
-        cfg = yaml.safe_load(c)
-
+def validate_yaml(cfg):
     # validate
     if "folder" not in cfg.keys() or not isinstance(cfg["folder"], str):
         raise InvalidConfigError("The folder attribute must exist and be a string")
@@ -77,8 +73,11 @@ def _run_yaml(dry_run=False):
                 f"The config you specified does not contain all the required arguments for the '{cfg['module']}' {mod_name}."
             )
 
-    if dry_run:
-        return
+def _run_yaml():
+    with open(CONFIG_PATH, "r") as c:
+        cfg = yaml.safe_load(c)
+
+    validate_yaml(cfg)
 
     # done validating, run appropriate phase
     if not os.path.exists(cfg["folder"]):

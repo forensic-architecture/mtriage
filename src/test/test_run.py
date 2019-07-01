@@ -1,5 +1,5 @@
 import unittest
-from run import _run_yaml
+from run import validate_yaml
 import yaml
 from lib.common.exceptions import InvalidConfigError
 
@@ -7,6 +7,12 @@ from lib.common.exceptions import InvalidConfigError
 def write_config(vl):
     with open("/run_args.yaml", "w") as c:
         yaml.dump(vl, c, default_flow_style=False)
+
+def validate_config():
+    with open("/run_args.yaml", "r") as c:
+        cfg = yaml.safe_load(c)
+    print(cfg)
+    validate_yaml(cfg)
 
 
 class TestRun(unittest.TestCase):
@@ -16,7 +22,7 @@ class TestRun(unittest.TestCase):
             c.write('foo: "an escaped \\\' single quote"')
 
         with self.assertRaises(yaml.YAMLError):
-            _run_yaml(dry_run=True)
+            validate_config()
 
     def test_bad_config(self):
         empty = {}
@@ -27,13 +33,13 @@ class TestRun(unittest.TestCase):
         with self.assertRaisesRegex(
             InvalidConfigError, "The folder attribute must exist and be a string"
         ):
-            _run_yaml(dry_run=True)
+            validate_config()
 
         write_config(bad_folder)
         with self.assertRaisesRegex(
             InvalidConfigError, "The folder attribute must exist and be a string"
         ):
-            _run_yaml(dry_run=True)
+            validate_config()
 
         bad_phase = {**good_folder, "phase": "not a phase"}
         good_phase_select = {**good_folder, "phase": "select"}
@@ -42,7 +48,7 @@ class TestRun(unittest.TestCase):
         with self.assertRaisesRegex(
             InvalidConfigError, "The phase attribute must be either select or analyse"
         ):
-            _run_yaml(dry_run=True)
+            validate_config()
 
         bad_select_module = {**good_phase_select, "module": "not a selector"}
         bad_analyse_module = {**good_phase_analyse, "module": "not an analyser"}
@@ -51,13 +57,13 @@ class TestRun(unittest.TestCase):
         with self.assertRaisesRegex(
             InvalidConfigError, "No selector named 'not a selector'"
         ):
-            _run_yaml(dry_run=True)
+            validate_config()
 
         write_config(bad_analyse_module)
         with self.assertRaisesRegex(
             InvalidConfigError, "No analyser named 'not an analyser'"
         ):
-            _run_yaml(dry_run=True)
+            validate_config()
 
         # the select module requires a 'source_folder' arg
         bad_local_config = {**good_select_module, "config": {}}
@@ -75,22 +81,22 @@ class TestRun(unittest.TestCase):
         with self.assertRaisesRegex(
             InvalidConfigError, "The 'config' attribute must exist."
         ):
-            _run_yaml(dry_run=True)
+            validate_config()
 
         write_config(bad_local_config)
         with self.assertRaisesRegex(
             InvalidConfigError,
             "The config you specified does not contain all the required arguments for the 'local' selector.",
         ):
-            _run_yaml(dry_run=True)
+            validate_config()
 
         write_config(bad_youtube_config)
         with self.assertRaisesRegex(
             InvalidConfigError,
             "The config you specified does not contain all the required arguments for the 'youtube' selector.",
         ):
-            _run_yaml(dry_run=True)
+            validate_config()
 
 
         write_config(good_youtube_config)
-        _run_yaml(dry_run=True)
+        validate_config()

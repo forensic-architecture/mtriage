@@ -1,0 +1,7 @@
+folder: "temp/demo_output"
+phase: "analyse"
+module: "keras_mobilenet"
+config: # <- no elements_in?
+  filepath: "./"
+  labels: "military uniform"
+  hardware: "local"
