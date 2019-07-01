@@ -43,8 +43,10 @@ from lib.common.exceptions import (
 
 CONFIG_PATH = "/run_args.yaml"
 
+
 def module_name(phase):
     return "selector" if phase == "select" else "analyser"
+
 
 def validate_yaml(cfg):
     # validate
@@ -72,6 +74,7 @@ def validate_yaml(cfg):
             raise InvalidConfigError(
                 f"The config you specified does not contain all the required arguments for the '{cfg['module']}' {mod_name}."
             )
+
 
 def _run_yaml():
     with open(CONFIG_PATH, "r") as c:

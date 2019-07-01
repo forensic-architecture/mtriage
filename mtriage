@@ -493,6 +493,7 @@ def viewer(args):
     signal.signal(signal.SIGINT, signal_handler)
     signal.pause()
 
+
 def run(args):
     TAG_NAME = "dev-gpu" if args.gpu else "dev"
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
@@ -519,6 +520,7 @@ def run(args):
         ]
     )
 
+
 if __name__ == "__main__":
     COMMANDS = {
         "build": build,
@@ -533,7 +535,7 @@ if __name__ == "__main__":
 
     subparsers = parser.add_subparsers(dest="__base")
 
-    run_p = subparsers.add_parser('run')
+    run_p = subparsers.add_parser("run")
 
     def yaml_type(fname):
         ext = os.path.splitext(fname)[1][1:]
@@ -547,7 +549,7 @@ if __name__ == "__main__":
     run_p.add_argument("--gpu", action="store_true")
     # TODO: accept an interactive option at -i
 
-    dev_p = subparsers.add_parser('dev')
+    dev_p = subparsers.add_parser("dev")
     dev_p.add_argument("command", choices=COMMANDS.keys())
     dev_p.add_argument("--input", "-i", help="Input Folder", required=False)
     dev_p.add_argument("--viewer", "-v", help="Viewer Plugin Folder", required=False)

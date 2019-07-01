@@ -8,6 +8,7 @@ def write_config(vl):
     with open("/run_args.yaml", "w") as c:
         yaml.dump(vl, c, default_flow_style=False)
 
+
 def validate_config():
     with open("/run_args.yaml", "r") as c:
         cfg = yaml.safe_load(c)
@@ -67,15 +68,20 @@ class TestRun(unittest.TestCase):
 
         # the select module requires a 'source_folder' arg
         bad_local_config = {**good_select_module, "config": {}}
-        bad_youtube_config = {**good_select_module, "module": "youtube", "config": {
-            "search_term": "a search term",
-            "uploaded_before": "212321",
-        }}
-        good_youtube_config = {**good_select_module, "module": "youtube", "config": {
-            "search_term": "a search term",
-            "uploaded_before": "212321",
-            "uploaded_after": "212321",
-        }}
+        bad_youtube_config = {
+            **good_select_module,
+            "module": "youtube",
+            "config": {"search_term": "a search term", "uploaded_before": "212321"},
+        }
+        good_youtube_config = {
+            **good_select_module,
+            "module": "youtube",
+            "config": {
+                "search_term": "a search term",
+                "uploaded_before": "212321",
+                "uploaded_after": "212321",
+            },
+        }
 
         write_config(good_select_module)
         with self.assertRaisesRegex(
@@ -96,7 +102,6 @@ class TestRun(unittest.TestCase):
             "The config you specified does not contain all the required arguments for the 'youtube' selector.",
         ):
             validate_config()
-
 
         write_config(good_youtube_config)
         validate_config()
