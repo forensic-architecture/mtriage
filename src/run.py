@@ -43,6 +43,9 @@ from lib.common.exceptions import (
 
 CONFIG_PATH = "/run_args.yaml"
 
+def module_name(phase):
+    return "selector" if phase == "select" else "analyser"
+
 def validate_yaml(cfg):
     # validate
     if "folder" not in cfg.keys() or not isinstance(cfg["folder"], str):
@@ -52,9 +55,6 @@ def validate_yaml(cfg):
 
     if "module" not in cfg.keys():
         raise InvalidConfigError("You must specify a module")
-
-    def module_name(phase):
-        return "selector" if phase == "select" else "analyser"
 
     mod_name = module_name(cfg["phase"])
 
@@ -83,7 +83,9 @@ def _run_yaml():
     if not os.path.exists(cfg["folder"]):
         os.makedirs(cfg["folder"])
 
-    the_module = mod(cfg["config"], cfg["module"], cfg["folder"])
+    mod_name = module_name(cfg["phase"])
+    Mod = get_module(mod_name, cfg["module"])
+    the_module = Mod(cfg["config"], cfg["module"], cfg["folder"])
     if cfg["phase"] == "select":
         the_module.start_indexing()
         the_module.start_retrieving()
