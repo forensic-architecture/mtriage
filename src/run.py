@@ -44,89 +44,52 @@ from lib.common.exceptions import (
 CONFIG_PATH = "/run_args.yaml"
 
 
-def _select_run(args):
-    # NOTE: make output dirs if they don't exist
-    if not os.path.exists(args.folder):
-        os.makedirs(args.folder)
+def _run_yaml(dry_run=False):
+    with open(CONFIG_PATH, "r") as c:
+        cfg = yaml.safe_load(c)
 
-    try:
-        TheSelector = get_module("selector", args.module)
-    except:
-        raise SelectorNotFoundError(args.module)
-
-    config = json.loads(args.config) if args.config else {}
-    selector = TheSelector(config, args.module, args.folder)
-
-    selector.start_indexing()
-    # TODO: conditionally run retrieve based on config
-    selector.start_retrieving()
-
-
-def _analyse_run(args):
-    if not os.path.exists(args.folder):
-        raise WorkingDirectorNotFoundError(args.folder)
-
-    try:
-        TheAnalyser = get_module("analyser", args.module)
-    except:
-        raise AnalyserNotFoundError(args.module)
-
-    config = json.loads(args.config) if args.config else {}
-
-    analyser = TheAnalyser(config, args.module, args.folder)
-    analyser.start_analysing()
-
-
-def _run():
-    PARSER = argparse.ArgumentParser()
-    PARSER.add_argument("--module", "-m", help="Module to use", required=True)
-    PARSER.add_argument(
-        "--config", "-c", help="Configuration options for module", required=True
-    )
-    PARSER.add_argument(
-        "--phase",
-        "-p",
-        help="The phase to run. One of: select, analyse, view",
-        required=True,
-    )
-    PARSER.add_argument(
-        "--folder", "-f", help="Path to working folder for results", required=True
-    )
-
-    ARGS = PARSER.parse_args()
-
-    if ARGS.phase == "select":
-        _select_run(ARGS)
-    elif ARGS.phase == "analyse":
-        _analyse_run(ARGS)
-    else:
-        raise (InvalidPhaseError())
-
-def __validate_config(config):
-    if "folder" not in config.keys() or not isinstance(config["folder"], str):
+    # validate
+    if "folder" not in cfg.keys() or not isinstance(cfg["folder"], str):
         raise InvalidConfigError("The folder attribute must exist and be a string")
-    if "phase" not in config.keys() or config["phase"] not in ["select", "analyse"]:
+    if "phase" not in cfg.keys() or cfg["phase"] not in ["select", "analyse"]:
         raise InvalidConfigError("The phase attribute must be either select or analyse")
 
-    if "module" not in config.keys():
+    if "module" not in cfg.keys():
         raise InvalidConfigError("You must specify a module")
 
     def module_name(phase):
         return "selector" if phase == "select" else "analyser"
 
-    mod_name = module_name(config["phase"])
+    mod_name = module_name(cfg["phase"])
 
     try:
-        get_module(mod_name, config["module"])
+        mod = get_module(mod_name, cfg["module"])
     except ModuleNotFoundError as e:
-        raise InvalidConfigError(f"No {mod_name} named '{config['module']}'")
+        raise InvalidConfigError(f"No {mod_name} named '{cfg['module']}'")
 
+    if "config" not in cfg.keys() or not isinstance(cfg["config"], dict):
+        raise InvalidConfigError("The 'config' attribute must exist.")
+    # dynamically check all required args for module config exist
+    argnames = mod.get_arg_names()
+    for key in argnames.keys():
+        if argnames[key] is True and key not in cfg["config"].keys():
+            raise InvalidConfigError(
+                f"The config you specified does not contain all the required arguments for the '{cfg['module']}' {mod_name}."
+            )
 
+    if dry_run:
+        return
 
-def _run_yaml():
-    with open(CONFIG_PATH, "r") as c:
-        config = yaml.safe_load(c)
-    __validate_config(config)
+    # done validating, run appropriate phase
+    if not os.path.exists(cfg["folder"]):
+        os.makedirs(cfg["folder"])
+
+    the_module = mod(cfg["config"], cfg["module"], cfg["folder"])
+    if cfg["phase"] == "select":
+        the_module.start_indexing()
+        the_module.start_retrieving()
+    else:  # analyse
+        the_module.start_analysing()
 
 
 if __name__ == "__main__":

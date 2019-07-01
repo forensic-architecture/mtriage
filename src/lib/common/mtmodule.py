@@ -25,8 +25,10 @@ class MTModule(ABC):
     def get_out_etype(self):
         return Etype.Any
 
-    def get_arg_names(self):
-        return []
+    @staticmethod
+    def get_arg_names():
+        """ Dict keys are arg names, vals are booleans indicating whether the arg is required """
+        return {}
 
     @staticmethod
     def logged_phase(phase_key):
