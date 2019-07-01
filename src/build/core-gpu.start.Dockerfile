@@ -33,8 +33,8 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
     DEBIAN_FRONTEND=noninteractive $APT_INSTALL \
         software-properties-common \
         && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && \
+    # add-apt-repository ppa:deadsnakes/ppa && \
+    # apt-get update && \
     DEBIAN_FRONTEND=noninteractive $APT_INSTALL \
         python3.6 \
         python3.6-dev \
@@ -57,10 +57,7 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
 EXPOSE 6006
 
 # core
-RUN apt-get update --fix-missing && \
-	apt-get install -y \
-	build-essential \
-	jq
+RUN apt-get update --fix-missing
 
 # Copy necessary folders
 RUN mkdir -p /mtriage
