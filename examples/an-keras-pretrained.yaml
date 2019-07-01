@@ -1,4 +1,4 @@
-folder: "temp/demo_output"
+folder: "temp/demo_youtube_select"
 phase: "analyse"
 module: "keras_pretrained"
 config:

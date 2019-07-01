@@ -1,4 +1,4 @@
-folder: temp/demo_output
+folder: temp/demo_output2
 phase: "select"
 module: "local"
 config:

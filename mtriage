@@ -516,8 +516,6 @@ def run(args):
             "-v",
             "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
             "{}:{}".format(NAME, TAG_NAME),
-            "python3", "/mtriage/src/run.py"
-
         ]
     )
 
