@@ -96,6 +96,15 @@ class YoutubeSelector(Selector):
                 args_obj["after"] = after
                 new_results = self._add_search_to_obj(args_obj, results)
                 results = results + new_results
+
+        else:
+            args_obj = {}
+            args_obj["q"] = config["search_term"]
+            args_obj["before"] = config["uploaded_before"]
+            args_obj["after"] = config["uploaded_after"]
+            new_results = self._add_search_to_obj(args_obj, results)
+            results = results + new_results
+
         self.logger("\n\n----------------")
         self.logger(f"Scrape successful, {len(results) - 1} results.")
 
@@ -146,7 +155,7 @@ class YoutubeSelector(Selector):
         except HttpError as e:
             self.logger(f"An HTTP error {e.resp.status} occured.")
             print(e.content)
-            return "ERROR"
+            return csv_obj
 
     def _youtube_search(self, options, pageToken=None):
         youtube = googleapiclient.discovery.build(
