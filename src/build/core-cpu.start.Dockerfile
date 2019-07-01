@@ -3,7 +3,6 @@
 # ------------------------------------------------------------------
 # python        3.6    (apt)
 # ==================================================================
-
 FROM ubuntu:18.04
 MAINTAINER Lachlan Kermode <lk@forensic-architecture.org>
 ENV LANG C.UTF-8
@@ -13,7 +12,6 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
     rm -rf /var/lib/apt/lists/* \
            /etc/apt/sources.list.d/cuda.list \
            /etc/apt/sources.list.d/nvidia-ml.list && \
-
     apt-get update && \
 # ==================================================================
 # tools
@@ -24,7 +22,6 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
         ca-certificates \
         wget \
         git \
-        vim \
         curl \
         unzip \
         unrar \
@@ -56,12 +53,6 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
     rm -rf /var/lib/apt/lists/* /tmp/* ~/*
 
 EXPOSE 6006
-
-# core
-RUN apt-get update --fix-missing && \
-	apt-get install -y \
-	build-essential \
-	jq
 
 # Copy necessary folders
 RUN mkdir -p /mtriage
