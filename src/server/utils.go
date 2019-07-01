@@ -58,42 +58,7 @@ func indexComponentDirs(dir string) error {
 	return nil
 }
 
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-}
 
-func serveJson(file string, w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	http.ServeFile(w, r, file)
-}
-
-func serveJsonData(data interface{}, w http.ResponseWriter) {
-	enableCors(&w)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(data)
-}
-
-func loadTypedElement(path string) EtypedElement {
-	file, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-	element := EtypedElement{}
-	err = json.Unmarshal([]byte(file), &element)
-	if err != nil {
-		panic(err)
-	}
-	return element
-}
-
-func getRequestValue(param string, r *http.Request) string {
-	values, ok := r.URL.Query()[param]
-	if !ok || len(values[0]) < 1 {
-		return ""
-	}
-	return values[0]
-}
 
 
 // FILE PATHS
@@ -170,44 +135,10 @@ func getChildDirsEtyped(path string) ([]EtypedElement, error) {
 
 }
 
-
-
-
-// func getDirsInDir(dir string, skips []string) []Dir {
-// 	var dirs []Dir
-// 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-// 		if !info.IsDir() {
-// 			return nil
-// 		}
-// 		for i := 0; i < len(skips); i++ {
-// 			if info.Name() == skips[i] {
-// 				return nil
-// 			}
-// 		}
-// 		name := info.Name()
-// 		dirs = append(dirs, Dir{ Path: path, Name: name })
-// 		return nil
-// 	})
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return dirs
-// }
-
-// func getPathBases(paths []string) []string {
-// 	var bases []string
-// 	for i := 0; i < len(paths); i++ {
-// 		base := filepath.Base(paths[i])
-// 		bases = append(bases, base)
-// 	}
-// 	return bases
-// }
-
-// func getPathBase(path string) string {
-// 	return filepath.Base(path)
-// }
-
 // IO
+func errorHandler(w http.ResponseWriter, r* http.Request, status int) {
+	w.WriteHeader(status)
+}
 
 func writeToJsonFile(path string, jsonable interface{}) {
 	file, err := json.MarshalIndent(jsonable, "", " ")
@@ -218,4 +149,41 @@ func writeToJsonFile(path string, jsonable interface{}) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
+func serveJson(file string, w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	http.ServeFile(w, r, file)
+}
+
+func serveJsonData(data interface{}, w http.ResponseWriter) {
+	enableCors(&w)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(data)
+}
+
+func loadTypedElement(path string) EtypedElement {
+	file, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	element := EtypedElement{}
+	err = json.Unmarshal([]byte(file), &element)
+	if err != nil {
+		panic(err)
+	}
+	return element
+}
+
+func getRequestValue(param string, r *http.Request) string {
+	values, ok := r.URL.Query()[param]
+	if !ok || len(values[0]) < 1 {
+		return ""
+	}
+	return values[0]
 }

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 // global element map. This variable is populated when the server starts by
@@ -46,18 +47,21 @@ func handleElementMap(w http.ResponseWriter, r *http.Request) {
 	serveJsonData(ELEMENT_MAP, w)
 }
 
-func handleElements(w http.ResponseWriter, r *http.Request) {
-	// elementDirs := getDirsInDir(ELEMENTS_DIR, []string{"media", "elements"})
-	// var elements []EtypedElement
-	// for i := range elementDirs {
-	// 	path := ELEMENTS_DIR + "/" + elementDirs[i].Name + "/" + elementDirs[i].Name + ".json"
-	// 	element := loadTypedElement(path)
-	// 	elements = append(elements, element)
-	// }
-	// serveJsonData(elements, w)
+func handleElement(w http.ResponseWriter, r *http.Request) {
+	query, ok := r.URL.Query()["q"]
+	if !ok || len(values[0] < 1) {
+		errorHandler(w, r, http.StatusBadRequest)
+	}
+	query = query[0]
+	terms := strings.Split(query, "/")
+	if len(terms) <= 1 {
+		errorHandler(w, r, http.StatusBadRequest)
+		return
+	}
+	serveJsonData(ELEMENT_MAP, w)
 }
 
-func handleElement(w http.ResponseWriter, r *http.Request) {
+func handleElements(w http.ResponseWriter, r *http.Request) {
 	id := getRequestValue("id", r)
 	media := getRequestValue("media", r)
 	// path := ELEMENTS_DIR + "/" + id + "/"

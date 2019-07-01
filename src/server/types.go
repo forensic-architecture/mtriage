@@ -40,4 +40,3 @@ type ElementMap struct {
 	Analysed []AnalysedDir
 }
 
-
