@@ -25,6 +25,9 @@ class MTModule(ABC):
     def get_out_etype(self):
         return Etype.Any
 
+    def get_arg_names(self):
+        return []
+
     @staticmethod
     def logged_phase(phase_key):
         def decorator(function):

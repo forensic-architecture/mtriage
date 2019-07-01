@@ -520,7 +520,6 @@ def run(args):
 
         ]
     )
-    print("TODO: spin up docker etc")
 
 if __name__ == "__main__":
     COMMANDS = {

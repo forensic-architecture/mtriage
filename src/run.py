@@ -26,6 +26,7 @@ Attributes:
 
 import argparse
 import json
+import yaml
 import os
 from pathlib import Path
 from subprocess import check_output
@@ -37,7 +38,10 @@ from lib.common.exceptions import (
     SelectorNotFoundError,
     AnalyserNotFoundError,
     WorkingDirectorNotFoundError,
+    InvalidConfigError,
 )
+
+CONFIG_PATH = "/run_args.yaml"
 
 
 def _select_run(args):
@@ -98,6 +102,32 @@ def _run():
     else:
         raise (InvalidPhaseError())
 
+def __validate_config(config):
+    if "folder" not in config.keys() or not isinstance(config["folder"], str):
+        raise InvalidConfigError("The folder attribute must exist and be a string")
+    if "phase" not in config.keys() or config["phase"] not in ["select", "analyse"]:
+        raise InvalidConfigError("The phase attribute must be either select or analyse")
+
+    if "module" not in config.keys():
+        raise InvalidConfigError("You must specify a module")
+
+    def module_name(phase):
+        return "selector" if phase == "select" else "analyser"
+
+    mod_name = module_name(config["phase"])
+
+    try:
+        get_module(mod_name, config["module"])
+    except ModuleNotFoundError as e:
+        raise InvalidConfigError(f"No {mod_name} named '{config['module']}'")
+
+
+
+def _run_yaml():
+    with open(CONFIG_PATH, "r") as c:
+        config = yaml.safe_load(c)
+    __validate_config(config)
+
 
 if __name__ == "__main__":
-    _run()
+    _run_yaml()
