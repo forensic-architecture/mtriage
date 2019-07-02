@@ -82,25 +82,26 @@ class TestRun(unittest.TestCase):
             },
         }
 
-        write_config(good_select_module)
-        with self.assertRaisesRegex(
-            InvalidConfigError, "The 'config' attribute must exist."
-        ):
-            validate_config()
+        if os.path.exists("/mtriage/credentials/google.json"):
+            write_config(good_select_module)
+            with self.assertRaisesRegex(
+                InvalidConfigError, "The 'config' attribute must exist."
+            ):
+                validate_config()
 
-        write_config(bad_local_config)
-        with self.assertRaisesRegex(
-            InvalidConfigError,
-            "The config you specified does not contain all the required arguments for the 'local' selector.",
-        ):
-            validate_config()
+            write_config(bad_local_config)
+            with self.assertRaisesRegex(
+                InvalidConfigError,
+                "The config you specified does not contain all the required arguments for the 'local' selector.",
+            ):
+                validate_config()
 
-        write_config(bad_youtube_config)
-        with self.assertRaisesRegex(
-            InvalidConfigError,
-            "The config you specified does not contain all the required arguments for the 'youtube' selector.",
-        ):
-            validate_config()
+            write_config(bad_youtube_config)
+            with self.assertRaisesRegex(
+                InvalidConfigError,
+                "The config you specified does not contain all the required arguments for the 'youtube' selector.",
+            ):
+                validate_config()
 
-        write_config(good_youtube_config)
-        validate_config()
+            write_config(good_youtube_config)
+            validate_config()
