@@ -12,7 +12,6 @@ def write_config(vl):
 def validate_config():
     with open("/run_args.yaml", "r") as c:
         cfg = yaml.safe_load(c)
-    print(cfg)
     validate_yaml(cfg)
 
 

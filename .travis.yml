@@ -6,6 +6,7 @@ before_install:
 - ./mtriage dev build --gpu
 script:
 - cp .env.example .env
+- touch credentials/google.json
 - ./mtriage dev test
 - black --check mtriage
 - black --check test/
