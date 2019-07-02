@@ -99,7 +99,15 @@ func handleElement(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if id != -1 {
-			serveJsonData(output.Elements[id], w)
+			var pathToElement strings.Builder
+			w.Header().Set("Cache-Control", "no-cache")
+			pathToElement.WriteString(output.Path)
+			pathToElement.WriteString("/")
+			pathToElement.WriteString(output.Elements[id].Id)
+			pathToElement.WriteString("/")
+			// NOTE: just serve the first element for the time being
+			pathToElement.WriteString(output.Elements[id].Media["all"][0])
+			http.ServeFile(w, r, pathToElement.String())
 		} else {
 			serveJsonData(output, w)
 		}
