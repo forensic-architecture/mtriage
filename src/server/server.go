@@ -48,17 +48,62 @@ func handleElementMap(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleElement(w http.ResponseWriter, r *http.Request) {
-	query, ok := r.URL.Query()["q"]
-	if !ok || len(values[0] < 1) {
-		errorHandler(w, r, http.StatusBadRequest)
-	}
-	query = query[0]
-	terms := strings.Split(query, "/")
-	if len(terms) <= 1 {
+	var context string = ""
+	queries := r.URL.Query()["q"]
+	_context := r.URL.Query()["context"]
+	if len(queries) <= 0 {
 		errorHandler(w, r, http.StatusBadRequest)
 		return
 	}
-	serveJsonData(ELEMENT_MAP, w)
+	query := queries[0]
+	terms := strings.Split(query, "/")
+	if len(terms) > 2 {
+		errorHandler(w, r, http.StatusBadRequest)
+		return
+	}
+	if len(_context) > 0 {
+		context = _context[0]
+	}
+
+	var selector string = terms[0]
+	var hasAnalyser bool = len(terms) > 1
+	var counter int = 0
+
+	// NOTE: select first matching
+	if hasAnalyser {
+		var output AnalysedDir
+		analyser := terms[1]
+		for i := 0; i < len(ELEMENT_MAP.Analysed); i++ {
+			output = ELEMENT_MAP.Analysed[i]
+			if output.Component == analyser {
+				if context == "" || context == output.Context {
+					break
+				}
+			}
+			counter += 1
+		}
+		if counter == len(ELEMENT_MAP.Analysed) {
+			errorHandler(w, r, http.StatusNotFound)
+			return
+		}
+		serveJsonData(output, w)
+		return
+	} else {
+		var output SelectedDir
+		for i := 0; i < len(ELEMENT_MAP.Selected); i++ {
+			output = ELEMENT_MAP.Selected[i]
+			if output.Component == selector {
+				break
+			}
+			counter += 1
+		}
+		if counter == len(ELEMENT_MAP.Selected) {
+			errorHandler(w, r, http.StatusNotFound)
+			return
+		}
+		serveJsonData(output, w)
+		return
+	}
 }
 
 func handleElements(w http.ResponseWriter, r *http.Request) {

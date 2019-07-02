@@ -28,12 +28,20 @@ type EtypedElement struct {
 
 type EtypedDir struct {
 	Path string
-	ComponentName string
+	Context string
+	Component string
 	Elements []EtypedElement
 }
 
 type SelectedDir EtypedDir
-type AnalysedDir EtypedDir
+
+type AnalysedDir struct {
+	Path string
+	Context string
+	Selector string
+	Component string
+	Elements []EtypedElement
+}
 
 type ElementMap struct {
 	Selected []SelectedDir

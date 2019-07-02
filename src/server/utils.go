@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"strings"
+	"log"
 )
 
 const DATA_DIR = "data"
@@ -14,6 +15,7 @@ const DERIVED_DIR = "derived"
 
 // run on server start
 func indexComponentDirs(dir string) error {
+	log.Println("Making element map...")
 	ELEMENT_MAP = ElementMap{ Selected: []SelectedDir{}, Analysed: []AnalysedDir{} }
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		// skip files
@@ -27,7 +29,16 @@ func indexComponentDirs(dir string) error {
 			if err != nil {
 				panic("somthing")
 			}
-			dir := SelectedDir{ Path: path, ComponentName: name, Elements: elements }
+			allBits := strings.Split(path, "/")
+			compName := allBits[len(allBits)-2]
+			context := allBits[len(allBits)-3]
+
+			dir := SelectedDir{
+				Path: path,
+				Context: context,
+				Component: compName,
+				Elements: elements,
+			}
 			ELEMENT_MAP.Selected = append(ELEMENT_MAP.Selected, dir)
 		}
 		// append all derived folders
@@ -42,9 +53,15 @@ func indexComponentDirs(dir string) error {
 				if err != nil {
 					panic("somthing")
 				}
+				allBits := strings.Split(dir.Path, "/")
+				selector := allBits[len(allBits)-3]
+				context := allBits[len(allBits)-4]
+
 				edir := AnalysedDir{
 					Path: dir.Path,
-					ComponentName: dir.Name,
+					Selector: selector,
+					Context: context,
+					Component: dir.Name,
 					Elements: elements,
 				}
 				ELEMENT_MAP.Analysed = append(ELEMENT_MAP.Analysed, edir)
