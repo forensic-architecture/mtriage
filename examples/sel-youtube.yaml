@@ -1,0 +1,8 @@
+folder: temp/demo_youtube_select
+phase: "select"
+module: "youtube"
+config:
+  search_term: "Triple chaser"
+  uploaded_before: "2015-10-02T00:00:00Z"
+  uploaded_after: "2015-10-01T00:00:00Z"
+  daily: true

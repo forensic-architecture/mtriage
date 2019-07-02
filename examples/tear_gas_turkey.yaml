@@ -1,0 +1,8 @@
+folder: temp/tear_gas_turkey
+phase: "select"
+module: "youtube"
+config:
+  search_term: "Gaz Gezi"
+  uploaded_after: "2013-05-20T00:00:00Z"
+  uploaded_before: "2013-06-20T00:00:00Z"
+  daily: true

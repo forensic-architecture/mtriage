@@ -1,0 +1,7 @@
+folder: "temp/demo_youtube_select"
+phase: "analyse"
+module: "keras_pretrained"
+config:
+  elements_in:
+    - "youtube/frames"
+  model: "ResNet50"

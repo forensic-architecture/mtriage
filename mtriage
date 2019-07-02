@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import inspect
-import pytest
 import os
-import re
 import argparse
-import shutil
 import subprocess as sp
 import webbrowser
-import json
 import signal
 import sys
+from util import *
 
 NAME = "forensicarchitecture/mtriage"
 CONT_NAME = NAME.replace("/", "_")  # docker doesn't allow slashes in cont names
@@ -24,87 +20,6 @@ CONT_VIEWER_NAME = VIEWER_NAME.replace("/", "_")
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 ENV_FILE = "{}/.env".format(DIR_PATH)
 HOME_PATH = os.path.expanduser("~")
-
-
-def get_subdirs(d):
-    whitelist = ["__pycache__"]
-    return [
-        o
-        for o in os.listdir(d)
-        if os.path.isdir(os.path.join(d, o)) and o not in whitelist
-    ]
-
-
-class InvalidPipDep(Exception):
-    pass
-
-
-class InvalidArgumentsError(Exception):
-    pass
-
-
-class InvalidViewerConfigError(Exception):
-    pass
-
-
-class WorkingDirectorNotFoundError(Exception):
-    pass
-
-
-def name_and_ver(pipdep):
-    """ Return the name and version from a string that expresses a pip dependency.
-        Raises an InvalidPipDep exception if the string is an invalid dependency.
-    """
-    pipdep = pipdep.split("==")
-    dep_name = pipdep[0]
-    try:
-        if len(pipdep) == 1:
-            dep_version = None
-        elif len(pipdep) > 2:
-            raise InvalidPipDep
-        else:
-            dep_version = pipdep[1]
-            if re.search(r"^([0-9]{1,2}\.){0,2}([0-9]{1,2})$", dep_version) is None:
-                raise InvalidPipDep
-        return dep_name, dep_version
-    except:
-        raise InvalidPipDep
-
-
-def should_add_pipdep(dep, pipdeps):
-    """Check whether pipdep should be added.
-    """
-    dep_name, dep_ver = name_and_ver(dep)
-    for _dep in pipdeps:
-        _dep_name, _dep_ver = name_and_ver(_dep)
-        if _dep_name == dep_name:
-            # new version unspecified, cannot be more specific
-            if dep_ver is None:
-                return False
-            # new version more specific
-            elif _dep_ver is None and dep_ver is not None:
-                return True
-            elif str(dep_ver) < str(_dep_ver):
-                return False
-    return True
-
-
-def should_add_dockerline(line, dockerfile):
-    """Check whether line should be added to array representing Dockerfile.
-    """
-    return line not in dockerfile
-
-
-def add_deps(dep_path, deps, should_add):
-    """ Add dependences at {folder_path} to {deps}, excluding if {should_add} is True for any given dependency.
-    """
-    if not os.path.isfile(dep_path):
-        return
-
-    with open(dep_path) as f:
-        for line in f.readlines():
-            if should_add(line, deps):
-                deps.append(line)
 
 
 def build(args):
@@ -275,75 +190,6 @@ def test(args):
     print("All tests for mtriage done.")
 
 
-def verify_viewer_args(inputDir, viewersDir, viewerName):
-    if inputDir == None:
-        raise InvalidArgumentsError("No input directory supplied for viewer plugin.")
-
-    if viewerName == None:
-        raise InvalidArgumentsError("No viewer plugin name supplied.")
-
-    if not os.path.exists(inputDir):
-        raise WorkingDirectorNotFoundError(
-            "The input directory {} does not exist. ".format(inputDir)
-        )
-
-    viewerDir = "{}/{}".format(viewersDir, viewerName)
-    viewerConfigPath = "{}/config.json".format(viewerDir)
-
-    if not os.path.exists(viewerDir):
-        raise InvalidArgumentsError(
-            "The viewer plugin '{}' does not exist.".format(viewerName)
-        )
-
-    if not os.path.isfile(viewerConfigPath):
-        raise InvalidArgumentsError(
-            "Viewer config does not exist in the folder {}".format(viewerConfigPath)
-        )
-
-    return viewerDir, viewerConfigPath
-
-
-def create_symlinks(inputElementsDir, serverElementsDir):
-    # clean if exists
-    if not os.path.exists(inputElementsDir):
-        raise OSError("Server elements dir does not exist")
-
-    # make it empty
-    shutil.rmtree(serverElementsDir)
-    os.makedirs(serverElementsDir)
-
-    el_ids = [
-        f
-        for f in os.listdir(inputElementsDir)
-        if os.path.isdir("{}/{}".format(inputElementsDir, f))
-    ]
-
-    # create symlinks for input elements
-    for el_id in el_ids:
-        folder_in = "{}/{}".format(inputElementsDir, el_id)
-        for element_path in os.listdir(folder_in):
-            folder_out = "{}/{}".format(serverElementsDir, el_id)
-            folder_out_media = "{}/media".format(folder_out)
-            if not os.path.exists(folder_out):
-                os.makedirs(folder_out_media)
-            os.symlink(
-                "{}/{}".format(folder_in, element_path),
-                "{}/{}".format(folder_out_media, element_path),
-            )
-
-
-def get_viewer_etype(viewerConfigPath):
-    with open(viewerConfigPath, "r") as f:
-        viewerConfig = json.load(f)
-        viewerEType = viewerConfig["etype"]
-        return viewerEType
-
-
-def create_server_config(configPath, configDict):
-    with open(configPath, "w") as config:
-        json.dump(configDict, config)
-
-
 def viewer(args):
     """ Must be invoked with an input folder and viewer-plugin e.g.:
 
@@ -494,6 +340,33 @@ def viewer(args):
     signal.pause()
 
 
+def run(args):
+    TAG_NAME = "dev-gpu" if args.gpu else "dev"
+    # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
+    # so that the call arguments are well formed.
+    sp.call(
+        [
+            "docker",
+            "run",
+            "--name",
+            CONT_NAME,
+            "--runtime=nvidia" if args.gpu else "--ipc=host",
+            "--env",
+            "BASE_DIR=/mtriage",
+            "--env-file={}".format(ENV_FILE),
+            "--rm",
+            "--privileged",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            "-v",
+            "{}:/run_args.yaml".format(os.path.abspath(args.yaml)),
+            "-v",
+            "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
+            "{}:{}".format(NAME, TAG_NAME),
+        ]
+    )
+
+
 if __name__ == "__main__":
     COMMANDS = {
         "build": build,
@@ -501,13 +374,36 @@ if __name__ == "__main__":
         "test": test,
         "clean": clean,
         "view": viewer,
+        "run": run,
     }
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
-    parser.add_argument("command", choices=COMMANDS.keys())
-    parser.add_argument("--input", "-i", help="Input Folder", required=False)
-    parser.add_argument("--viewer", "-v", help="Viewer Plugin Folder", required=False)
-    parser.add_argument("--gpu", action="store_true")
+    # parser.add_argument("toplevel", choices=["run", "dev"])
+
+    subparsers = parser.add_subparsers(dest="__base")
+
+    run_p = subparsers.add_parser("run")
+
+    def yaml_type(fname):
+        ext = os.path.splitext(fname)[1][1:]
+        if ext not in ("yaml"):
+            run_p.error("The file you specify to run mtriage must be a YAML file")
+        if not os.path.exists(fname):
+            run_p.error("Cannot find a file at {}.".format(fname))
+        return fname
+
+    run_p.add_argument("yaml", type=yaml_type)
+    run_p.add_argument("--gpu", action="store_true")
+    # TODO: accept an interactive option at -i
+
+    dev_p = subparsers.add_parser("dev")
+    dev_p.add_argument("command", choices=COMMANDS.keys())
+    dev_p.add_argument("--input", "-i", help="Input Folder", required=False)
+    dev_p.add_argument("--viewer", "-v", help="Viewer Plugin Folder", required=False)
+    dev_p.add_argument("--gpu", action="store_true")
 
     args = parser.parse_args()
-    cmd = COMMANDS[args.command]
-    cmd(args)
+
+    if args.__base == "dev":
+        COMMANDS[args.command](args)
+    else:
+        COMMANDS["run"](args)

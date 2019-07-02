@@ -58,7 +58,6 @@ class Analyser(MTModule):
         except PermissionError as e:
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
-        print(config)
         if not "elements_in" in config:
             raise InvalidAnalyserConfigError(
                 "The config must contain an 'elements_in' indicating the analyser's input."

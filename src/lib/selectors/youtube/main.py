@@ -28,6 +28,14 @@ class YoutubeSelector(Selector):
     def get_out_etype(self):
         return Etype.AnnotatedVideo
 
+    def get_arg_names():
+        return {
+            "search_term": True,
+            "uploaded_before": True,
+            "uploaded_after": True,
+            "daily": False,
+        }
+
     def index(self, config):
         results = self._run(config)
         if len(results) > 0:
@@ -73,7 +81,7 @@ class YoutubeSelector(Selector):
         self.logger(f"Start: {config['uploaded_after']}")
         self.logger(f"End: {config['uploaded_after']}")
 
-        if config["daily"]:
+        if "daily" in config.keys() and config["daily"]:
             self.logger(
                 f"Scraping daily, from {config['uploaded_after']} -- {config['uploaded_before']}"
             )
@@ -88,6 +96,15 @@ class YoutubeSelector(Selector):
                 args_obj["after"] = after
                 new_results = self._add_search_to_obj(args_obj, results)
                 results = results + new_results
+
+        else:
+            args_obj = {}
+            args_obj["q"] = config["search_term"]
+            args_obj["before"] = config["uploaded_before"]
+            args_obj["after"] = config["uploaded_after"]
+            new_results = self._add_search_to_obj(args_obj, results)
+            results = results + new_results
+
         self.logger("\n\n----------------")
         self.logger(f"Scrape successful, {len(results) - 1} results.")
 
@@ -138,7 +155,7 @@ class YoutubeSelector(Selector):
         except HttpError as e:
             self.logger(f"An HTTP error {e.resp.status} occured.")
             print(e.content)
-            return "ERROR"
+            return csv_obj
 
     def _youtube_search(self, options, pageToken=None):
         youtube = googleapiclient.discovery.build(

@@ -1,0 +1,15 @@
+folder: "temp/demo_output"
+phase: "analyse"
+module: "meta"
+config:
+  elements_in:
+  dev: true
+  delete_cache: true
+  children:
+    - name: "extract_audio"
+      config:
+        output_ext: "mp3"
+    - name: "convert_audio"
+      config:
+        input_ext: "mp3"
+        output_ext: "wav"

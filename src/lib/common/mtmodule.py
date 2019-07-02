@@ -26,6 +26,11 @@ class MTModule(ABC):
         return Etype.Any
 
     @staticmethod
+    def get_arg_names():
+        """ Dict keys are arg names, vals are booleans indicating whether the arg is required """
+        return {}
+
+    @staticmethod
     def logged_phase(phase_key):
         def decorator(function):
             @wraps(function)

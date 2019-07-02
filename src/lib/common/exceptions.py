@@ -36,6 +36,11 @@ class InvalidSelectorConfigError(Exception):
         super().__init__(f"Invalid selector config - {msg}")
 
 
+class InvalidConfigError(Exception):
+    def __init__(self, msg):
+        super().__init__(f"Invalid config - {msg}")
+
+
 class ElementShouldSkipError(Exception):
     def __init__(self, msg):
         super().__init__(f"{msg} - skipping element")
