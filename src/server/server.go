@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"strconv"
 )
 
 // global element map. This variable is populated when the server starts by
@@ -49,8 +50,10 @@ func handleElementMap(w http.ResponseWriter, r *http.Request) {
 
 func handleElement(w http.ResponseWriter, r *http.Request) {
 	var context string = ""
+	var id int64 = -1
 	queries := r.URL.Query()["q"]
 	_context := r.URL.Query()["context"]
+	_id := r.URL.Query()["id"]
 	if len(queries) <= 0 {
 		errorHandler(w, r, http.StatusBadRequest)
 		return
@@ -64,12 +67,21 @@ func handleElement(w http.ResponseWriter, r *http.Request) {
 	if len(_context) > 0 {
 		context = _context[0]
 	}
+	if len(_id) > 0 {
+		theid, err := strconv.ParseInt(_id[0], 10, 64)
+		id = theid
+		if err != nil {
+			errorHandler(w, r, http.StatusBadRequest)
+			return
+		}
+	}
 
 	var selector string = terms[0]
 	var hasAnalyser bool = len(terms) > 1
 	var counter int = 0
 
-	// NOTE: select first matching
+	// NOTE: SUPER shoddy code, just needed to get it working, will return
+	// TODO(lachlan)
 	if hasAnalyser {
 		var output AnalysedDir
 		analyser := terms[1]
@@ -86,7 +98,11 @@ func handleElement(w http.ResponseWriter, r *http.Request) {
 			errorHandler(w, r, http.StatusNotFound)
 			return
 		}
-		serveJsonData(output, w)
+		if id != -1 {
+			serveJsonData(output.Elements[id], w)
+		} else {
+			serveJsonData(output, w)
+		}
 		return
 	} else {
 		var output SelectedDir
@@ -101,7 +117,11 @@ func handleElement(w http.ResponseWriter, r *http.Request) {
 			errorHandler(w, r, http.StatusNotFound)
 			return
 		}
-		serveJsonData(output, w)
+		if id != -1 {
+			serveJsonData(output.Elements[id], w)
+		} else {
+			serveJsonData(output, w)
+		}
 		return
 	}
 }

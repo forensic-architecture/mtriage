@@ -75,9 +75,6 @@ func indexComponentDirs(dir string) error {
 	return nil
 }
 
-
-
-
 // FILE PATHS
 func dirExists(path string) (bool, error) {
 	_, err := os.Stat(path)
