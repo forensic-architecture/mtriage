@@ -21,6 +21,9 @@ src/server/elements/**
 src/server/bin
 src/server/config.json
 
+# workflows
+workflows/*
+
 # authentication files
 credentials/**
 .env
