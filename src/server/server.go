@@ -36,7 +36,6 @@ func main() {
 	}
 
 	http.HandleFunc("/elementmap", handleElementMap)
-	http.HandleFunc("/elements", handleElements)
 	http.HandleFunc("/element", handleElement)
 
 	log.Println("Listening on port 8080...")
@@ -132,20 +131,4 @@ func handleElement(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-}
-
-func handleElements(w http.ResponseWriter, r *http.Request) {
-	id := getRequestValue("id", r)
-	media := getRequestValue("media", r)
-	// path := ELEMENTS_DIR + "/" + id + "/"
-	// log.Println(path)
-	log.Println(id)
-	log.Println(media)
-	// if media != "" {
-	// 	path = path + "media/" + media
-	// 	serveSymlink(path, w, r)
-	// } else {
-	// 	path = path + id + ".json"
-	// 	serveJson(path, w, r)
-	// }
 }

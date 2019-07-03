@@ -141,6 +141,7 @@ def develop(args):
             "-v",
             "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
             "{}:{}".format(NAME, TAG_NAME),
+            "/bin/bash",
         ]
     )
 
@@ -149,48 +150,7 @@ def clean(args):
     sp.call(["docker", "rmi", NAME])
 
 
-def __run_lib_tests():
-    returncode = sp.call(
-        [
-            "docker",
-            "run",
-            "--env",
-            "BASE_DIR=/mtriage",
-            "--env-file={}".format(ENV_FILE),
-            "--rm",
-            "-v",
-            "{}:/mtriage".format(DIR_PATH),
-            "--workdir",
-            "/mtriage/src",
-            "{}:dev".format(NAME),
-            "python",
-            "-m",
-            "pytest",
-            "test",
-        ]
-    )
-    if returncode is 1:
-        exit(returncode)
-
-
-def __run_runpy_tests():
-    # NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
-    # using the LOCAL python (could be 2 or 3).
-    returncode = sp.call(["python", "-m", "pytest", "test/"])
-    if returncode is 1:
-        exit(returncode)
-
-
-def test(args):
-    print("Creating container to run tests...")
-    print("----------------------------------")
-    __run_lib_tests()
-    __run_runpy_tests()
-    print("----------------------------------")
-    print("All tests for mtriage done.")
-
-
-def __build_viewer_server():
+def __build_server():
     server_img_name = "{}:dev".format(SERVER_NAME)
     print("Creating container to build server...")
     print("----------------------------------")
@@ -207,12 +167,12 @@ def __build_viewer_server():
             ]
         )
     except:
-        print("__build_viewer_server: Something went wrong! EEK.")
+        print("__build_server: Something went wrong! EEK.")
     print("Server build successful.")
     print("----------------------------------")
 
 
-def __build_viewer_client(viewer_name):
+def __build_viewer(viewer_name):
     viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
     print("Creating container to build viewer plugin...")
     print("----------------------------------")
@@ -229,18 +189,95 @@ def __build_viewer_client(viewer_name):
             ]
         )
     except:
-        print("__build_viewer_client: Something went wrong! EEK.")
+        print("__build_viewer: Something went wrong! EEK.")
     print("Viewer plugin build successful.")
+    print("----------------------------------")
+
+
+def dev_server(args):
+    print("Creating container to run server...")
+    working_dir = args.input
+    if working_dir is None or not os.path.exists(working_dir):
+        raise Exception(
+            "Not a valid directory. Pass one with './mtriage dev view:server -i path/to/directory'."
+        )
+
+    if args.rebuild:
+        __build_server()
+
+    sp.Popen(
+        [
+            "docker",
+            "run",
+            "--name",
+            CONT_SERVER_NAME,
+            "-p",
+            "8080:8080",
+            "--rm",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            "-v",
+            # NOTE: assumes path is relative from the mtriage folder
+            "{}/{}:/workingdir".format(DIR_PATH, working_dir),
+            "{}:dev".format(SERVER_NAME),
+        ]
+    )
+    print("Server running successfully in a container.")
+    print("----------------------------------")
+
+    def signal_handler(sig, frame):
+        print("Removing containers...")
+        sys.exit(0)
+
+    signal.pause()
+    signal.signal(signal.SIGINT, signal_handler)
+
+
+def dev_viewer(args):
+    print("Creating container to run viewer...")
+    viewer_name = args.viewer
+    viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
+
+    if viewer_name is None or not os.path.exists(
+        "{}/src/lib/viewers/{}".format(DIR_PATH, viewer_name)
+    ):
+        raise Exception(
+            "Not a valid viewer. Pass it with the -v option, making sure a corresponding directory exists in src/lib/viewers."
+        )
+
+    if args.rebuild:
+        __build_viewer(viewer_name)
+
+    process = sp.Popen(
+        [
+            "docker",
+            "run",
+            "--name",
+            CONT_VIEWER_NAME,
+            "-p",
+            "8081:80",
+            "--rm",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            viewer_img_name,
+        ],
+        stderr=sp.PIPE,
+    )
+    _, stderr = process.communicate()
+    if stderr:
+        print(stderr)
+        exit(1)
+    print(stdout)
+    print("Viewer plugin successfully running in container.")
     print("----------------------------------")
 
 
 def viewer(args):
     """ Must be invoked with an input folder and viewer-plugin e.g.:
 
-            ./mtriage view -i <derived_folder> -v <viewer_plugin>
+            ./mtriage view -i <working_dir> -v <viewer_plugin>
 
-        Server requires that input folder contain directories corresponsing to elements (where directory names
-        are element ids.)
+        Server requires that input folder is a correctly formatted mtriage working directory.
 
         Viewers must be yarn buildable apps living in the src/lib/viewers folder. Their name is taken to be the name
         of their outer directory. Viewers must specify which etype they accept in their config.yml file.
@@ -281,65 +318,47 @@ def viewer(args):
         }
 
     """
-    input_elements_dir = args.input
-    viewer_name = args.viewer
+    pass
 
-    is_local = True
-    server_img_name = "{}:dev".format(SERVER_NAME)
-    viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
-
-    if is_local:
-        __build_viewer_server()
-
-    print("Creating container to run server...")
-    sp.Popen(
+def __run_lib_tests():
+    returncode = sp.call(
         [
             "docker",
             "run",
-            "--name",
-            CONT_SERVER_NAME,
-            "-p",
-            "8080:8080",
+            "--env",
+            "BASE_DIR=/mtriage",
+            "--env-file={}".format(ENV_FILE),
             "--rm",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
-            server_img_name,
+            "--workdir",
+            "/mtriage/src",
+            "{}:dev".format(NAME),
+            "python",
+            "-m",
+            "pytest",
+            "test",
         ]
     )
-    print("Server running successfully in a container.")
+    if returncode is 1:
+        exit(returncode)
+
+
+def __run_runpy_tests():
+    """ NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
+    using the LOCAL python (could be 2 or 3). """
+    returncode = sp.call(["python", "-m", "pytest", "test/"])
+    if returncode is 1:
+        exit(returncode)
+
+
+def test(args):
+    print("Creating container to run tests...")
     print("----------------------------------")
-
-    if is_local:
-        __build_viewer_client(viewer_name)
-
-    print("Creating container to run viewer plugin...")
-    sp.Popen(
-        [
-            "docker",
-            "run",
-            "--name",
-            CONT_VIEWER_NAME,
-            "-p",
-            "8081:80",
-            "--rm",
-            "-v",
-            "{}:/mtriage".format(DIR_PATH),
-            viewer_img_name,
-        ]
-    )
-    print("Viewer plugin successfully running in container.")
+    __run_lib_tests()
+    __run_runpy_tests()
     print("----------------------------------")
-
-    # block, and stop containers on ctrl c
-    print("The viewer is running at: http://localhost:8081")
-    webbrowser.open("http://localhost:8081")
-
-    def signal_handler(sig, frame):
-        print("Removing containers...")
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.pause()
+    print("All tests for mtriage done.")
 
 
 def run(args):
@@ -369,55 +388,15 @@ def run(args):
     )
 
 
-def dev_viewerserver(args):
-    print("Creating container to run server...")
-    # __build_viewer_server()
-    if not os.path.exists(working_dir):
-    working_dir = args.input
-        raise Exception("Not a valid directory.")
-    sp.Popen(
-        [
-            "docker",
-            "run",
-            "--name",
-            CONT_SERVER_NAME,
-            "-p",
-            "8080:8080",
-            "--rm",
-            "-v",
-            "{}:/mtriage".format(DIR_PATH),
-            "-v",
-            # NOTE: assumes path is relative from the mtriage folder
-            "{}/{}:/workingdir".format(DIR_PATH, working_dir),
-            "{}:dev".format(SERVER_NAME),
-        ]
-    )
-    print("Server running successfully in a container.")
-    print("----------------------------------")
-
-    def signal_handler(sig, frame):
-        print("Removing containers...")
-        sys.exit(0)
-
-    signal.pause()
-    signal.signal(signal.SIGINT, signal_handler)
-
-
 if __name__ == "__main__":
-    COMMANDS = {
-        "build": build,
+    DEV_COMMANDS = {
         "develop": develop,
+        "build": build,
         "test": test,
         "clean": clean,
-        "view": viewer,
-        "run": run,
+        "server": dev_server,
+        "viewer": dev_viewer,
     }
-    parser = argparse.ArgumentParser(description="mtriage dev scripts")
-    # parser.add_argument("toplevel", choices=["run", "dev"])
-
-    subparsers = parser.add_subparsers(dest="__base")
-
-    run_p = subparsers.add_parser("run")
 
     def yaml_type(fname):
         ext = os.path.splitext(fname)[1][1:]
@@ -427,19 +406,40 @@ if __name__ == "__main__":
             run_p.error("Cannot find a file at {}.".format(fname))
         return fname
 
+    parser = argparse.ArgumentParser(description="mtriage dev scripts")
+    subparsers = parser.add_subparsers(dest="__base")
+
+    run_p = subparsers.add_parser("run")
     run_p.add_argument("yaml", type=yaml_type)
     run_p.add_argument("--gpu", action="store_true")
     # TODO: accept an interactive option at -i
 
     dev_p = subparsers.add_parser("dev")
-    dev_p.add_argument("command", choices=COMMANDS.keys())
+    dev_p.add_argument(
+        "command",
+        choices=DEV_COMMANDS.keys(),
+        default="develop",
+        const="develop",
+        nargs="?",
+    )
+    # viewer args
     dev_p.add_argument("--input", "-i", help="Input Folder", required=False)
     dev_p.add_argument("--viewer", "-v", help="Viewer Plugin Folder", required=False)
+    dev_p.add_argument(
+        "--rebuild",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=False,
+        help="Pass this flag to build Docker images locally",
+        required=False,
+    )
+
     dev_p.add_argument("--gpu", action="store_true")
 
     args = parser.parse_args()
 
     if args.__base == "dev":
-        COMMANDS[args.command](args)
+        DEV_COMMANDS[args.command](args)
     else:
-        COMMANDS["run"](args)
+        run(args)
