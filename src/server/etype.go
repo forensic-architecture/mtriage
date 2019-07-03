@@ -42,9 +42,7 @@ func (etype Etype) String() string {
 }
 
 func (etype Etype) MediaTypes() []MediaType {
-
   indexers := [...] []MediaType {
-
     []MediaType{ MediaType{ Key: "all", Regex: "." }},
     []MediaType{ MediaType{ Key: "image", Regex: ".[bB][mM][pP]" }},
     []MediaType{ MediaType{ Key: "video", Regex: ".[mM][pP][4]" }},
@@ -88,7 +86,6 @@ func getEtype(name string) Etype {
 }
 
 func globit(path string, regex string, is_single bool) []string {
-
   var globbed []string
   files := getFilesInDir(path, []string{".DS_Store"})
   for i := range files {

@@ -1,168 +1,151 @@
 package main
 
 import (
-  "log"
-  "net/http"
-  "encoding/json"
-  "io/ioutil"
-  "strings"
-  "fmt"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+	"strconv"
 )
 
-// INTERNAL TYPES
-
-type Config struct {
-  Port int
-  Etype string
-}
-
-type File struct {
-  Path string
-  Name string
-  Ext string
-}
-
-type Dir struct {
-  Path string
-  Name string
-}
-
-// RESPONSE DATA TYPES
-
-type EtypedElement struct {
-  Id string
-  Etype string
-  Media map[string][]string
-}
-
-type ElementIndex struct {
-  Elements []string
-}
-
-type ElementsData struct {
-  Elements []EtypedElement
-}
+// global element map. This variable is populated when the server starts by
+// indexing the working directory's filesystem, and keeps all global state for
+// mserver. Could think about better persistent storage in the future.
+var ELEMENT_MAP ElementMap
 
 // ENTRYPOINT
-
 func main() {
+	if len(os.Args) != 2 {
+		log.Println("You need to pass the working directory context as the first argument to mserver")
+		os.Exit(1)
+	}
+	workingDir := os.Args[1]
+	exists, err := dirExists(workingDir)
+	if !exists || err != nil {
+		log.Println("You need to pass a working directory that exists.")
+		os.Exit(1)
+	}
+	port := ":8080"
 
-  config := loadConfig(CONFIG_FILE)
-  port := fmt.Sprintf(":%d", config.Port)
-  castElements(config)
+	// NOTE: populates ELEMENT_MAP synchronously
+	err = indexComponentDirs(workingDir)
 
-  http.HandleFunc("/elementIndex", handleElementIndex)
-  http.HandleFunc("/elements", handleElements)
-  http.HandleFunc("/element", handleElement)
+	if err != nil {
+		panic("Could not index")
+		os.Exit(1)
+	}
 
-  log.Println("Listening on port 8080...")
-  http.ListenAndServe(port, nil)
+	http.HandleFunc("/elementmap", handleElementMap)
+	http.HandleFunc("/elements", handleElements)
+	http.HandleFunc("/element", handleElement)
+
+	log.Println("Listening on port 8080...")
+	http.ListenAndServe(port, nil)
 }
 
 // HANDLERS
-
-func handleElementIndex(w http.ResponseWriter, r *http.Request) {
-  elementDirs := getDirsInDir(ELEMENTS_DIR, []string{"media", "elements"})
-  var elementNames []string
-  for i := range elementDirs {
-    elementNames = append(elementNames, elementDirs[i].Name)
-  }
-  elementsData := ElementIndex{ Elements: elementNames }
-  serveJsonData(elementsData, w)
-}
-
-func handleElements(w http.ResponseWriter, r *http.Request) {
-  elementDirs := getDirsInDir(ELEMENTS_DIR, []string{"media", "elements"})
-  var elements []EtypedElement
-  for i := range elementDirs {
-    path := ELEMENTS_DIR + "/" + elementDirs[i].Name + "/" + elementDirs[i].Name + ".json"
-    element := loadTypedElement(path)
-    elements = append(elements, element)
-  }
-  serveJsonData(elements, w)
+func handleElementMap(w http.ResponseWriter, r *http.Request) {
+	serveJsonData(ELEMENT_MAP, w)
 }
 
 func handleElement(w http.ResponseWriter, r *http.Request) {
+	var context string = ""
+	var id int64 = -1
+	queries := r.URL.Query()["q"]
+	_context := r.URL.Query()["context"]
+	_id := r.URL.Query()["id"]
+	if len(queries) <= 0 {
+		errorHandler(w, r, http.StatusBadRequest)
+		return
+	}
+	query := queries[0]
+	terms := strings.Split(query, "/")
+	if len(terms) > 2 {
+		errorHandler(w, r, http.StatusBadRequest)
+		return
+	}
+	if len(_context) > 0 {
+		context = _context[0]
+	}
+	if len(_id) > 0 {
+		theid, err := strconv.ParseInt(_id[0], 10, 64)
+		id = theid
+		if err != nil {
+			errorHandler(w, r, http.StatusBadRequest)
+			return
+		}
+	}
 
-  id := getRequestValue("id", r)
-  media := getRequestValue("media", r)
-  path := ELEMENTS_DIR + "/" + id + "/"
-  if media != "" {
-    path = path + "media/" + media
-    serveSymlink(path, w, r)
-  } else {
-    path = path + id + ".json"
-    serveJson(path, w, r)
-  }
+	var selector string = terms[0]
+	var hasAnalyser bool = len(terms) > 1
+	var counter int = 0
+
+	// NOTE: SUPER shoddy code, just needed to get it working, will return
+	// TODO(lachlan)
+	if hasAnalyser {
+		var output AnalysedDir
+		analyser := terms[1]
+		for i := 0; i < len(ELEMENT_MAP.Analysed); i++ {
+			output = ELEMENT_MAP.Analysed[i]
+			if output.Component == analyser {
+				if context == "" || context == output.Context {
+					break
+				}
+			}
+			counter += 1
+		}
+		if counter == len(ELEMENT_MAP.Analysed) {
+			errorHandler(w, r, http.StatusNotFound)
+			return
+		}
+		if id != -1 {
+			var pathToElement strings.Builder
+			w.Header().Set("Cache-Control", "no-cache")
+			pathToElement.WriteString(output.Path)
+			pathToElement.WriteString("/")
+			pathToElement.WriteString(output.Elements[id].Id)
+			pathToElement.WriteString("/")
+			// NOTE: just serve the first element for the time being
+			pathToElement.WriteString(output.Elements[id].Media["all"][0])
+			http.ServeFile(w, r, pathToElement.String())
+		} else {
+			serveJsonData(output, w)
+		}
+		return
+	} else {
+		var output SelectedDir
+		for i := 0; i < len(ELEMENT_MAP.Selected); i++ {
+			output = ELEMENT_MAP.Selected[i]
+			if output.Component == selector {
+				break
+			}
+			counter += 1
+		}
+		if counter == len(ELEMENT_MAP.Selected) {
+			errorHandler(w, r, http.StatusNotFound)
+			return
+		}
+		if id != -1 {
+			serveJsonData(output.Elements[id], w)
+		} else {
+			serveJsonData(output, w)
+		}
+		return
+	}
 }
 
-// HELPERS
-
-func enableCors(w *http.ResponseWriter) {
-  (*w).Header().Set("Access-Control-Allow-Origin", "*")
-}
-
-func serveJson(file string, w http.ResponseWriter, r *http.Request) {
-  enableCors(&w)
-  http.ServeFile(w, r, file)
-}
-
-func serveSymlink(link string, w http.ResponseWriter, r *http.Request) {
-  file := resolveSymlink(link)
-  enableCors(&w)
-  http.ServeFile(w, r, file)
-}
-
-func serveJsonData(data interface{}, w http.ResponseWriter) {
-  enableCors(&w)
-  w.Header().Set("Content-Type", "application/json")
-  w.WriteHeader(http.StatusCreated)
-  json.NewEncoder(w).Encode(data)
-}
-
-func loadConfig(path string) Config {
-    file, err := ioutil.ReadFile(path)
-    if err != nil {
-      panic(err)
-    }
-    config := Config{}
-    err = json.Unmarshal([]byte(file), &config)
-    if err != nil {
-      panic(err)
-    }
-    return config
-}
-
-func loadTypedElement(path string) EtypedElement {
-  file, err := ioutil.ReadFile(path)
-  if err != nil {
-    panic(err)
-  }
-  element := EtypedElement{}
-  err = json.Unmarshal([]byte(file), &element)
-  if err != nil {
-    panic(err)
-  }
-  return element
-}
-
-func getRequestValue(param string, r *http.Request) string {
-  values, ok := r.URL.Query()[param]
-  if !ok || len(values[0]) < 1 {
-        return ""
-  }
-  return values[0]
-}
-
-func castElements(config Config) {
-  elementDirs := getDirsInDir(ELEMENTS_DIR, []string{"media", "elements"})
-  for i := 0; i < len(elementDirs); i++ {
-    elementDir := elementDirs[i]
-    elementId := strings.Replace(elementDir.Path, "/media", "", -1)
-    elementId = strings.Replace(elementId, ELEMENTS_DIR + "/", "", -1)
-    etype := getEtype(config.Etype)
-    typedElement := castToEtype(elementDir.Path + "/media", etype, elementId)
-    filepath := ELEMENTS_DIR + "/" + elementId + "/" + elementId + ".json"
-    writeToJsonFile(filepath, typedElement)
-  }
+func handleElements(w http.ResponseWriter, r *http.Request) {
+	id := getRequestValue("id", r)
+	media := getRequestValue("media", r)
+	// path := ELEMENTS_DIR + "/" + id + "/"
+	// log.Println(path)
+	log.Println(id)
+	log.Println(media)
+	// if media != "" {
+	// 	path = path + "media/" + media
+	// 	serveSymlink(path, w, r)
+	// } else {
+	// 	path = path + id + ".json"
+	// 	serveJson(path, w, r)
+	// }
 }

@@ -11,10 +11,10 @@ from util import *
 NAME = "forensicarchitecture/mtriage"
 CONT_NAME = NAME.replace("/", "_")  # docker doesn't allow slashes in cont names
 
-SERVER_NAME = "forensicarchitecture/mtriageserver"
+SERVER_NAME = "forensicarchitecture/mviewserver"
 CONT_SERVER_NAME = SERVER_NAME.replace("/", "_")
 
-VIEWER_NAME = "forensicarchitecture/mtriageviewer"
+VIEWER_NAME = "forensicarchitecture/mviewer"
 CONT_VIEWER_NAME = VIEWER_NAME.replace("/", "_")
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -190,6 +190,50 @@ def test(args):
     print("All tests for mtriage done.")
 
 
+def __build_viewer_server():
+    server_img_name = "{}:dev".format(SERVER_NAME)
+    print("Creating container to build server...")
+    print("----------------------------------")
+    try:
+        sp.call(
+            [
+                "docker",
+                "build",
+                "-t",
+                server_img_name,
+                "-f",
+                "src/server/server.Dockerfile",
+                "src/server",
+            ]
+        )
+    except:
+        print("__build_viewer_server: Something went wrong! EEK.")
+    print("Server build successful.")
+    print("----------------------------------")
+
+
+def __build_viewer_client(viewer_name):
+    viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
+    print("Creating container to build viewer plugin...")
+    print("----------------------------------")
+    try:
+        sp.call(
+            [
+                "docker",
+                "build",
+                "-t",
+                viewer_img_name,
+                "-f",
+                "src/build/viewer.Dockerfile",
+                "src/lib/viewers/" + viewer_name,
+            ]
+        )
+    except:
+        print("__build_viewer_client: Something went wrong! EEK.")
+    print("Viewer plugin build successful.")
+    print("----------------------------------")
+
+
 def viewer(args):
     """ Must be invoked with an input folder and viewer-plugin e.g.:
 
@@ -208,7 +252,7 @@ def viewer(args):
         elementIndex                                - return an array of all element ids
         elements                                    - returns an array of all etyped elements (n.b. potentially slow)
         element?id=<element_id>                     - serves the element's etype data
-        element?if=<element_id>&media=<media_file>  - serves the media file associated with element
+        element?id=<element_id>&media=<media_file>  - serves the media file associated with element
 
         Example response for 'elementIndex':
 
@@ -237,43 +281,15 @@ def viewer(args):
         }
 
     """
-    # setup variables
-    inputElementsDir = args.input
-    viewer = args.viewer
-    viewersDir = "src/lib/viewers"
-    viewerDir, viewerConfigPath = verify_viewer_args(
-        inputElementsDir, viewersDir, viewer
-    )
-    serverElementsDir = "src/server/elements"
-    serverConfigPath = "src/server/config.json"
-    viewerEtype = get_viewer_etype(viewerConfigPath)
+    input_elements_dir = args.input
+    viewer_name = args.viewer
 
-    serverConfig = {"port": 8080, "etype": viewerEtype}
-    viewerImgName = "{}:{}".format(VIEWER_NAME, viewer)
-    serverImgName = "{}:dev".format(SERVER_NAME)
+    is_local = True
+    server_img_name = "{}:dev".format(SERVER_NAME)
+    viewer_img_name = "{}:{}".format(VIEWER_NAME, viewer_name)
 
-    create_server_config(serverConfigPath, serverConfig)
-    create_symlinks(inputElementsDir, serverElementsDir)
-
-    print("Creating container to build server...")
-    print("----------------------------------")
-    try:
-        sp.call(
-            [
-                "docker",
-                "build",
-                "-t",
-                serverImgName,
-                "-f",
-                "src/server/server.Dockerfile",
-                "src/server",
-            ]
-        )
-    except:
-        # TODO
-        print("Something went wrong! EEK.")
-    print("Server build successful.")
-    print("----------------------------------")
+    if is_local:
+        __build_viewer_server()
 
     print("Creating container to run server...")
     sp.Popen(
@@ -287,30 +303,14 @@ def viewer(args):
             "--rm",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
-            serverImgName,
+            server_img_name,
         ]
     )
     print("Server running successfully in a container.")
     print("----------------------------------")
 
-    print("Creating container to build viewer plugin...")
-    print("----------------------------------")
-    try:
-        sp.call(
-            [
-                "docker",
-                "build",
-                "-t",
-                viewerImgName,
-                "-f",
-                "src/build/viewer.Dockerfile",
-                "src/lib/viewers/" + viewer,
-            ]
-        )
-    except:
-        print("Something went wrong! EEK.")
-    print("Viewer plugin build successful.")
-    print("----------------------------------")
+    if is_local:
+        __build_viewer_client(viewer_name)
 
     print("Creating container to run viewer plugin...")
     sp.Popen(
@@ -324,14 +324,16 @@ def viewer(args):
             "--rm",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
-            viewerImgName,
+            viewer_img_name,
         ]
     )
     print("Viewer plugin successfully running in container.")
     print("----------------------------------")
+
+    # block, and stop containers on ctrl c
     print("The viewer is running at: http://localhost:8081")
     webbrowser.open("http://localhost:8081")
-    # block, and stop containers on ctrl c
+
     def signal_handler(sig, frame):
         print("Removing containers...")
         sys.exit(0)
@@ -365,6 +367,40 @@ def run(args):
             "{}:{}".format(NAME, TAG_NAME),
         ]
     )
+
+
+def dev_viewerserver(args):
+    print("Creating container to run server...")
+    # __build_viewer_server()
+    if not os.path.exists(working_dir):
+    working_dir = args.input
+        raise Exception("Not a valid directory.")
+    sp.Popen(
+        [
+            "docker",
+            "run",
+            "--name",
+            CONT_SERVER_NAME,
+            "-p",
+            "8080:8080",
+            "--rm",
+            "-v",
+            "{}:/mtriage".format(DIR_PATH),
+            "-v",
+            # NOTE: assumes path is relative from the mtriage folder
+            "{}/{}:/workingdir".format(DIR_PATH, working_dir),
+            "{}:dev".format(SERVER_NAME),
+        ]
+    )
+    print("Server running successfully in a container.")
+    print("----------------------------------")
+
+    def signal_handler(sig, frame):
+        print("Removing containers...")
+        sys.exit(0)
+
+    signal.pause()
+    signal.signal(signal.SIGINT, signal_handler)
 
 
 if __name__ == "__main__":
