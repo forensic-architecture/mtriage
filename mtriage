@@ -320,6 +320,7 @@ def viewer(args):
     """
     pass
 
+
 def __run_lib_tests():
     returncode = sp.call(
         [
