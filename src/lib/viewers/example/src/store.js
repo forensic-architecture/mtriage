@@ -10,15 +10,14 @@ export default new Vuex.Store({
     version: '0.1',
     fetching: true,
     error: null,
-    elements: []
+    elementmap: {}
   },
   mutations: {
     [types.FETCH_ELEMENTS_ATTEMPT] (state) {
       state.fetching = true
     },
-    [types.FETCH_ELEMENTS] (state, elements) {
-      state.elements = elements
-      console.log(elements)
+    [types.FETCH_ELEMENTS] (state, elementmap) {
+      state.elementmap = elementmap
       state.fetching = false
     },
     [types.FETCH_ELEMENTS_ERROR] (state, msg) {

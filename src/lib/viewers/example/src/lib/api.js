@@ -19,6 +19,6 @@ const ROOT_URL = 'http://localhost:8080'
 // }
 
 export default {
-  fetchElements: () => axios.get(`${ROOT_URL}/elements`),
+  fetchElements: () => axios.get(`${ROOT_URL}/elementmap`),
   fetchElement: elementId => axios.get(`${ROOT_URL}/element?id=${elementId}`)
 }
