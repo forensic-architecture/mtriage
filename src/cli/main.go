@@ -15,7 +15,17 @@ const VIEW_INPUT = "input"
 const VIEW_SAVE = "save"
 const VIEW_CONSOLE = "console"
 
+const PHASE_SELECT = "select"
+const PHASE_ANALYSE = "analyse"
+
+const LIB_SELECTORS = "selectors"
+const LIB_ANALYSERS = "analysers"
+
 const DIR_WORKFLOWS = "../../workflows"
+const DIR_LIB = "../lib"
+const DIR_SELECTORS = DIR_LIB + "/" + LIB_SELECTORS
+const DIR_ANALYSERS = DIR_LIB + "/" + LIB_ANALYSERS
+
 
 // GOCUI LIFECYCLE
 
@@ -57,7 +67,8 @@ func layout(g *gocui.Gui) error {
       return err
     }
     v.Wrap = true
-    initState := state{ cfg: make(map[string]interface{}), option: getNextOption(g)}
+    initCfg := make(map[string]interface{})
+    initState := state{ cfg: initCfg, option: getNextOption(g, initCfg)}
     pushState(g, initState)
   }
 
@@ -81,8 +92,6 @@ func layout(g *gocui.Gui) error {
     }
     v.Autoscroll = true
   }
-
-  // also a panel that explain the keys to use
 
   return nil
 }
@@ -140,15 +149,15 @@ func inputEntered(g *gocui.Gui, v *gocui.View) error {
   input = input[:len(input)-1]  // remove trailing newline
   optionName := history[len(history)-1].option.Name()
   isModuleConfig := history[len(history)-1].option.IsModuleConfig()
-  update(g, optionName, input, isModuleConfig)
 
   if err := g.DeleteView(VIEW_INPUT); err != nil {
-    // log.Panicln("here")
-    return nil
+    return err
   }
   if _, err := g.SetCurrentView(VIEW_MAIN); err != nil {
     return err
   }
+
+  update(g, optionName, input, isModuleConfig)
 
   return nil
 }
@@ -159,9 +168,6 @@ func undo(g *gocui.Gui, v *gocui.View) error {
 }
 
 func cursorUp(g *gocui.Gui, v *gocui.View) error {
-  logger(g, "cursor up")
-  // type assertion: current option is multiOption
-  // history[len(history)-1].option.(multiOption)
 
   if v != nil {
     ox, oy := v.Origin()
@@ -176,7 +182,6 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 }
 
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
-  logger(g, "cursor down")
   // type assertion: current option is multiOption
   o := history[len(history)-1].option.(multiOption)
 
@@ -235,12 +240,14 @@ func updateConfigView(g *gocui.Gui, cfg map[string]interface{}) error {
       v.Clear()
 
       for key, val := range cfg {
-        // value is either a string or not
         if s, ok := val.(string); ok {
           fmt.Fprintln(v, key + ": \"" + s + "\"")
         } else {
-          // TODO: has to be a map
-          // is a map
+          fmt.Fprintln(v, "config:")
+          configMap := val.(map[string]string)
+          for key1, val1 := range configMap {
+            fmt.Fprintln(v, "  - " + key1 + ": \"" + val1 + "\"")
+          }
         }
       }
     }
@@ -248,9 +255,9 @@ func updateConfigView(g *gocui.Gui, cfg map[string]interface{}) error {
 }
 
 func updateOptionView(g *gocui.Gui, o option) error {
-  logger(g, "update option")
 
   v, err := g.View(VIEW_MAIN)
+  v.SetCursor(0, 0)
   if err != nil {
     return err
   }
@@ -270,14 +277,17 @@ func logger(g *gocui.Gui, text string) {
   }
 }
 
-// TODO logic will hook into mtriage
-func getNextOption(g *gocui.Gui) option {
-  c := len(history)
-  if c == 0 {
-    return multiOption{ options: []string{"select","analyse"}, isModuleConfig: false, name: "phase" }
-  } else if c == 1 {
-    return textInputOption{ prompt: "please enter a folder path", name: "folder", isModuleConfig: false  }
-  } else {
-    return saveOption{}
+func logCfg(g *gocui.Gui, cfg map[string]interface{}) {
+  logger(g,  "------")
+  for k, v := range cfg {
+    if val, ok := v.(string); ok {
+      logger(g,  k + ": " + val)
+    } else {
+      configMap := v.(map[string]string)
+      for k1, v1 := range configMap {
+        logger(g,  "    " + k1 + ": " + v1)
+      }
+    }
   }
+  logger(g,  "------")
 }

@@ -27,11 +27,12 @@ var history []state = []state {}
 // MUTATIONS
 
 func pushState(g *gocui.Gui, newState state) {
+  logger(g, "push state")
+  logCfg(g, newState.cfg)
   history = append(history, newState)
 
-  // directly updating the ui is not ideal,
-  // - for looser coupling between data and ui
-  // would be better to implement an observer pattern
+  // directly updating the ui is not ideal -
+  // observer pattern would make for looser coupling
   updateConfigView(g, newState.cfg)
   updateOptionView(g, newState.option)
 }
@@ -55,6 +56,13 @@ func update(g *gocui.Gui, key string, value string, isModuleConfig bool) {
       config := newState.cfg["config"].(map[string]string)
       config[key] = value
   }
-  newState.option = getNextOption(g)
+  newState.option = getNextOption(g, newState.cfg)
   pushState(g, newState)
+}
+
+func currentState() state {
+  if len(history) > 0 {
+    return history[len(history)-1]
+  }
+  return state{}
 }
