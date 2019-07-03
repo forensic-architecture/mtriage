@@ -4,7 +4,23 @@ import (
   "log"
   "fmt"
   "github.com/jroimartin/gocui"
+  "gopkg.in/yaml.v2"
+  "strconv"
+  "io/ioutil"
+  "time"
 )
+
+// MODULE ARGS
+
+type Arg struct {
+  name string
+  required bool
+  input string
+}
+
+func (a Arg) String() string {
+  return "name: " + a.name + " input: " + a.input + " required: " + strconv.FormatBool(a.required)
+}
 
 // OPTION INTERFACE
 
@@ -47,6 +63,7 @@ type textInputOption struct {
   prompt string
   name string
   isModuleConfig bool
+  validationType string
 }
 
 func (to textInputOption) Present(g *gocui.Gui, v *gocui.View) error {
@@ -71,6 +88,39 @@ func (to textInputOption) Name() string {
 
 func (to textInputOption) IsModuleConfig() bool {
   return to.isModuleConfig
+}
+
+func (to textInputOption) IsValidType(g *gocui.Gui, input string) bool {
+  switch to.validationType {
+  case "int":
+    _, err := strconv.Atoi(input)
+    if err != nil {
+      logger(g, input + " is not an integer")
+    }
+    return err == nil
+  case "folder":
+    exists := dirExists("../../" + input)
+    if !exists {
+      logger(g, "folder " + input + " does not exist")
+    }
+    return exists
+  case "date":
+    // TODO: should be the format used by the analyser
+    const dtFormat = "2006/01/02 15:04:05"
+    _, err := time.Parse(dtFormat, input)
+    if err != nil {
+      logger(g, input + " is not a valid date format. Dates must be formatted YYYY/MM/DD HH:MM:SS")
+    }
+    return err == nil
+  case "bool":
+    _, err := strconv.ParseBool(input)
+    if err != nil {
+      logger(g, input + " is not a bool. Please enter 'true' or 'false'")
+    }
+    return err == nil
+  default:  // accepts anything
+    return true
+  }
 }
 
 // SAVEOPTION
@@ -113,21 +163,21 @@ func getNextOption(g *gocui.Gui, cfg map[string]interface{}) option {
   case 0:
     return multiOption{ options: []string{"select","analyse"}, isModuleConfig: false, name: "phase" }
   case 1:
-    return textInputOption{ prompt: "please enter a folder path", name: "folder", isModuleConfig: false  }
-  case 2:
     phase := cfg["phase"].(string)
     modules := modulesForPhase(phase)
     return multiOption{ options: modules, isModuleConfig: false, name: "module" }
+  case 2:
+    return textInputOption{ prompt: "please enter the path to your working directory", name: "folder", isModuleConfig: false, validationType: "folder"  }
   default:
-    logCfg(g, cfg)
-    // return saveOption{}
     module := cfg["module"].(string)
-    configOptions := configOptionsForModule(module)
+    phase := cfg["phase"].(string)
+    configOptions := configOptionsForModule(module, phase)
     i := c - 3
     if i < len(configOptions) {
-      name := configOptions[i]
-      prompt := "please enter a " + name
-      return textInputOption { prompt: prompt, isModuleConfig: true, name: name }
+      name := configOptions[i].name
+      input := configOptions[i].input
+      prompt := "please enter a " + input + " for argument:\n\n   "  + name
+      return textInputOption { prompt: prompt, isModuleConfig: true, name: name, validationType: input }
     } else {
       return saveOption{}
     }
@@ -136,7 +186,7 @@ func getNextOption(g *gocui.Gui, cfg map[string]interface{}) option {
 
 func modulesForPhase(phase string) []string {
   path, name := phaseToLibFolder(phase)
-  return dirNamesIn(path, []string{name, "__pycache__"})
+  return dirNamesIn(path, []string{name, "__pycache__", "meta"})
 }
 
 func phaseToLibFolder(phase string) (path string, name string) {
@@ -150,6 +200,49 @@ func phaseToLibFolder(phase string) (path string, name string) {
   }
 }
 
-func configOptionsForModule(module string) []string {
-  return []string{ "option1", "option2" }
+func configOptionsForModule(module string, phase string) []Arg {
+
+  argsPath := argsPathForModule(module, phase)
+
+  file, err := ioutil.ReadFile(argsPath)
+  if err != nil {
+    log.Panicln(err)
+  }
+
+  var argsWild []map[string]interface{}
+  err = yaml.Unmarshal(file, &argsWild)
+  if err != nil {
+    log.Panicln(err)
+  }
+
+  argsTame := []Arg{}
+
+  if phase == PHASE_ANALYSE {
+    els_in := Arg{ name: "elements_in", input: "string", required: true }
+    argsTame = append(argsTame, els_in)
+  }
+
+  for i := range argsWild {
+    name, ok := argsWild[i]["name"].(string)
+    if !ok {
+      log.Panicln("invalid args yaml! name not string")
+    }
+    input, ok := argsWild[i]["input"].(string)
+    if !ok {
+      log.Panicln("invalid args yaml! input not string")
+    }
+    required, ok := argsWild[i]["required"].(bool)
+    if !ok {
+      log.Panicln("invalid args yaml! required not bool")
+    }
+    arg := Arg{ name: name, input: input, required: required }
+    argsTame = append(argsTame, arg)
+  }
+
+  return argsTame
+}
+
+func argsPathForModule(module string, phase string) string {
+  phaseDir, _ := phaseToLibFolder(phase)
+  return phaseDir + "/" + module + "/args.yaml"
 }

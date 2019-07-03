@@ -27,8 +27,7 @@ var history []state = []state {}
 // MUTATIONS
 
 func pushState(g *gocui.Gui, newState state) {
-  logger(g, "push state")
-  logCfg(g, newState.cfg)
+  // logCfg(g, newState.cfg)
   history = append(history, newState)
 
   // directly updating the ui is not ideal -

@@ -39,3 +39,10 @@ func dirNamesIn(dir string, skips []string) []string {
   }
   return dirs
 }
+
+func dirExists(path string) bool {
+  if stat, err := os.Stat(path); err == nil && stat.IsDir() {
+    return true
+  }
+  return false
+}

@@ -142,13 +142,17 @@ func saveFile(g *gocui.Gui, v *gocui.View) error {
 
 func inputEntered(g *gocui.Gui, v *gocui.View) error {
 
+  o := history[len(history)-1].option.(textInputOption)
+
   input := v.Buffer()
   if len(input) == 0 {
     return nil
   }
   input = input[:len(input)-1]  // remove trailing newline
-  optionName := history[len(history)-1].option.Name()
-  isModuleConfig := history[len(history)-1].option.IsModuleConfig()
+
+  if !o.IsValidType(g, input) {
+    return nil
+  }
 
   if err := g.DeleteView(VIEW_INPUT); err != nil {
     return err
@@ -156,6 +160,9 @@ func inputEntered(g *gocui.Gui, v *gocui.View) error {
   if _, err := g.SetCurrentView(VIEW_MAIN); err != nil {
     return err
   }
+
+  optionName := o.Name()
+  isModuleConfig := o.IsModuleConfig()
 
   update(g, optionName, input, isModuleConfig)
 
@@ -168,7 +175,6 @@ func undo(g *gocui.Gui, v *gocui.View) error {
 }
 
 func cursorUp(g *gocui.Gui, v *gocui.View) error {
-
   if v != nil {
     ox, oy := v.Origin()
     cx, cy := v.Cursor()
