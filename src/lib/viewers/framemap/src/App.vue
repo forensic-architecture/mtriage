@@ -7,7 +7,7 @@
         <!--   <Controls /> -->
         <!-- </div> -->
         <div class="content-case">
-          <Container />
+          <Container label="garbage_truck" />
         </div>
       </div>
     </div>

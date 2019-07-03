@@ -31,7 +31,7 @@ export default new Vuex.Store({
       commit(types.FETCH_ELEMENTS_ATTEMPT)
       api.fetchElements()
         .then(result => {
-          commit(types.FETCH_ELEMENTS, result.data)
+          commit(types.FETCH_ELEMENTS, result)
         })
         .catch(err => {
           commit(types.FETCH_ELEMENTS_ERROR, err.message)

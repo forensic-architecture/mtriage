@@ -1,6 +1,7 @@
 <template>
   <div class="table">
-    <Graph :elements="elements" />
+    <h1>Showing matches for: {{ this.label }}</h1>
+    <Graph :elements="elements" :label="this.label" />
     <Loading v-if="!!fetching" />
     <div v-if="!!error" class="flexc">
       <h1>A network connection occurred. Make sure you are correctly configured with a running backend.</h1>
@@ -17,6 +18,9 @@ export default {
   components: {
     Loading,
     'Graph': () => import('./Graph.vue')
+  },
+  props: {
+    label: String,
   },
   methods: {
     ...mapActions([
@@ -40,8 +44,7 @@ export default {
 $primary-color: #e2e2e2;
 
 h1 {
-  color: white;
-  max-width: 800px;
+  padding-bottom: 30px;
 }
 
 .table {

@@ -48,6 +48,7 @@ func handleElementMap(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleElement(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 	var context string = ""
 	var id int64 = -1
 	queries := r.URL.Query()["q"]

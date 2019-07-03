@@ -2,23 +2,29 @@ import axios from 'axios'
 
 const ROOT_URL = 'http://localhost:8080'
 
+const ANALYSED_DIR = "keras_pretrained"
+const CONTEXT = "demo_youtube_select"
+
 function fetchElements() {
-  return axios.get(`${ROOT_URL}/elements`)
-    .then(elements => {
-      const urls = elements.data.map(getElementUrl)
+  return axios.get(`${ROOT_URL}/elementmap`)
+    .then(response => {
+      const elementmap = response.data
+      const elementSets = elementmap.Analysed.filter(els => els.Component === ANALYSED_DIR)
+      const elements = elementSets.filter(els => els.Context === CONTEXT)
+      if (elements.length !== 1) {
+        alert("check your elements dir and context")
+      }
+      const ctxObj = elements[0]
+      const urls = ctxObj.Elements.map(getElementUrl)
       return Promise.all(urls.map(url => axios.get(url)))
     })
     .then(fullElements => {
-      console.log("ciao")
-      console.log(fullElements.map(el => el.data))
+      return fullElements.map(el => el.data)
     })
 }
 
-function getElementUrl(element) {
-  const id = element.Id
-  const filename = element.Media.json[0]
-  return `${ROOT_URL}/element?id=${id}&media=${filename}`
-  // return `${ROOT_URL}/element?id=${id}`
+function getElementUrl(_, idx) {
+  return `${ROOT_URL}/element?q=youtube/${ANALYSED_DIR}&context=${CONTEXT}&id=${idx}`
 }
 
 export default {
