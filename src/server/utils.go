@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"log"
+	"errors"
 )
 
 const DATA_DIR = "data"
@@ -200,4 +201,62 @@ func getRequestValue(param string, r *http.Request) string {
 		return ""
 	}
 	return values[0]
+}
+
+
+func getQuery(r *http.Request, q string) (string, error) {
+	content := r.URL.Query()[q]
+	if len(content) <= 0 {
+		return "", errors.New("Query does not exist")
+	}
+	query := content[0]
+	return query, nil
+}
+
+func getPathToAnalysedElementMedia(dir AnalysedDir, elId string, media string) string {
+	var pathToElement strings.Builder
+
+	idx := -1
+	for i := 0; i < len(dir.Elements); i++ {
+		if dir.Elements[i].Id == elId {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		return ""
+	}
+
+	pathToElement.WriteString(dir.Path)
+	pathToElement.WriteString("/")
+	pathToElement.WriteString(dir.Elements[idx].Id)
+	pathToElement.WriteString("/")
+	// NOTE: currently just serves the first media, should be indexed
+	// pathToElement.WriteString(dir.Elements[idx].Media["all"][0])
+	pathToElement.WriteString(media)
+	return pathToElement.String()
+}
+
+func getPathToSelectedElementMedia(dir SelectedDir, elId string, media string) string {
+	var pathToElement strings.Builder
+
+	idx := -1
+	for i := 0; i < len(dir.Elements); i++ {
+		if dir.Elements[i].Id == elId {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		return ""
+	}
+
+	pathToElement.WriteString(dir.Path)
+	pathToElement.WriteString("/")
+	pathToElement.WriteString(dir.Elements[idx].Id)
+	pathToElement.WriteString("/")
+	// NOTE: currently just serves the first media, should be indexed
+	// pathToElement.WriteString(dir.Elements[idx].Media["all"][0])
+	pathToElement.WriteString(media)
+	return pathToElement.String()
 }

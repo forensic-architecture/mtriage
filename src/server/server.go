@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"strconv"
 )
 
 // global element map. This variable is populated when the server starts by
@@ -48,88 +47,76 @@ func handleElementMap(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleElement(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	var context string = ""
-	var id int64 = -1
-	queries := r.URL.Query()["q"]
-	_context := r.URL.Query()["context"]
-	_id := r.URL.Query()["id"]
-	if len(queries) <= 0 {
+	q, q_err := getQuery(r, "q")
+	context, context_err := getQuery(r, "context")
+	id, id_err := getQuery(r, "id")
+	media, media_err := getQuery(r, "media")
+
+	if q_err != nil || context_err != nil {
 		errorHandler(w, r, http.StatusBadRequest)
 		return
 	}
-	query := queries[0]
-	terms := strings.Split(query, "/")
+
+	terms := strings.Split(q, "/")
 	if len(terms) > 2 {
 		errorHandler(w, r, http.StatusBadRequest)
 		return
 	}
-	if len(_context) > 0 {
-		context = _context[0]
-	}
-	if len(_id) > 0 {
-		theid, err := strconv.ParseInt(_id[0], 10, 64)
-		id = theid
-		if err != nil {
-			errorHandler(w, r, http.StatusBadRequest)
-			return
-		}
-	}
 
+	enableCors(&w)
+	w.Header().Set("Cache-Control", "no-cache")
 	var selector string = terms[0]
 	var hasAnalyser bool = len(terms) > 1
-	var counter int = 0
+	var hasElement bool = id_err == nil
+	var hasMedia bool = media_err == nil
 
-	// NOTE: SUPER shoddy code, just needed to get it working, will return
-	// TODO(lachlan)
 	if hasAnalyser {
-		var output AnalysedDir
 		analyser := terms[1]
+		var output AnalysedDir
 		for i := 0; i < len(ELEMENT_MAP.Analysed); i++ {
 			output = ELEMENT_MAP.Analysed[i]
 			if output.Component == analyser {
 				if context == "" || context == output.Context {
-					break
+					if hasElement && hasMedia {
+						elPath := getPathToAnalysedElementMedia(output, id, media)
+						http.ServeFile(w, r, elPath)
+					} else {
+						serveJsonData(output, w)
+					}
+					return
 				}
 			}
-			counter += 1
 		}
-		if counter == len(ELEMENT_MAP.Analysed) {
-			errorHandler(w, r, http.StatusNotFound)
-			return
-		}
-		if id != -1 {
-			var pathToElement strings.Builder
-			w.Header().Set("Cache-Control", "no-cache")
-			pathToElement.WriteString(output.Path)
-			pathToElement.WriteString("/")
-			pathToElement.WriteString(output.Elements[id].Id)
-			pathToElement.WriteString("/")
-			// NOTE: just serve the first element for the time being
-			pathToElement.WriteString(output.Elements[id].Media["all"][0])
-			http.ServeFile(w, r, pathToElement.String())
-		} else {
-			serveJsonData(output, w)
-		}
-		return
 	} else {
 		var output SelectedDir
 		for i := 0; i < len(ELEMENT_MAP.Selected); i++ {
 			output = ELEMENT_MAP.Selected[i]
 			if output.Component == selector {
-				break
+				if context == "" || context == output.Context {
+					if hasElement && hasMedia {
+						elPath := getPathToSelectedElementMedia(output, id, media)
+						http.ServeFile(w, r, elPath)
+					} else {
+						serveJsonData(output, w)
+					}
+					return
+				}
 			}
-			counter += 1
 		}
-		if counter == len(ELEMENT_MAP.Selected) {
-			errorHandler(w, r, http.StatusNotFound)
-			return
-		}
-		if id != -1 {
-			serveJsonData(output.Elements[id], w)
-		} else {
-			serveJsonData(output, w)
-		}
-		return
+		// for i := 0; i < len(ELEMENT_MAP.Selected); i++ {
+		// 	output := ELEMENT_MAP.Selected[i]
+		// 	if output.Component == selector {
+		// 		break
+		// 	}
+		// }
+		// if counter == len(ELEMENT_MAP.Selected) {
+		// 	errorHandler(w, r, http.StatusNotFound)
+		// 	return
+		// }
+		// if id != -1 {
+		// 	serveJsonData(output.Elements[id], w)
+		// } else {
+		// 	serveJsonData(output, w)
+		// }
 	}
 }
