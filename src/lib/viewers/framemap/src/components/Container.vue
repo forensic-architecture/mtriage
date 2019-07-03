@@ -31,7 +31,7 @@ export default {
     ...mapState({
       fetching: 'fetching',
       elements: 'elements',
-      error: 'error'
+      error: 'error',
     })
   },
   mounted: function () {

@@ -1,16 +1,17 @@
 import axios from 'axios'
 
-const ROOT_URL = 'http://localhost:8080'
-
-const ANALYSED_DIR = "keras_pretrained"
-const CONTEXT = "demo_youtube_select"
+const cfg = {
+  url: "http://localhost:8080",
+  analysed: "keras_pretrained",
+  context: "demo_youtube_select"
+}
 
 function fetchElements() {
-  return axios.get(`${ROOT_URL}/elementmap`)
+  return axios.get(`${cfg.url}/elementmap`)
     .then(response => {
       const elementmap = response.data
-      const elementSets = elementmap.Analysed.filter(els => els.Component === ANALYSED_DIR)
-      const elements = elementSets.filter(els => els.Context === CONTEXT)
+      const elementSets = elementmap.Analysed.filter(els => els.Component === cfg.analysed)
+      const elements = elementSets.filter(els => els.Context === cfg.context)
       if (elements.length !== 1) {
         alert("check your elements dir and context")
       }
@@ -24,7 +25,7 @@ function fetchElements() {
 }
 
 function getElementUrl(_, idx) {
-  return `${ROOT_URL}/element?q=youtube/${ANALYSED_DIR}&context=${CONTEXT}&id=${idx}`
+  return `${cfg.url}/element?q=youtube/${cfg.analysed}&context=${cfg.context}&id=${idx}`
 }
 
 export default {

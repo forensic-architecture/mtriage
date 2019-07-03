@@ -7,7 +7,7 @@
         <!--   <Controls /> -->
         <!-- </div> -->
         <div class="content-case">
-          <Container label="garbage_truck" />
+          <Container :label="this.label" />
         </div>
       </div>
     </div>
@@ -19,17 +19,23 @@ import { mapState } from 'vuex'
 import Header from './components/Header.vue'
 import Container from './components/Container.vue'
 import Controls from './components/Controls.vue'
+import cfg from './LABEL'
 
 export default {
   name: 'app',
-  computed: mapState({
-    version: 'version',
-  }),
+  computed: {
+    ...mapState({
+      version: 'version',
+    }),
+  },
+  data() {
+    return cfg
+  },
   components: {
     Header,
     Container,
     Controls
-  }
+  },
 }
 </script>
 
