@@ -193,8 +193,8 @@ func getNextOption(g *gocui.Gui, cfg map[string]interface{}) option {
 }
 
 func modulesForPhase(phase string) []string {
-  path, name := phaseToLibFolder(phase)
-  return dirNamesIn(path, []string{name, "__pycache__", "meta"})
+  path, _ := phaseToLibFolder(phase)
+  return dirNamesIn(path, []string{"meta"})
 }
 
 func phaseToLibFolder(phase string) (path string, name string) {

@@ -2,7 +2,7 @@ package main
 
 import (
   "os"
-  "path/filepath"
+  // "path/filepath"
   "log"
   "io/ioutil"
   "gopkg.in/yaml.v2"
@@ -20,22 +20,27 @@ func writeToYamlFile(path string, data map[string]interface{}) {
 }
 
 func dirNamesIn(dir string, skips []string) []string {
+
+  files, err := ioutil.ReadDir(dir)
+  if err != nil {
+    log.Panicln(err)
+  }
+
   var dirs []string
-  err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-    if !info.IsDir() {
-      return nil
+  for _, file := range files {
+    if !file.IsDir() {
+      continue
     }
-    for i := 0; i < len(skips); i++ {
-      if info.Name() == skips[i] {
-        return nil
+    shouldSkip := false
+    for i := range skips {
+      if file.Name() == skips[i] {
+        shouldSkip = true
       }
     }
-    name := info.Name()
-    dirs = append(dirs, name)
-    return nil
-  })
-  if err != nil {
-    panic(err)
+    if shouldSkip {
+      continue
+    }
+    dirs = append(dirs, file.Name())
   }
   return dirs
 }
