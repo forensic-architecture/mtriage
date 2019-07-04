@@ -189,6 +189,9 @@ def test(args):
     print("----------------------------------")
     print("All tests for mtriage done.")
 
+def cli(args):
+    sp.call(["src/cli/cli"])
+
 
 def viewer(args):
     """ Must be invoked with an input folder and viewer-plugin e.g.:
@@ -375,11 +378,14 @@ if __name__ == "__main__":
         "clean": clean,
         "view": viewer,
         "run": run,
+        "cli": cli
     }
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     # parser.add_argument("toplevel", choices=["run", "dev"])
 
     subparsers = parser.add_subparsers(dest="__base")
+
+    cli_p = subparsers.add_parser("cli")
 
     run_p = subparsers.add_parser("run")
 
@@ -405,5 +411,7 @@ if __name__ == "__main__":
 
     if args.__base == "dev":
         COMMANDS[args.command](args)
-    else:
+    elif args.__base == "run":
         COMMANDS["run"](args)
+    else:
+        COMMANDS["cli"](args)
