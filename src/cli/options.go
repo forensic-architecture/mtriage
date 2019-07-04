@@ -65,6 +65,7 @@ type textInputOption struct {
   name string
   isModuleConfig bool
   validationType string
+  childModule string
 }
 
 func (to textInputOption) Present(g *gocui.Gui, v *gocui.View) error {
@@ -167,7 +168,7 @@ func (to saveOption) IsModuleConfig() bool {
 // MTRIAGE INTERFACE
 
 func getNextOption(g *gocui.Gui, cfg map[string]interface{}) option {
-  switch c := len(history); c {
+  switch stageCounter {
   case 0:
     return multiOption{ options: []string{"select","analyse"}, isModuleConfig: false, name: "phase" }
   case 1:
@@ -180,7 +181,7 @@ func getNextOption(g *gocui.Gui, cfg map[string]interface{}) option {
     module := cfg["module"].(string)
     phase := cfg["phase"].(string)
     configOptions := configOptionsForModule(module, phase)
-    i := c - 3
+    i := stageCounter - 3
     if i < len(configOptions) {
       name := configOptions[i].name
       input := configOptions[i].input

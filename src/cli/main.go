@@ -3,7 +3,7 @@ package main
 import (
   "fmt"
   "log"
-
+  "os/exec"
   "github.com/jroimartin/gocui"
   "strconv"
   "strings"
@@ -23,6 +23,7 @@ const PHASE_ANALYSE = "analyse"
 const LIB_SELECTORS = "selectors"
 const LIB_ANALYSERS = "analysers"
 
+const EXEC_MTRIAGE = "../../mtriage"
 const DIR_WORKFLOWS = "../../workflows"
 const DIR_LIB = "../lib"
 const DIR_SELECTORS = DIR_LIB + "/" + LIB_SELECTORS
@@ -35,7 +36,7 @@ const TYPE_INT = "int"
 const TYPE_WHITELIST = "whitelist"
 const TYPE_BOOL = "bool"
 
-
+const MODULE_META = "meta"
 
 // GOCUI LIFECYCLE
 
@@ -150,6 +151,12 @@ func saveFile(g *gocui.Gui, v *gocui.View) error {
   return gocui.ErrQuit
 }
 
+func runWorkflow(g *gocui.Gui, path string) {
+  // cmd := exec.Command(EXEC_MTRIAGE, "run", "../../examples/sel-local.yaml")
+  cmd := exec.Command(EXEC_MTRIAGE, "run", path)
+  cmd.Run()
+}
+
 func inputEntered(g *gocui.Gui, v *gocui.View) error {
 
   o := history[len(history)-1].option.(textInputOption)
@@ -171,10 +178,7 @@ func inputEntered(g *gocui.Gui, v *gocui.View) error {
     return err
   }
 
-  optionName := o.Name()
-  isModuleConfig := o.IsModuleConfig()
-
-  update(g, optionName, vInput, isModuleConfig)
+  update(g, o, vInput)
 
   return nil
 }
@@ -226,7 +230,7 @@ func selectOption(g *gocui.Gui, v *gocui.View) error {
     if cy < len(o.options) {
 
       selectedOption := o.options[cy]
-      update(g, o.Name(), selectedOption, o.IsModuleConfig())
+      update(g, o, selectedOption)
     }
   }
   return nil
@@ -246,52 +250,13 @@ func printToView(g *gocui.Gui, view string, text string) error {
 }
 
 func updateConfigView(g *gocui.Gui, cfg map[string]interface{}) error {
-
     v, err := g.View(VIEW_SIDE)
     if err != nil {
       return err
     }
     if v != nil {
-
       v.Clear()
-
-      for key, val := range cfg {
-        if s, ok := val.(string); ok {
-          fmt.Fprintln(v, key + ": \"" + s + "\"")
-        } else {
-          fmt.Fprintln(v, "config:")
-          configMap := val.(map[string]interface{})
-          for key1, val1 := range configMap {
-            // if type is bool / int / []string
-            var strVal string
-            b, ok := val1.(bool)
-            if ok {
-              strVal = strconv.FormatBool(b)
-            }
-            i, ok := val1.(int)
-            if ok {
-              strVal = strconv.Itoa(i)
-            }
-            whitelist, ok := val1.([]string)
-            if ok {
-              var str strings.Builder
-              str.WriteString("[")
-              for i := 0; i < len(whitelist); i++ {
-                str.WriteString(whitelist[i])
-                if i < len(whitelist)-1 {
-                  str.WriteString(",")
-                }
-              }
-              str.WriteString("]")
-              strVal = str.String()
-            }
-            if strVal == "" {
-              strVal = val1.(string)
-            }
-            fmt.Fprintln(v, "  - " + key1 + ": \"" + strVal + "\"")
-          }
-        }
-      }
+      printConfigInView(v, cfg)
     }
     return nil
 }
@@ -332,4 +297,62 @@ func logCfg(g *gocui.Gui, cfg map[string]interface{}) {
     }
   }
   logger(g,  "------")
+}
+
+func printConfigInView(v *gocui.View, cfg map[string]interface{}) {
+
+  if folder, ok := cfg["folder"].(string); ok {
+    fmt.Fprintln(v, "folder: \"" + folder + "\"")
+  }
+
+  if phase, ok := cfg["phase"].(string); ok {
+    fmt.Fprintln(v, "phase: \"" + phase + "\"")
+  }
+
+  if module, ok := cfg["module"].(string); ok {
+    fmt.Fprintln(v, "module: \"" + module + "\"")
+  }
+
+  if config, ok := cfg["config"].(map[string]interface{}); ok {
+    fmt.Fprintln(v, "config:")
+    if children, ok := config["children"].([]map[string]interface{}); ok {
+      fmt.Fprintln(v, "  children:")
+      for i := range children {
+        printMap(v, children[i], "    ")
+      }
+    } else {
+      printMap(v, config, "  ")
+    }
+  }
+}
+
+func printMap(v *gocui.View, m map[string]interface{}, ind string) {
+  for key1, val1 := range m {
+    var strVal string
+    b, ok := val1.(bool)
+    if ok {
+      strVal = strconv.FormatBool(b)
+    }
+    i, ok := val1.(int)
+    if ok {
+      strVal = strconv.Itoa(i)
+    }
+    whitelist, ok := val1.([]string)
+    if ok {
+      var str strings.Builder
+      str.WriteString("[")
+      for i := 0; i < len(whitelist); i++ {
+        str.WriteString(whitelist[i])
+        if i < len(whitelist)-1 {
+          str.WriteString(",")
+        }
+      }
+      str.WriteString("]")
+      strVal = str.String()
+    }
+    if strVal == "" {
+      strVal = val1.(string)
+    }
+    fmt.Fprintln(v, ind + key1 + ": \"" + strVal + "\"")
+  }
 }
