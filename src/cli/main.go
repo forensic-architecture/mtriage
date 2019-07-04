@@ -5,6 +5,8 @@ import (
   "log"
 
   "github.com/jroimartin/gocui"
+  "strconv"
+  "strings"
 )
 
 // CONSTANTS
@@ -25,6 +27,14 @@ const DIR_WORKFLOWS = "../../workflows"
 const DIR_LIB = "../lib"
 const DIR_SELECTORS = DIR_LIB + "/" + LIB_SELECTORS
 const DIR_ANALYSERS = DIR_LIB + "/" + LIB_ANALYSERS
+
+const TYPE_STRING = "string"
+const TYPE_FOLDER = "folder"
+const TYPE_DATE = "date"
+const TYPE_INT = "int"
+const TYPE_WHITELIST = "whitelist"
+const TYPE_BOOL = "bool"
+
 
 
 // GOCUI LIFECYCLE
@@ -149,8 +159,8 @@ func inputEntered(g *gocui.Gui, v *gocui.View) error {
     return nil
   }
   input = input[:len(input)-1]  // remove trailing newline
-
-  if !o.IsValidType(g, input) {
+  vInput := o.Validate(g, input)
+  if vInput == nil {
     return nil
   }
 
@@ -164,7 +174,7 @@ func inputEntered(g *gocui.Gui, v *gocui.View) error {
   optionName := o.Name()
   isModuleConfig := o.IsModuleConfig()
 
-  update(g, optionName, input, isModuleConfig)
+  update(g, optionName, vInput, isModuleConfig)
 
   return nil
 }
@@ -250,9 +260,35 @@ func updateConfigView(g *gocui.Gui, cfg map[string]interface{}) error {
           fmt.Fprintln(v, key + ": \"" + s + "\"")
         } else {
           fmt.Fprintln(v, "config:")
-          configMap := val.(map[string]string)
+          configMap := val.(map[string]interface{})
           for key1, val1 := range configMap {
-            fmt.Fprintln(v, "  - " + key1 + ": \"" + val1 + "\"")
+            // if type is bool / int / []string
+            var strVal string
+            b, ok := val1.(bool)
+            if ok {
+              strVal = strconv.FormatBool(b)
+            }
+            i, ok := val1.(int)
+            if ok {
+              strVal = strconv.Itoa(i)
+            }
+            whitelist, ok := val1.([]string)
+            if ok {
+              var str strings.Builder
+              str.WriteString("[")
+              for i := 0; i < len(whitelist); i++ {
+                str.WriteString(whitelist[i])
+                if i < len(whitelist)-1 {
+                  str.WriteString(",")
+                }
+              }
+              str.WriteString("]")
+              strVal = str.String()
+            }
+            if strVal == "" {
+              strVal = val1.(string)
+            }
+            fmt.Fprintln(v, "  - " + key1 + ": \"" + strVal + "\"")
           }
         }
       }

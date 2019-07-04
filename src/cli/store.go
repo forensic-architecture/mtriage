@@ -44,15 +44,15 @@ func popState(g *gocui.Gui) {
   }
 }
 
-func update(g *gocui.Gui, key string, value string, isModuleConfig bool) {
+func update(g *gocui.Gui, key string, value interface{}, isModuleConfig bool) {
   newState := history[len(history)-1].Copy()
   if !isModuleConfig {
       newState.cfg[key] = value
   } else {
       if _, ok := newState.cfg["config"]; !ok {
-        newState.cfg["config"] = make(map[string]string)
+        newState.cfg["config"] = make(map[string]interface{})
       }
-      config := newState.cfg["config"].(map[string]string)
+      config := newState.cfg["config"].(map[string]interface{})
       config[key] = value
   }
   newState.option = getNextOption(g, newState.cfg)

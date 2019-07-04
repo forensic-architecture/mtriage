@@ -8,6 +8,7 @@ import (
   "strconv"
   "io/ioutil"
   "time"
+  "strings"
 )
 
 // MODULE ARGS
@@ -70,12 +71,12 @@ func (to textInputOption) Present(g *gocui.Gui, v *gocui.View) error {
   fmt.Fprintln(v, to.prompt)
   v.Highlight = false
   maxX, maxY := g.Size()
-  if iView, err := g.SetView("input", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
+  if iView, err := g.SetView(VIEW_INPUT, maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
     if err != gocui.ErrUnknownView {
       return err
     }
     iView.Editable = true
-    if _, err := g.SetCurrentView("input"); err != nil {
+    if _, err := g.SetCurrentView(VIEW_INPUT); err != nil {
       return err
     }
   }
@@ -90,36 +91,43 @@ func (to textInputOption) IsModuleConfig() bool {
   return to.isModuleConfig
 }
 
-func (to textInputOption) IsValidType(g *gocui.Gui, input string) bool {
+func (to textInputOption) Validate(g *gocui.Gui, input string) interface{} {
   switch to.validationType {
-  case "int":
-    _, err := strconv.Atoi(input)
+  case TYPE_INT:
+    inInt, err := strconv.Atoi(input)
     if err != nil {
       logger(g, input + " is not an integer")
+      return nil
     }
-    return err == nil
-  case "folder":
+    return inInt
+  case TYPE_FOLDER:
     exists := dirExists("../../" + input)
     if !exists {
       logger(g, "folder " + input + " does not exist")
+      return nil
     }
-    return exists
-  case "date":
+    return input
+  case TYPE_DATE:
     // TODO: should be the format used by the analyser
     const dtFormat = "2006/01/02 15:04:05"
     _, err := time.Parse(dtFormat, input)
     if err != nil {
       logger(g, input + " is not a valid date format. Dates must be formatted YYYY/MM/DD HH:MM:SS")
+      return nil
     }
-    return err == nil
-  case "bool":
-    _, err := strconv.ParseBool(input)
+    return input
+  case TYPE_BOOL:
+    inBool, err := strconv.ParseBool(input)
     if err != nil {
       logger(g, input + " is not a bool. Please enter 'true' or 'false'")
+      return nil
     }
-    return err == nil
+    return inBool
+  case TYPE_WHITELIST:
+    whitelist := strings.Split(input, ",")
+    return whitelist
   default:  // accepts anything
-    return true
+    return input
   }
 }
 
@@ -136,12 +144,12 @@ func (so saveOption) Present(g *gocui.Gui, v *gocui.View) error {
   v.Highlight = false
 
   maxX, maxY := g.Size()
-  if iView, err := g.SetView("save", maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
+  if iView, err := g.SetView(VIEW_SAVE, maxX/2-30, maxY/2, maxX/2+30, maxY/2+2); err != nil {
     if err != gocui.ErrUnknownView {
       return err
     }
     iView.Editable = true
-    if _, err := g.SetCurrentView("save"); err != nil {
+    if _, err := g.SetCurrentView(VIEW_SAVE); err != nil {
       return err
     }
   }
@@ -167,7 +175,7 @@ func getNextOption(g *gocui.Gui, cfg map[string]interface{}) option {
     modules := modulesForPhase(phase)
     return multiOption{ options: modules, isModuleConfig: false, name: "module" }
   case 2:
-    return textInputOption{ prompt: "please enter the path to your working directory", name: "folder", isModuleConfig: false, validationType: "folder"  }
+    return textInputOption{ prompt: "please enter the path to your working directory", name: "folder", isModuleConfig: false, validationType: TYPE_FOLDER  }
   default:
     module := cfg["module"].(string)
     phase := cfg["phase"].(string)
@@ -218,7 +226,7 @@ func configOptionsForModule(module string, phase string) []Arg {
   argsTame := []Arg{}
 
   if phase == PHASE_ANALYSE {
-    els_in := Arg{ name: "elements_in", input: "string", required: true }
+    els_in := Arg{ name: "elements_in", input: TYPE_WHITELIST, required: true }
     argsTame = append(argsTame, els_in)
   }
 
