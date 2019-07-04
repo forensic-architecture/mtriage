@@ -189,6 +189,7 @@ def test(args):
     print("----------------------------------")
     print("All tests for mtriage done.")
 
+
 def cli(args):
     sp.call(["src/cli/cli"])
 
@@ -378,7 +379,7 @@ if __name__ == "__main__":
         "clean": clean,
         "view": viewer,
         "run": run,
-        "cli": cli
+        "cli": cli,
     }
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     # parser.add_argument("toplevel", choices=["run", "dev"])
