@@ -3,10 +3,7 @@ package main
 import (
   "fmt"
   "log"
-  "os/exec"
   "github.com/jroimartin/gocui"
-  "strconv"
-  "strings"
 )
 
 // CONSTANTS
@@ -16,6 +13,10 @@ const VIEW_SIDE = "side"
 const VIEW_INPUT = "input"
 const VIEW_SAVE = "save"
 const VIEW_CONSOLE = "console"
+
+const OPT_PHASE = "phase"
+const OPT_FOLDER = "folder"
+const OPT_MODULE = "module"
 
 const PHASE_SELECT = "select"
 const PHASE_ANALYSE = "analyse"
@@ -78,9 +79,7 @@ func layout(g *gocui.Gui) error {
       return err
     }
     v.Wrap = true
-    initCfg := make(map[string]interface{})
-    initState := state{ cfg: initCfg, option: getNextOption(g, initCfg)}
-    pushState(g, initState)
+    updateUI(g, currentState(g))
   }
 
   if v, err := g.SetView("help", 0, maxY - helpHeight, sideWidth-2, maxY-1); err != nil {
@@ -103,7 +102,7 @@ func layout(g *gocui.Gui) error {
     }
     v.Autoscroll = true
   }
-
+  g.SetViewOnTop(VIEW_INPUT)
   return nil
 }
 
@@ -130,7 +129,10 @@ func keybindings(g *gocui.Gui) error {
   if err := g.SetKeybinding(VIEW_INPUT, gocui.KeyEnter, gocui.ModNone, inputEntered); err != nil {
     return err
   }
-  if err := g.SetKeybinding(VIEW_SAVE, gocui.KeyEnter, gocui.ModNone, saveFile); err != nil {
+  if err := g.SetKeybinding(VIEW_SAVE, gocui.KeyEnter, gocui.ModNone, saveRequested); err != nil {
+    return err
+  }
+  if err := g.SetKeybinding(VIEW_SAVE, gocui.KeySpace, gocui.ModNone, addAnalyser); err != nil {
     return err
   }
 
@@ -139,22 +141,75 @@ func keybindings(g *gocui.Gui) error {
 
 // EVENT HANDLERS
 
-func saveFile(g *gocui.Gui, v *gocui.View) error {
+func addAnalyser(g *gocui.Gui, v *gocui.View) error {
+  so := currentState(g).option.(saveOption)
+  if !so.isComposable {
+    return nil
+  }
+  update(g, so, nil)
+  updateUI(g, currentState(g))
+  return nil
+}
+
+func saveRequested(g *gocui.Gui, v *gocui.View) error {
   input := v.Buffer()
   if len(input) == 0 {
     return nil
   }
   input = input[:len(input)-1]  // remove trailing newline
-  path := DIR_WORKFLOWS + "/" + input + ".yaml"
-  data := history[len(history)-1].cfg
-  writeToYamlFile(path, data)
-  return gocui.ErrQuit
+  save(g, input)
+  return quit(g, v)
 }
 
-func runWorkflow(g *gocui.Gui, path string) {
-  // cmd := exec.Command(EXEC_MTRIAGE, "run", "../../examples/sel-local.yaml")
-  cmd := exec.Command(EXEC_MTRIAGE, "run", path)
-  cmd.Run()
+func undo(g *gocui.Gui, v *gocui.View) error {
+  popState(g)
+  updateUI(g, currentState(g))
+  return nil
+}
+
+func cursorUp(g *gocui.Gui, v *gocui.View) error {
+  if v != nil {
+    ox, oy := v.Origin()
+    cx, cy := v.Cursor()
+    if err := v.SetCursor(cx, cy-1); err != nil && oy > 0 {
+      if err := v.SetOrigin(ox, oy-1); err != nil {
+        return err
+      }
+    }
+  }
+  return nil
+}
+
+func cursorDown(g *gocui.Gui, v *gocui.View) error {
+  // type assertion: current option is multiOption
+  o := currentState(g).option.(multiOption)
+  if v != nil {
+    cx, cy := v.Cursor()
+    if cy < len(o.options)-1 {
+      if err := v.SetCursor(cx, cy+1); err != nil {
+        ox, oy := v.Origin()
+        if err := v.SetOrigin(ox, oy+1); err != nil {
+          return err
+        }
+      }
+    }
+  }
+  return nil
+}
+
+func selectOption(g *gocui.Gui, v *gocui.View) error {
+  // type assertion: current option is multiOption
+  o := currentState(g).option.(multiOption)
+  if v != nil {
+    _, cy := v.Cursor()
+    if cy < len(o.options) {
+      selectedOption := o.options[cy]
+      update(g, o, selectedOption)
+      newState := currentState(g)
+      updateUI(g, newState)
+    }
+  }
+  return nil
 }
 
 func inputEntered(g *gocui.Gui, v *gocui.View) error {
@@ -179,61 +234,15 @@ func inputEntered(g *gocui.Gui, v *gocui.View) error {
   }
 
   update(g, o, vInput)
+  newState := currentState(g)
+  updateUI(g, newState)
 
   return nil
 }
 
-func undo(g *gocui.Gui, v *gocui.View) error {
-  popState(g)
-  return nil
-}
-
-func cursorUp(g *gocui.Gui, v *gocui.View) error {
-  if v != nil {
-    ox, oy := v.Origin()
-    cx, cy := v.Cursor()
-    if err := v.SetCursor(cx, cy-1); err != nil && oy > 0 {
-      if err := v.SetOrigin(ox, oy-1); err != nil {
-        return err
-      }
-    }
-  }
-  return nil
-}
-
-func cursorDown(g *gocui.Gui, v *gocui.View) error {
-  // type assertion: current option is multiOption
-  o := history[len(history)-1].option.(multiOption)
-
-  if v != nil {
-    cx, cy := v.Cursor()
-    if cy < len(o.options)-1 {
-      if err := v.SetCursor(cx, cy+1); err != nil {
-        ox, oy := v.Origin()
-        if err := v.SetOrigin(ox, oy+1); err != nil {
-          return err
-        }
-      }
-    }
-  }
-  return nil
-}
-
-func selectOption(g *gocui.Gui, v *gocui.View) error {
-
-  // type assertion: current option is multiOption
-  o := history[len(history)-1].option.(multiOption)
-
-  if v != nil {
-
-    _, cy := v.Cursor()
-    if cy < len(o.options) {
-
-      selectedOption := o.options[cy]
-      update(g, o, selectedOption)
-    }
-  }
-  return nil
+func updateUI(g *gocui.Gui, newState state) {
+  updateConfigView(g, newState)
+  updateOptionView(g, newState)
 }
 
 // HELPERS
@@ -249,20 +258,23 @@ func printToView(g *gocui.Gui, view string, text string) error {
   return nil
 }
 
-func updateConfigView(g *gocui.Gui, cfg map[string]interface{}) error {
+func updateConfigView(g *gocui.Gui, newState state) error {
+    stateMap := newState.AsMap()
+    yamlString := mapToYamlString(stateMap)
     v, err := g.View(VIEW_SIDE)
     if err != nil {
       return err
     }
     if v != nil {
       v.Clear()
-      printConfigInView(v, cfg)
+      printToView(g, VIEW_SIDE, yamlString)
     }
     return nil
 }
 
-func updateOptionView(g *gocui.Gui, o option) error {
+func updateOptionView(g *gocui.Gui, newState state) error {
 
+  o := newState.option
   v, err := g.View(VIEW_MAIN)
   v.SetCursor(0, 0)
   if err != nil {
@@ -281,78 +293,5 @@ func logger(g *gocui.Gui, text string) {
   v, _ := g.View(VIEW_CONSOLE)
   if v != nil {
     fmt.Fprintln(v, text)
-  }
-}
-
-func logCfg(g *gocui.Gui, cfg map[string]interface{}) {
-  logger(g,  "------")
-  for k, v := range cfg {
-    if val, ok := v.(string); ok {
-      logger(g,  k + ": " + val)
-    } else {
-      configMap := v.(map[string]string)
-      for k1, v1 := range configMap {
-        logger(g,  "    " + k1 + ": " + v1)
-      }
-    }
-  }
-  logger(g,  "------")
-}
-
-func printConfigInView(v *gocui.View, cfg map[string]interface{}) {
-
-  if folder, ok := cfg["folder"].(string); ok {
-    fmt.Fprintln(v, "folder: \"" + folder + "\"")
-  }
-
-  if phase, ok := cfg["phase"].(string); ok {
-    fmt.Fprintln(v, "phase: \"" + phase + "\"")
-  }
-
-  if module, ok := cfg["module"].(string); ok {
-    fmt.Fprintln(v, "module: \"" + module + "\"")
-  }
-
-  if config, ok := cfg["config"].(map[string]interface{}); ok {
-    fmt.Fprintln(v, "config:")
-    if children, ok := config["children"].([]map[string]interface{}); ok {
-      fmt.Fprintln(v, "  children:")
-      for i := range children {
-        printMap(v, children[i], "    ")
-      }
-    } else {
-      printMap(v, config, "  ")
-    }
-  }
-}
-
-func printMap(v *gocui.View, m map[string]interface{}, ind string) {
-  for key1, val1 := range m {
-    var strVal string
-    b, ok := val1.(bool)
-    if ok {
-      strVal = strconv.FormatBool(b)
-    }
-    i, ok := val1.(int)
-    if ok {
-      strVal = strconv.Itoa(i)
-    }
-    whitelist, ok := val1.([]string)
-    if ok {
-      var str strings.Builder
-      str.WriteString("[")
-      for i := 0; i < len(whitelist); i++ {
-        str.WriteString(whitelist[i])
-        if i < len(whitelist)-1 {
-          str.WriteString(",")
-        }
-      }
-      str.WriteString("]")
-      strVal = str.String()
-    }
-    if strVal == "" {
-      strVal = val1.(string)
-    }
-    fmt.Fprintln(v, ind + key1 + ": \"" + strVal + "\"")
   }
 }

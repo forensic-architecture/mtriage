@@ -2,20 +2,27 @@ package main
 
 import (
   "os"
-  // "path/filepath"
   "log"
   "io/ioutil"
   "gopkg.in/yaml.v2"
 )
 
-func writeToYamlFile(path string, data map[string]interface{}) {
+func mapToYaml(data map[string]interface{}) []byte {
   d, err := yaml.Marshal(&data)
   if err != nil {
-          log.Fatalf("error: %v", err)
+    log.Panicln(err)
   }
-  err = ioutil.WriteFile(path, d, 0644)
+  return d
+}
+
+func mapToYamlString(data map[string]interface{}) string {
+  return string(mapToYaml(data))
+}
+
+func writeDataToFile(data []byte, path string) {
+  err := ioutil.WriteFile(path, data, 0644)
   if err != nil {
-    panic(err)
+    log.Panicln(err)
   }
 }
 
@@ -50,4 +57,25 @@ func dirExists(path string) bool {
     return true
   }
   return false
+}
+
+func keysForMap(m map[string]interface{}) []string {
+  keys := []string{}
+  for k := range m {
+    keys = append(keys, k)
+  }
+  return keys
+}
+
+func copyMap(m map[string]interface{}) map[string]interface{} {
+  // this method assumes that any maps within m have type map[string]interface{}
+  newMap := make(map[string]interface{})
+  for k,v := range m {
+    if innerMap, ok := v.(map[string]interface{}); ok {
+      newMap[k] = copyMap(innerMap)
+    } else {
+      newMap[k] = v
+    }
+  }
+  return newMap
 }

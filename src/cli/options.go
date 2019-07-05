@@ -28,7 +28,6 @@ func (a Arg) String() string {
 type option interface {
   Present(g *gocui.Gui, v *gocui.View) error
   Name() string
-  IsModuleConfig() bool
 }
 
 // MULTIOPTION
@@ -36,7 +35,6 @@ type option interface {
 type multiOption struct {
   options []string
   name string
-  isModuleConfig bool
 }
 
 func (mo multiOption) Present(g *gocui.Gui, v *gocui.View) error {
@@ -52,10 +50,6 @@ func (mo multiOption) Present(g *gocui.Gui, v *gocui.View) error {
 
 func (mo multiOption) Name() string {
   return mo.name
-}
-
-func (mo multiOption) IsModuleConfig() bool {
-  return mo.isModuleConfig
 }
 
 // TEXTINPUTOPTION
@@ -88,10 +82,6 @@ func (to textInputOption) Name() string {
   return to.name
 }
 
-func (to textInputOption) IsModuleConfig() bool {
-  return to.isModuleConfig
-}
-
 func (to textInputOption) Validate(g *gocui.Gui, input string) interface{} {
   switch to.validationType {
   case TYPE_INT:
@@ -109,7 +99,7 @@ func (to textInputOption) Validate(g *gocui.Gui, input string) interface{} {
     }
     return input
   case TYPE_DATE:
-    // TODO: should be the format used by the analyser
+
     const dtFormat = "2006/01/02 15:04:05"
     _, err := time.Parse(dtFormat, input)
     if err != nil {
@@ -134,14 +124,19 @@ func (to textInputOption) Validate(g *gocui.Gui, input string) interface{} {
 
 // SAVEOPTION
 
-type saveOption struct {}
+type saveOption struct {
+  isComposable bool
+}
 
 func (so saveOption) Present(g *gocui.Gui, v *gocui.View) error {
 
   fmt.Fprintln(v, "SAVE CONFIG")
   fmt.Fprintln(v, "-----------")
   fmt.Fprintln(v, "")
-  fmt.Fprintln(v, "Please choose a file name for this workflow\nconfiguration.\n\nIt will be saved as a yaml file in your workflows\ndirectory.")
+  fmt.Fprintln(v, "Please choose a file name for this workflow\nconfiguration.\n\nIt will be saved as a yaml file in your workflows\ndirectory.\n\n")
+  if so.isComposable {
+    fmt.Fprintln(v, "Or to add another analyser, press SPACE.")
+  }
   v.Highlight = false
 
   maxX, maxY := g.Size()
@@ -167,30 +162,42 @@ func (to saveOption) IsModuleConfig() bool {
 
 // MTRIAGE INTERFACE
 
-func getNextOption(g *gocui.Gui, cfg map[string]interface{}) option {
-  switch stageCounter {
-  case 0:
-    return multiOption{ options: []string{"select","analyse"}, isModuleConfig: false, name: "phase" }
-  case 1:
-    phase := cfg["phase"].(string)
-    modules := modulesForPhase(phase)
-    return multiOption{ options: modules, isModuleConfig: false, name: "module" }
-  case 2:
-    return textInputOption{ prompt: "please enter the path to your working directory", name: "folder", isModuleConfig: false, validationType: TYPE_FOLDER  }
-  default:
-    module := cfg["module"].(string)
-    phase := cfg["phase"].(string)
-    configOptions := configOptionsForModule(module, phase)
-    i := stageCounter - 3
-    if i < len(configOptions) {
-      name := configOptions[i].name
-      input := configOptions[i].input
+func getNextOption(g *gocui.Gui, newState state) option {
+
+  if newState.folder == "" {
+    return textInputOption{ prompt: "please enter the path to your working directory", name: "folder", validationType: TYPE_FOLDER  }
+  }
+
+  if newState.phase == "" {
+    return multiOption{ options: []string{"select","analyse"}, name: "phase" }
+  }
+
+  if newState.currentModule == "" {
+    modules := modulesForPhase(newState.phase)
+    return multiOption{ options: modules, name: "module" }
+  }
+
+  configOptions := configOptionsForModule(newState.currentModule, newState.phase)
+  moduleConfig := newState.configs[newState.currentModule].(map[string]interface{})
+  existingKeys := keysForMap(moduleConfig)
+  for i := range configOptions {
+    option := configOptions[i]
+    exists := false
+    for j := range existingKeys {
+      key := existingKeys[j]
+      if option.name == key {
+        exists = true
+      }
+    }
+
+    if !exists {
+      name := option.name
+      input := option.input
       prompt := "please enter a " + input + " for argument:\n\n   "  + name
-      return textInputOption { prompt: prompt, isModuleConfig: true, name: name, validationType: input }
-    } else {
-      return saveOption{}
+      return textInputOption { prompt: prompt, name: name, validationType: input }
     }
   }
+  return saveOption{ isComposable: newState.phase == PHASE_ANALYSE }
 }
 
 func modulesForPhase(phase string) []string {

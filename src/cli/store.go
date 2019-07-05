@@ -8,17 +8,52 @@ import (
 // TYPES
 
 type state struct {
-  cfg map[string]interface{}
   option option
+  phase string
+  folder string
+  currentModule string
+  configs map[string]interface{}
 }
 
 func (s state) Copy() state {
   newState := s
-  newState.cfg = make(map[string]interface{})
-  for k,v := range s.cfg {
-    newState.cfg[k] = v
-  }
+  newState.configs = make(map[string]interface{})
+  newState.configs = copyMap(s.configs)
   return newState
+}
+
+func (s state) IsEmpty() bool {
+  return s.phase == ""
+}
+
+func (s state) AsMap() map[string]interface{} {
+  stateMap := make(map[string]interface{})
+  stateMap[OPT_PHASE] = s.phase
+  stateMap[OPT_FOLDER] = s.folder
+  if s.configs != nil {
+    keys := keysForMap(s.configs)
+    keyCount := len(keys)
+    switch keyCount {
+    case 0:
+      break
+    case 1:
+      moduleName := keys[0]
+      moduleConfig := s.configs[moduleName].(map[string]interface{})
+      stateMap["module"] = moduleName
+      stateMap["config"] = moduleConfig
+    default:
+      stateMap["module"] = MODULE_META
+      children := make(map[string]interface{})
+      for i := range keys {
+        k := keys[i]
+        children[k] = s.configs[k]
+      }
+      configMap := make(map[string]interface{})
+      configMap["children"] = children
+      stateMap["config"] = configMap
+    }
+  }
+  return stateMap
 }
 
 // STATE
@@ -28,72 +63,67 @@ var stageCounter int
 
 // MUTATIONS
 
-func pushState(g *gocui.Gui, newState state) {
+func pushState(newState state) {
   history = append(history, newState)
-
-  // directly updating the ui is not ideal -
-  // observer pattern would make for looser coupling
-  updateConfigView(g, newState.cfg)
-  updateOptionView(g, newState.option)
   stageCounter++
 }
 
 func popState(g *gocui.Gui) {
   if len(history) > 1 {
     history = history[:len(history)-1]
-    updateConfigView(g, history[len(history)-1].cfg)
-    updateOptionView(g, history[len(history)-1].option)
     stageCounter--
   }
 }
 
 func update(g *gocui.Gui, o option, value interface{}) {
-  newState := history[len(history)-1].Copy()
-  if !o.IsModuleConfig() {
-      newState.cfg[o.Name()] = value
+
+  newState := currentState(g).Copy()
+
+  if _, ok := o.(saveOption); ok {
+    newState.currentModule = ""
+    newState.option = getNextOption(g, newState)
+    pushState(newState)
+    return
+  }
+
+  if newState.currentModule != "" {
+    moduleConfig := newState.configs[newState.currentModule].(map[string]interface{})
+    moduleConfig[o.Name()] = value
   } else {
-      if _, ok := newState.cfg["config"]; !ok {
-        newState.cfg["config"] = make(map[string]interface{})
+    optionName := o.Name()
+    switch optionName {
+    case OPT_PHASE:
+      newState.phase = value.(string)
+    case OPT_FOLDER:
+      newState.folder = value.(string)
+    case OPT_MODULE:
+      if newState.configs == nil {
+        newState.configs = make(map[string]interface{})
       }
-      config := newState.cfg["config"].(map[string]interface{})
-      config[o.Name()] = value
+      moduleName := value.(string)
+      newState.currentModule = moduleName
+      newState.configs[moduleName] = make(map[string]interface{})
+    default:
+      log.Panicln("option neither phase nor folder but no current module name")
+    }
   }
-  newState.option = getNextOption(g, newState.cfg)
-  pushState(g, newState)
+  newState.option = getNextOption(g, newState)
+  pushState(newState)
 }
 
-func convertToMeta(cfg map[string]interface{}) map[string]interface{} {
-
-  if cfg["phase"].(string) == PHASE_SELECT {
-    log.Panicln("tried to convert a select config to meta-analyser")
-  }
-  if cfg["module"].(string) == MODULE_META {
-    return cfg
-  }
-  newCfg := make(map[string]interface{})
-  newCfg["phase"] = cfg["phase"]
-  newCfg["folder"] = cfg["folder"]
-  newCfg["module"] = MODULE_META
-
-  config := cfg["config"].(map[string]interface{})
-  childConfig := make(map[string]interface{})
-  for k, _ := range config {
-    childConfig[k] = config[k]
-  }
-
-  children := make([]map[string]interface{},1,1)
-  children = append(children, childConfig)
-
-  innerConfig := make(map[string]interface{})
-  innerConfig["children"] = children
-  newCfg["config"] = innerConfig
-
-  return newCfg
-}
-
-func currentState() state {
+func currentState(g *gocui.Gui) state {
   if len(history) > 0 {
     return history[len(history)-1]
+  } else {
+    initState := state{ option: getNextOption(g, state{}) }
+    pushState(initState)
+    return currentState(g)
   }
-  return state{}
+}
+
+func save(g *gocui.Gui, name string) {
+  path := DIR_WORKFLOWS + "/" + name + ".yaml"
+  stateMap := currentState(g).AsMap()
+  yamlData := mapToYaml(stateMap)
+  writeDataToFile(yamlData, path)
 }
