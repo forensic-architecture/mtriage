@@ -79,7 +79,7 @@ func layout(g *gocui.Gui) error {
       return err
     }
     v.Wrap = true
-    updateUI(g, currentState(g))
+    updateUI(g, currentState())
   }
 
   if v, err := g.SetView("help", 0, maxY - helpHeight, sideWidth-2, maxY-1); err != nil {
@@ -142,12 +142,12 @@ func keybindings(g *gocui.Gui) error {
 // EVENT HANDLERS
 
 func addAnalyser(g *gocui.Gui, v *gocui.View) error {
-  so := currentState(g).option.(saveOption)
+  so := currentState().option.(saveOption)
   if !so.isComposable {
     return nil
   }
   update(g, so, nil)
-  updateUI(g, currentState(g))
+  updateUI(g, currentState())
   return nil
 }
 
@@ -157,13 +157,14 @@ func saveRequested(g *gocui.Gui, v *gocui.View) error {
     return nil
   }
   input = input[:len(input)-1]  // remove trailing newline
-  save(g, input)
+  stateMap := currentState().AsMap()
+  save(input, stateMap)
   return quit(g, v)
 }
 
 func undo(g *gocui.Gui, v *gocui.View) error {
   popState(g)
-  updateUI(g, currentState(g))
+  updateUI(g, currentState())
   return nil
 }
 
@@ -182,7 +183,7 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
   // type assertion: current option is multiOption
-  o := currentState(g).option.(multiOption)
+  o := currentState().option.(multiOption)
   if v != nil {
     cx, cy := v.Cursor()
     if cy < len(o.options)-1 {
@@ -199,13 +200,13 @@ func cursorDown(g *gocui.Gui, v *gocui.View) error {
 
 func selectOption(g *gocui.Gui, v *gocui.View) error {
   // type assertion: current option is multiOption
-  o := currentState(g).option.(multiOption)
+  o := currentState().option.(multiOption)
   if v != nil {
     _, cy := v.Cursor()
     if cy < len(o.options) {
       selectedOption := o.options[cy]
       update(g, o, selectedOption)
-      newState := currentState(g)
+      newState := currentState()
       updateUI(g, newState)
     }
   }
@@ -234,7 +235,7 @@ func inputEntered(g *gocui.Gui, v *gocui.View) error {
   }
 
   update(g, o, vInput)
-  newState := currentState(g)
+  newState := currentState()
   updateUI(g, newState)
 
   return nil

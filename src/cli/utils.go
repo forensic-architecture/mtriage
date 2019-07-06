@@ -79,3 +79,9 @@ func copyMap(m map[string]interface{}) map[string]interface{} {
   }
   return newMap
 }
+
+func save(name string, stateMap map[string]interface{}) {
+  path := DIR_WORKFLOWS + "/" + name + ".yaml"
+  yamlData := mapToYaml(stateMap)
+  writeDataToFile(yamlData, path)
+}
