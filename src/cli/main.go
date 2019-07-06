@@ -68,7 +68,7 @@ func layout(g *gocui.Gui) error {
   maxX, maxY := g.Size()
   sideWidth := 60
   helpHeight := 4
-  logHeight := 30
+  logHeight := 10
 
   if v, err := g.SetView(VIEW_MAIN, 0, 0, sideWidth-2, maxY-helpHeight-1); err != nil {
     if err != gocui.ErrUnknownView {
@@ -101,6 +101,7 @@ func layout(g *gocui.Gui) error {
     if err != gocui.ErrUnknownView {
       return err
     }
+    v.Wrap = true
     v.Autoscroll = true
   }
   g.SetViewOnTop(VIEW_INPUT)

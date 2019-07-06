@@ -3,9 +3,9 @@ package main
 import (
   "fmt"
   "github.com/jroimartin/gocui"
-  "time"
   "strings"
   "strconv"
+  // "time"
 )
 
 // OPTION INTERFACE

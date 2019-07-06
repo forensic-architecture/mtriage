@@ -20,7 +20,6 @@ type state struct {
 
 func (s state) Copy() state {
   newState := s
-  newState.configs = make(map[string]interface{})
   newState.configs = copyMap(s.configs)
   return newState
 }
@@ -31,8 +30,12 @@ func (s state) IsEmpty() bool {
 
 func (s state) AsMap() map[string]interface{} {
   stateMap := make(map[string]interface{})
-  stateMap[OPT_PHASE] = s.phase
-  stateMap[OPT_FOLDER] = s.folder
+  if s.phase != "" {
+    stateMap[OPT_PHASE] = s.phase
+  }
+  if s.folder != "" {
+    stateMap[OPT_FOLDER] = s.folder
+  }
   if s.configs != nil {
     keys := keysForMap(s.configs)
     keyCount := len(keys)
