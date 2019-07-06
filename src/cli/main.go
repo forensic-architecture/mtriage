@@ -32,6 +32,7 @@ const DIR_ANALYSERS = DIR_LIB + "/" + LIB_ANALYSERS
 
 const TYPE_STRING = "string"
 const TYPE_FOLDER = "folder"
+const TYPE_EXISTING_FOLDER = "existing_folder"
 const TYPE_DATE = "date"
 const TYPE_INT = "int"
 const TYPE_WHITELIST = "whitelist"
@@ -215,7 +216,7 @@ func selectOption(g *gocui.Gui, v *gocui.View) error {
 
 func inputEntered(g *gocui.Gui, v *gocui.View) error {
 
-  o := history[len(history)-1].option.(textInputOption)
+  o := currentState().option.(textInputOption)
 
   input := v.Buffer()
   if len(input) == 0 {

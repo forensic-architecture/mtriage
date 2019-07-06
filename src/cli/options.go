@@ -77,14 +77,19 @@ func (to textInputOption) Validate(g *gocui.Gui, input string) interface{} {
     }
     return inInt
   case TYPE_FOLDER:
-    exists := dirExists("../../" + input)
-    if !exists {
-      logger(g, "folder " + input + " does not exist")
+    validDir := dirIsValid("../../" + input)
+    if !validDir {
+      logger(g, "folder " + input + " is invalid")
       return nil
     }
     return input
+  case TYPE_EXISTING_FOLDER:
+    exists := dirExists("../../" + input)
+    if !exists {
+      logger(g, "folder " + input + " does not exist")
+    }
+    return input
   case TYPE_DATE:
-
     const dtFormat = "2006/01/02 15:04:05"
     _, err := time.Parse(dtFormat, input)
     if err != nil {

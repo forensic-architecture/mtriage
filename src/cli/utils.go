@@ -59,6 +59,18 @@ func dirExists(path string) bool {
   return false
 }
 
+func dirIsValid(path string) bool {
+  if dirExists(path) {
+    return true
+  }
+  err := os.Mkdir(path, 0755)
+  if err == nil {
+    os.Remove(path)
+    return true
+  }
+  return false
+}
+
 func keysForMap(m map[string]interface{}) []string {
   keys := []string{}
   for k := range m {
@@ -68,7 +80,7 @@ func keysForMap(m map[string]interface{}) []string {
 }
 
 func copyMap(m map[string]interface{}) map[string]interface{} {
-  // this method assumes that any maps within m have type map[string]interface{}
+  // assumes any maps within m have type map[string]interface{}
   newMap := make(map[string]interface{})
   for k,v := range m {
     if innerMap, ok := v.(map[string]interface{}); ok {

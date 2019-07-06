@@ -132,7 +132,7 @@ func currentState() state {
   } else {
     initState := state{ option: getNextOption(state{}) }
     pushState(initState)
-    return currentState()
+    return initState
   }
 }
 
@@ -218,7 +218,7 @@ func configOptionsForModule(module string, phase string) []Arg {
 
 func modulesForPhase(phase string) []string {
   path, _ := phaseToLibFolder(phase)
-  return dirNamesIn(path, []string{"meta"})
+  return dirNamesIn(path, []string{MODULE_META})
 }
 
 func phaseToLibFolder(phase string) (path string, name string) {
