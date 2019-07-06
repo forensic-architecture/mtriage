@@ -90,12 +90,16 @@ func (to textInputOption) Validate(g *gocui.Gui, input string) interface{} {
     }
     return input
   case TYPE_DATE:
-    const dtFormat = "2006/01/02 15:04:05"
-    _, err := time.Parse(dtFormat, input)
-    if err != nil {
-      logger(g, input + " is not a valid date format. Dates must be formatted YYYY/MM/DD HH:MM:SS")
-      return nil
-    }
+    // TODO: consider what restrictions on date formatting (if any) are appropriate here
+    // - for the moment accept any string
+
+    // const dtFormat = "2006/01/02 15:04:05"
+    // _, err := time.Parse(dtFormat, input)
+    // if err != nil {
+    //   logger(g, input + " is not a valid date format. Dates must be formatted YYYY/MM/DD HH:MM:SS")
+    //   return nil
+    // }
+
     return input
   case TYPE_BOOL:
     inBool, err := strconv.ParseBool(input)
