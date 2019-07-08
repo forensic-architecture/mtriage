@@ -1,6 +1,7 @@
 import os
 import json
 import shutil
+import argparse
 
 
 class InvalidPipDep(Exception):
@@ -151,3 +152,13 @@ def get_viewer_etype(viewerConfigPath):
 def create_server_config(configPath, configDict):
     with open(configPath, "w") as config:
         json.dump(configDict, config)
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no','false','f','n','0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")

@@ -1,10 +1,36 @@
 <template>
-  <div class="table">
-    <Elements :elements="elements" />
-    <Loading v-if="fetching" />
-    <div v-if="error" class="flexc">
-      <h1>A network connection error occurred. Make sure you are correctly configured.</h1>
+  <div>
+    <h1>Selected</h1>
+    <hr/>
+    <div v-for="elements in elementmap.Selected">
+      <div v-if="elements.Elements !== null">
+        <h2>Context: {{elements.Context}}</h2>
+        <h2>Component: {{elements.Component}}</h2>
+        <div class="table">
+          <Elements :elements="elements.Elements" />
+          <Loading v-if="fetching" />
+          <div v-if="error" class="flexc">
+            <h1>A network connection error occurred. Make sure you are correctly configured.</h1>
+          </div>
+        </div>
+      </div>
     </div>
+    <h1>Analysed</h1>
+    <hr/>
+    <div v-for="elements in elementmap.Analysed">
+      <div v-if="elements.Elements !== null">
+        <h2>Context: {{elements.Context}}</h2>
+        <h2>Component: {{elements.Component}}</h2>
+        <div class="table">
+          <Elements :elements="elements.Elements" />
+          <Loading v-if="fetching" />
+          <div v-if="error" class="flexc">
+            <h1>A network connection error occurred. Make sure you are correctly configured.</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -27,7 +53,7 @@ export default {
   computed: {
     ...mapState({
       fetching: state => state.fetching,
-      elements: state => state.elements,
+      elementmap: state => state.elementmap,
       error: state => state.error
     })
   },
@@ -40,9 +66,12 @@ export default {
 <style lang="scss">
 $primary-color: #e2e2e2;
 
-h1 {
-  color: white;
-  max-width: 800px;
+h1, h2 {
+  text-align: left;
+}
+
+hr {
+  margin: 15px 0;
 }
 
 .table {
