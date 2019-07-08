@@ -1,0 +1,8 @@
+folder: temp/military_vehicles_ukraine
+phase: "select"
+module: "youtube"
+config:
+  search_term: "...tk Ukraine"
+  uploaded_before: "2019-06-01T00:00:00Z"
+  uploaded_after: "2018-06-01T00:00:00Z"
+  daily: false

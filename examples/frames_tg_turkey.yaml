@@ -1,0 +1,10 @@
+folder: "temp/tear_gas_turkey"
+phase: "analyse"
+module: "frames"
+config:
+  elements_in:
+    - "youtube"
+  method: "opencv"
+  change_threshold: "1e-5"
+  sequential: false
+  fps: 1
