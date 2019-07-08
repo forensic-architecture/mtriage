@@ -1,0 +1,12 @@
+- name: "method"
+  required: true
+  input: "string"
+- name: "change_threshold"
+  required: true
+  input: "string"
+- name: "sequential"
+  required: true
+  input: "bool"
+- name: "fps"
+  required: true
+  input: "int"
