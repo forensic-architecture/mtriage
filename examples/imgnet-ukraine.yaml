@@ -1,0 +1,7 @@
+folder: "temp/military_vehicles_ukraine"
+phase: "analyse"
+module: "keras_pretrained"
+config:
+  elements_in:
+    - "youtube/frames"
+  model: "ResNet50"
