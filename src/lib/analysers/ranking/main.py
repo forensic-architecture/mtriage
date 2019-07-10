@@ -1,4 +1,5 @@
 from lib.common.analyser import Analyser
+
 # from lib.common.exceptions import ElementShouldSkipError
 from lib.common.etypes import Etype
 import os
@@ -9,7 +10,6 @@ from shutil import copyfile
 
 
 class RankingAnalyser(Analyser):
-
     def get_in_etype(self):
         return Etype.Any
 
@@ -28,10 +28,10 @@ class RankingAnalyser(Analyser):
         self.logger(dest)
 
         if self.wkDir == "":
-            self.wkDir = dest.replace(id, '')
+            self.wkDir = dest.replace(id, "")
 
         mpath = src + "/" + element["id"] + ".json"
-        with open(mpath, 'r') as f:
+        with open(mpath, "r") as f:
             eData = json.load(f)
 
         labels = eData["labels"]
@@ -43,7 +43,6 @@ class RankingAnalyser(Analyser):
 
         dpath = dest + "/" + element["id"] + ".json"
         copyfile(mpath, dpath)
-
 
     def post_analyse(self, config, derived_dirs):
         ranking = self.dataToRanking()
