@@ -1,0 +1,8 @@
+- name: "path"
+  required: true
+  input: "string"
+  desc: "The relative path to the .pkl that has been exported from 'learn.export()' for a model that has been trained using the FastAI Python package."
+- name: "labels"
+  required: false
+  input: "array"
+  desc: "An array of the labels whose predictions should be saved. By default the analyser will save predictions of ALL labels."
