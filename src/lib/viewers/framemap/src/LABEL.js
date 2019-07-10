@@ -1,3 +1,4 @@
 export default {
-  label: "candle",
+  label: 'tank',
+  threshold: 0.1
 }

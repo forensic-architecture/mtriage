@@ -1,7 +1,7 @@
 <template>
   <div class="table">
-    <h1>Showing matches for: {{ this.label }}</h1>
-    <Graph :elements="elements" :label="this.label" />
+    <h1>Showing matches for: {{ label }}</h1>
+    <Graph :elements="elements" :label="label" :threshold="threshold" />
     <Loading v-if="!!fetching" />
     <div v-if="!!error" class="flexc">
       <h1>A network connection occurred. Make sure you are correctly configured with a running backend.</h1>
@@ -11,31 +11,44 @@
 
 <script>
 import Loading from './Loading.vue'
+import Graph from './Graph.vue'
 import { mapState, mapActions } from 'vuex'
 
 export default {
   name: 'Container',
   components: {
     Loading,
-    'Graph': () => import('./Graph.vue')
+    Graph
   },
   props: {
     label: String,
+    threshold: Number
   },
   methods: {
     ...mapActions([
-      'fetchElements'
-    ])
+      'fetchElements',
+      'fetchRankedElements'
+    ]),
+    scroll() {
+      window.onscroll = () => {
+        let bottomOfWindow = Math.max(window.pageYOffset, document.documentElement.scrollTop, document.body.scrollTop) + window.innerHeight === document.documentElement.offsetHeight
+        if (bottomOfWindow) {
+         this.fetchRankedElements(this.label)
+        }
+      }
+    }
   },
   computed: {
     ...mapState({
       fetching: 'fetching',
       elements: 'elements',
       error: 'error',
+      ranking: 'ranking'
     })
   },
   mounted: function () {
-    this.fetchElements()
+    this.fetchRankedElements(this.label)
+    this.scroll()
   }
 }
 </script>

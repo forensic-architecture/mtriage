@@ -3,11 +3,11 @@
     <Header :version="version" />
     <div id="body-container">
       <div class="container">
-        <!-- <div class="info&#45;case"> -->
-        <!--   <Controls /> -->
-        <!-- </div> -->
+        <!-- <div class="info&#45;case">
+           <Controls />
+        </div> -->
         <div class="content-case">
-          <Container :label="this.label" />
+          <Container :label="label" :threshold="threshold" />
         </div>
       </div>
     </div>

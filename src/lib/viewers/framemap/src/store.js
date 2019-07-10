@@ -24,18 +24,56 @@ export default new Vuex.Store({
     },
     [types.FETCH_ELEMENTS_ERROR] (state, msg) {
       state.error = msg
+    },
+    [types.FETCH_NEXT_ELEMENTS_ATTEMPT] (state) {
+      state.fetching = true
+    },
+    [types.FETCH_NEXT_ELEMENTS] (state, elements) {
+      state.elements = state.elements.concat(elements)
+      state.fetching = false
+    },
+    [types.FETCH_NEXT_ELEMENTS_ERROR] (state, msg) {
+      state.error = msg
+    },
+    [types.FETCH_RANKING] (state, ranking) {
+      state.ranking = ranking
+      state.fetching = false
     }
   },
   actions: {
-    fetchElements ({ commit, state }, pages) {
-      commit(types.FETCH_ELEMENTS_ATTEMPT)
-      api.fetchElements()
+    fetchRankedElements ({ commit, state }, label) {
+      commit(types.FETCH_NEXT_ELEMENTS_ATTEMPT)
+      const fromIndex = this.state.elements.length
+      api.fetchRankedElements(label, fromIndex)
         .then(result => {
-          commit(types.FETCH_ELEMENTS, result)
+          commit(types.FETCH_NEXT_ELEMENTS, result)
         })
         .catch(err => {
-          commit(types.FETCH_ELEMENTS_ERROR, err.message)
+          console.log(err.message)
+          commit(types.FETCH_NEXT_ELEMENTS_ERROR, err.message)
         })
     }
+    // fetchElements ({ commit, state }, pages) {
+    //   commit(types.FETCH_ELEMENTS_ATTEMPT)
+    //   api.fetchElements()
+    //     .then(result => {
+    //       commit(types.FETCH_ELEMENTS, result)
+    //     })
+    //     .catch(err => {
+    //       console.log(err.message)
+    //       commit(types.FETCH_ELEMENTS_ERROR, err.message)
+    //     })
+    // },
+    // fetchNextElements ({ commit, state }) {
+    //   commit(types.FETCH_NEXT_ELEMENTS_ATTEMPT)
+    //   const fromIndex = this.state.elements.length
+    //   api.fetchIndexedElements(fromIndex)
+    //     .then(result => {
+    //       commit(types.FETCH_NEXT_ELEMENTS, result)
+    //     })
+    //     .catch(err => {
+    //       commit(types.FETCH_NEXT_ELEMENTS_ERROR, err.message)
+    //     })
+    // }
   }
 })

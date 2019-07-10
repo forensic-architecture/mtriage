@@ -11,6 +11,8 @@
         :length="duration"
         :frames="frames"
         :scores="scores"
+        :label="label"
+        :threshold="threshold"
       />
     </div>
      <!-- TODO: break this into another component -->
@@ -69,7 +71,9 @@ export default {
     description: String,
     duration: Number,
     frames: Array,
-    scores: Array
+    scores: Array,
+    label: String,
+    threshold: Number
   },
   computed: {
     rankFmt: function() {
