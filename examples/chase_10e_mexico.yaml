@@ -1,0 +1,8 @@
+folder: "temp/tear_gas_mexico"
+phase: "analyse"
+module: "fastai_model"
+config:
+  elements_in:
+    - "youtube/frames"
+  path: "data/canister_10e.pkl"
+  labels: ["other", "teargas", "triplechaser_synth"]
