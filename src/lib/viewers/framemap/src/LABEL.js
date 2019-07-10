@@ -1,4 +1,4 @@
 export default {
-  label: 'tank',
-  threshold: 0.1
+  label: 'rifle',
+  threshold: 0.5
 }

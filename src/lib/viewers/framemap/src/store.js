@@ -53,27 +53,5 @@ export default new Vuex.Store({
           commit(types.FETCH_NEXT_ELEMENTS_ERROR, err.message)
         })
     }
-    // fetchElements ({ commit, state }, pages) {
-    //   commit(types.FETCH_ELEMENTS_ATTEMPT)
-    //   api.fetchElements()
-    //     .then(result => {
-    //       commit(types.FETCH_ELEMENTS, result)
-    //     })
-    //     .catch(err => {
-    //       console.log(err.message)
-    //       commit(types.FETCH_ELEMENTS_ERROR, err.message)
-    //     })
-    // },
-    // fetchNextElements ({ commit, state }) {
-    //   commit(types.FETCH_NEXT_ELEMENTS_ATTEMPT)
-    //   const fromIndex = this.state.elements.length
-    //   api.fetchIndexedElements(fromIndex)
-    //     .then(result => {
-    //       commit(types.FETCH_NEXT_ELEMENTS, result)
-    //     })
-    //     .catch(err => {
-    //       commit(types.FETCH_NEXT_ELEMENTS_ERROR, err.message)
-    //     })
-    // }
   }
 })
