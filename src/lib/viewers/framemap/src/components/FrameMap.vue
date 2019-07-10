@@ -17,7 +17,7 @@
           :style="getFrameColor(index)"
         />
         <span>{{ timeFmt(index) }}</span><br>
-        <span>{{ scoreFmt(index )}}</span>
+        <span>{{ scoreFmt(index)}}</span>
       </v-tooltip>
       <div
         v-else
@@ -37,11 +37,14 @@ export default {
     video_id: String,
     length: Number,
     frames: Array,
-    scores: Array
+    scores: Array,
+    label: String,
+    threshold: Number
   },
   methods: {
     isOn: function(idx) {
-      return this.frames.indexOf(idx) > -1
+      const _idx = this.frames.indexOf(idx)
+      return _idx > -1 && this.scores[_idx] > this.threshold
     },
     openFrame: function(idx) {
       window.open(`https://youtu.be/${this.video_id}?t=${idx}`, '_blank')

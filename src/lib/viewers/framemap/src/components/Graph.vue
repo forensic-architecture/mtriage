@@ -11,6 +11,8 @@
       :duration="video.duration"
       :frames="getFrames(video)"
       :scores="getScores(video)"
+      :label="label"
+      :threshold="threshold"
     ></VideoCell>
   </div>
 </template>
@@ -27,6 +29,7 @@
     props: {
       elements: Array,
       label: String,
+      threshold: Number
     },
     methods: {
       getFrames(video) {
