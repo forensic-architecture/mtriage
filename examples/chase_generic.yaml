@@ -1,0 +1,9 @@
+# folder: "temp/tear_gas_mexico"
+folder: "temp/demo_output"
+phase: "analyse"
+module: "fastai_model"
+config:
+  elements_in:
+    - "youtube/frames"
+  path: "data/generic-chaser.pkl"
+  labels: ["other", "teargas", "chaser_validation_set"]

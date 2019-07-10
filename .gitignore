@@ -25,3 +25,6 @@ src/server/config.json
 credentials/**
 .env
 
+# other data
+data/**
+
