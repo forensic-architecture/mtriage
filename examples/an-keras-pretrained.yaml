@@ -5,3 +5,6 @@ config:
   elements_in:
     - "youtube/frames"
   model: "ResNet50"
+  labels:
+    - "tank"
+    - "rifle"
