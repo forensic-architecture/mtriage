@@ -1,4 +1,4 @@
-folder: "temp/demo_youtube_select"
+folder: "temp/demo"
 phase: "analyse"
 module: "frames"
 config:
