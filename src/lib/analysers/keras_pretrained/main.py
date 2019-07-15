@@ -36,6 +36,7 @@ class Resnet50Analyser(Analyser):
         impmodel = getattr(self.model_module, config["model"])
         # NB: this downloads the weights if they don't exist
         self.model = impmodel(weights="imagenet")
+        self.THRESH = 0.1
 
         def get_preds(img_path):
             img = load_img(img_path, target_size=(224, 224))
@@ -46,12 +47,13 @@ class Resnet50Analyser(Analyser):
 
             # top field must be included or defaults to 5, huge number ensures
             # it gets all labels
-            decoded = self.model_module.decode_predictions(preds, top=10000000000000)
+            decoded = self.model_module.decode_predictions(preds, top=100)
 
             # filter by labels provided in whitelist
             filteredPreds = [p for p in decoded[0] if p[1] in rLabels]
 
-            return map(lambda x: (x[1], float(x[2])), filteredPreds)
+            # return map(lambda x: (x[1], float(x[2])), filteredPreds)
+            return [(x[1], float(x[2])) for x in filteredPreds if float(x[2]) >= self.THRESH]
 
         self.get_preds = get_preds
 
