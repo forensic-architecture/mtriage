@@ -1,8 +1,11 @@
-folder: "temp/tear_gas_turkey"
-phase: "analyse"
-module: "fastai_model"
+folder: temp/turkey
+phase: analyse
+module: fastai_model
 config:
   elements_in:
-    - "youtube/frames"
-  path: "data/canister_10e.pkl"
-  labels: ["other", "teargas", "triplechaser_synth"]
+    - youtube/frames
+  path: data/canister_10e.pkl
+  labels:
+    - other
+    - teargas
+    - triplechaser_synth
