@@ -8,18 +8,30 @@ import signal
 import sys
 from util import *
 
-NAME = "forensicarchitecture/mtriage"
-CONT_NAME = NAME.replace("/", "_")  # docker doesn't allow slashes in cont names
 
 SERVER_NAME = "forensicarchitecture/mviewserver"
 CONT_SERVER_NAME = SERVER_NAME.replace("/", "_")
-
 VIEWER_NAME = "forensicarchitecture/mviewer"
 CONT_VIEWER_NAME = VIEWER_NAME.replace("/", "_")
-
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 ENV_FILE = "{}/.env".format(DIR_PATH)
 HOME_PATH = os.path.expanduser("~")
+NAME = "forensicarchitecture/mtriage"
+
+
+def get_cont_name():
+    """ Get name of next mtriage instance based on existing containers. """
+    names = sp.check_output(["docker", "ps", "--format", "{{.Names}}"]).split("\n")
+    seed = 1
+    cont_name = "mtriage_{}".format(seed)
+    while cont_name in names:
+        seed += 1
+        cont_name = "{}__{}".format(CONT_NAME, seed)
+
+    return cont_name
+
+
+CONT_NAME = get_cont_name()
 
 
 def build(args):
