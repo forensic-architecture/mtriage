@@ -47,7 +47,7 @@ class Resnet50Analyser(Analyser):
 
             # top field must be included or defaults to 5, huge number ensures
             # it gets all labels
-            decoded = self.model_module.decode_predictions(preds, top=100)
+            decoded = self.model_module.decode_predictions(preds, top=10)
 
             # filter by labels provided in whitelist
             filteredPreds = [p for p in decoded[0] if p[1] in rLabels]

@@ -8,21 +8,21 @@ config:
   labels:
     - tank
     - rifle
-    - military uniform
-    - assault rifle, assault gun
+    - military_uniform
+    - assault_rifle
     - assault rifle
-    - assault gun
+    - assault_gun
     - revolver
-    - bulletproof vest
+    - bulletproof_vest
     - bomb
     - bomblet
-    - chemical bomb
-    - pipe bomb
+    - chemical_bomb
+    - pipe_bomb
     - grenade
     - munition
     - gunnery
-    - case shot
+    - case_shot
     - canister
-    - tank shell
-    - artillery shell
+    - tank_shell
+    - artillery_shell
     - shrapnel
