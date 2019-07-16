@@ -53,7 +53,9 @@ class Resnet50Analyser(Analyser):
             filteredPreds = [p for p in decoded[0] if p[1] in rLabels]
 
             # return map(lambda x: (x[1], float(x[2])), filteredPreds)
-            return [(x[1], float(x[2])) for x in filteredPreds if float(x[2]) >= self.THRESH]
+            return [
+                (x[1], float(x[2])) for x in filteredPreds if float(x[2]) >= self.THRESH
+            ]
 
         self.get_preds = get_preds
 
