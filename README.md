@@ -2,79 +2,54 @@
 
 [![Build Status](https://travis-ci.com/forensic-architecture/mtriage.svg?branch=master)](https://travis-ci.com/forensic-architecture/mtriage)
 
-### NB: currently unstable, in active development, and should not be used in production
+##### select, download, and analyse media 
 
-##### scrape and analyse media on the web
+mtriage is a command-line application that can be used to scrape and analyse 
+media. mtriage is developed by [Forensic Architecture](https://forensic-architecture.org), and is intended for use 
+by open source research agencies, journalists, and activists.
 
-mtriage is a command-line application that scrapes and analyses public domain media. mtriage is developed by [Forensic Architecture](https://forensic-architecture.org), and is intended for use by open source research agencies, journalists, and activists.
-
-mtriage is a framework that orchestrates two different kinds of components:
+mtriage consists of two types of components:
 
 * **selectors**: to search for and download media from various platforms.
-* **analysers**: to derive data from media that has been retrieved by
-    a selector.
+* **analysers**: to derive data from media that has been retrieved by a selector.
+
+Below are the following components that are supported. If you are interested in
+helping us to develop additional selectors and analysers, please consider
+joining [the conversaton on Discord](https://discord.gg/FJ4XsCg).
 
 ### selectors
 * youtube - search and download via the [v3 API](https://developers.google.com/youtube/v3/).
+* local - use media that already exists on your filesystem. 
 
 ### analysers
-* frames - extract one frame for each second from a video.
-* ocr - analyse an image using [Google Cloud Platform](https://cloud.google.com/vision/docs/ocr).
-<!-- * pytorch - run inference with a [PyTorch](https://pytorch.org/) model on an image. -->
+* frames - extract frames from videos as images.
+* yolov3 - detect and classify objects in images using [YoloV3](https://pjreddie.com/darknet/yolo/) trained on [ImageNet](http://www.image-net.org/) classes.
+* keras_pretrained - classify objects in images using [Resnet50 trained on
+    ImageNet](https://resources.wolframcloud.com/NeuralNetRepository/resources/ResNet-50-Trained-on-ImageNet-Competition-Data).
+* ocr - analyse an image using optical character recognition from [Google Cloud Platform](https://cloud.google.com/vision/docs/ocr).
 
-
-## development
+## setup 
 mtriage is currently in active development, and is not yet packaged in any way.
-It uses [Docker](https://www.docker.com/products/docker-desktop) to manage
-dependencies, and is written in Python.
+It uses [Docker](https://www.docker.com/products/docker-desktop) to manage dependencies, which you will need to download to ensure mtriage works as expected. 
 
-### dependencies
 - Docker Desktop (Mac installation [here](https://docs.docker.com/v17.12/docker-for-mac/install/), Ubuntu installation [here](https://docs.docker.com/v17.12/install/linux/docker-ce/ubuntu/)).
-- [docker](https://docs.docker.com/install/) (python library, v3.5.0)
 
-Follow the instructions relevant to your operating system to install Docker CE,
-and then install the python dependency with:
+Follow the instructions relevant to your operating system to install Docker CE.
 
+You also need to ensure that a version of [Python](https://www.python.org/downloads/) is installed on your computer.
+Most modern operating systems have a version installed by default. 
+
+### additional setup
+Depending on what components you intend to use, there may be additional setup
+required. Ensure to read the documentation for each component you wish to use. 
+
+## Run 
+Once you have Docker and Python installed, you can run mtriage using one of the
+examples provided. From this folder:
 ```bash
-python -m pip install -r requirements.txt
+./mtriage run examples/_demo/youtube.yaml 
 ```
 
-(Note that mtriage was developed using Python 3, but you should be able to run it with 2.x as well.)
-
-### configuration setup
-Selectors and analysers often rely on private credentials such as API keys. mtriage deals with these in two ways:
-
-* **`.env` file at the top level**: contains API keys and other environment variables, which are made available when
-    mtriage is running.
-* **`credentials` folder**: in some cases, components require JSON configs, such as for GCP service accounts. mtriage
-    currently deals with this by adding a path to the credentials file in `.env`, and adding the credential file itself
-    in the `credentials` folder.
-
-The specific configuration steps depend on which components you intend to use. For every component you wish to use, run
-through its setup:
-
-##### selectors
-* [youtube](docs/config/youtube.md)
-##### analysers
-* frames
-* ocr
-
-### running
-You can run mtriage in a Docker container with:
-```bash
-python run.py develop
-```
-
-Selectors and analysers are currently specified as runtime arguments to the
-entrypoint script, "src/run.py". In "scripts" you can find a series of example
-bash scripts that construct appropriate arguments and execute them.
-
-A more robust interface for passing options is a work in progress.
-
-
-### building locally
-You can build the mtriage image locally via run.py as well:
-```bash
-python run.py build
-
-
+When you first run mtriage, it will download the necessary Docker images to
+your system. The first time you run it, it may take several minutes to get up
+and running. Subsequent uses will be much faster.
