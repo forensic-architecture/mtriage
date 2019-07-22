@@ -1,4 +1,4 @@
-folder: "temp/demo_output"
+folder: "temp/demo"
 phase: "analyse"
 module: "meta"
 config:

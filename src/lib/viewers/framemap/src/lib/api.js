@@ -1,17 +1,11 @@
 import axios from 'axios'
-
-const cfg = {
-  url: "http://localhost:8080",
-  analyser: "ranking",
-  context: "military_vehicles_ambaz"
-}
+import { cfg } from '../LABEL'
 
 function fetchRankedElements (label, fromIndex) {
   const rUrl = `${cfg.url}/element?q=youtube/${cfg.analyser}&context=${cfg.context}&id=all&media=rankings.json`
   return axios.get(rUrl)
     .then(response => {
       const rankings = response.data
-      console.log(label)
       const rankedElements = rankings[label]
       const urls = rankedElements.slice(fromIndex, fromIndex + 15).map(getElementUrl)
       const promises = urls.map(url => Promise.resolve(url).then(url => axios.get(url).catch(err => null)))

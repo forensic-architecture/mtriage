@@ -1,0 +1,8 @@
+folder: temp/venezuela
+phase: select
+module: youtube
+config:
+  search_term: venezuela lacrimogeno
+  uploaded_after: 2019-01-01T00:00:00Z
+  uploaded_before: 2019-06-01T00:00:00Z
+  daily: true

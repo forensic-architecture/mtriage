@@ -1,6 +1,0 @@
-folder: "temp/military_vehicles_ambaz"
-phase: "analyse"
-module: "ranking"
-config:
-  elements_in:
-    - "youtube/keras_pretrained"
