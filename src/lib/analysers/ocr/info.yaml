@@ -1,0 +1,6 @@
+desc: Analyse an image using optical character recognition as provided through the Google Cloud Platform APIs.
+args:
+  - name: max_requests
+    desc: The maximum requests to run through GCP per element. This is mainly an optionality passed for debugging, so that we don't run GCP analysis on all frames of a video when testing this analyser.
+    required: true
+    input: int

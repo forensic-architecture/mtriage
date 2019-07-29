@@ -1,0 +1,6 @@
+desc: Extract the audio from a video file.
+args:
+  - name: output_ext
+    desc: The file extension of the output audio, e.g. 'mp4' or 'aac'.
+    required: true
+    input: string

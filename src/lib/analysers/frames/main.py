@@ -83,11 +83,17 @@ class FramesAnalyser(Analyser):
 
     def analyse_element(self, element, config):
         FPS_NUMBER = int(config["fps"])
+        THRESHOLD = config["change_threshold"]
+        SEQUENTIAL = config["sequential"]
         dest = element["dest"]
         json = element["media"]["json"]
         video = element["media"]["video"]
 
-        ffmpeg_frames(dest, video, FPS_NUMBER)
-        copyfile(json, f"{dest}/meta.json")
+        if config["method"] == "opencv":
+            opencv_frames(dest, video, FPS_NUMBER, THRESHOLD, SEQUENTIAL)
+            copyfile(json, f"{dest}/meta.json")
+        else:
+            ffmpeg_frames(dest, video, FPS_NUMBER)
+            copyfile(json, f"{dest}/meta.json")
 
         self.logger(f"Frames successfully created for element {element}.")

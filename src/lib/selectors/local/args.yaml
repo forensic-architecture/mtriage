@@ -1,3 +1,0 @@
-- name: "source_folder"
-  required: true
-  input: "folder"

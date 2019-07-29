@@ -1,6 +1,0 @@
-- name: "model"
-  required: true
-  input: "string"
-- name: "labels"
-  required: true
-  input: "whitelist"

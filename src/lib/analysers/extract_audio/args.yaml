@@ -1,3 +1,0 @@
-- name: "output_ext"
-  required: true
-  input: "string"

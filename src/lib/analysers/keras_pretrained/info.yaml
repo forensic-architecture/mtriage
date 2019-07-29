@@ -1,0 +1,10 @@
+desc: Classify objects in images using a neural net trained on ImageNet, as made available through the pretrained Keras modules. Inference is run on each image using the specified model, and the labels for the top 10 predictions will be retained in an output JSON of ImageFrameJson format.
+args:
+  - name: model
+    desc: The model you want to use to classify, 'Resnet50', 'VGG16', or 'VGG19'. All models are trained on ImageNet.
+    required: true
+    input: string
+  - name: labels
+    desc: Filter results to a limited array of ImageNet labels, if you are only interested in some of them. If not provided, the analyser will return predictions for all labels.
+    required: true
+    input: whitelist
