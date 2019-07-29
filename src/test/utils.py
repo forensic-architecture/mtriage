@@ -58,4 +58,4 @@ def dictsEqual(d1, d2):
 
 
 def get_info_path(kind, mod_name):
-   return f"lib/{kind}s/{mod_name}/info.yaml"
+    return f"lib/{kind}s/{mod_name}/info.yaml"

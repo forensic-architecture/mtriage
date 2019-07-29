@@ -5,10 +5,13 @@ from os import listdir
 
 
 def is_valid_arg(arg):
-    if "name" not in arg or not isinstance(arg["name"], str): return False
-    if "required" not in arg or not isinstance(arg["required"], bool): return False
+    if "name" not in arg or not isinstance(arg["name"], str):
+        return False
+    if "required" not in arg or not isinstance(arg["required"], bool):
+        return False
     # NOTE: not checking for 'input' or 'desc' attrs, considering them optional at this time.
     return True
+
 
 class TestInfoYamls(unittest.TestCase):
     @classmethod
