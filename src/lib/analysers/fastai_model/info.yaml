@@ -1,0 +1,10 @@
+desc: Run inference on an AnnotatedImageArray using a model trained with the FastAI library. Produces an ImageFrameJson file.
+args:
+  - name: path
+    desc: The relative path to the .pkl model that has been exported using 'learn.export()' in FastAI.
+    required: true
+    input: string
+  - name: labels
+    desc: An array of the labels whose predictions should be saved. By default the analyser will save predictions of ALL labels.
+    required: false
+    input: array

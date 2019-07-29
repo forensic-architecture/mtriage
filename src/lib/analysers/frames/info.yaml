@@ -1,0 +1,15 @@
+desc: Extract a subset of representative frames from a video. A number of frames per second are extracted, with duplicate frames deleted as per the arguments provided.
+args:
+  - name: method
+    required: true
+    input: string
+  - name: change_threshold
+    required: true
+    input: string
+  - name: sequential
+    required: true
+    input: bool
+  - name: fps
+    desc: Frames per second. Defaults to 1.
+    required: true
+    input: int

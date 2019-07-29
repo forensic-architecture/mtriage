@@ -1,6 +1,0 @@
-- name: "input_ext"
-  required: true
-  input: "string"
-- name: "output_ext"
-  required: true
-  input: "string"

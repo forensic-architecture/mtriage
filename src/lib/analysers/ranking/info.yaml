@@ -1,0 +1,7 @@
+desc: Rewrite an ImageFrameJson as a ranked ImageFrameJson. This step is necessary to display the results via the 'framemap' viewer.
+args:
+  - name: threshold
+    desc: The minimum score for which a prediction should be counted towards an element's rank.
+    required: false
+    input: float
+

@@ -1,3 +1,0 @@
-- name: "max_requests"
-  required: true
-  input: "int"

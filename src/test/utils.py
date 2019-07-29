@@ -1,5 +1,6 @@
 import os
 from lib.common.analyser import Analyser
+from lib.common.get_module import get_module
 import shutil
 import json
 
@@ -54,3 +55,7 @@ def dictsEqual(d1, d2):
     d2json = json.dumps(d2, sort_keys=True, default=str)
 
     return d1json == d2json
+
+
+def get_info_path(kind, mod_name):
+   return f"lib/{kind}s/{mod_name}/info.yaml"
