@@ -12,10 +12,6 @@ class InvalidArgumentsError(Exception):
     pass
 
 
-class InvalidViewerConfigError(Exception):
-    pass
-
-
 def get_subdirs(d):
     whitelist = ["__pycache__"]
     return [
