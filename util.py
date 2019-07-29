@@ -81,34 +81,6 @@ def add_deps(dep_path, deps, should_add):
                 deps.append(line)
 
 
-    # clean if exists
-    if not os.path.exists(inputElementsDir):
-        raise OSError("Server elements dir does not exist")
-
-    # make it empty
-    shutil.rmtree(serverElementsDir)
-    os.makedirs(serverElementsDir)
-
-    el_ids = [
-        f
-        for f in os.listdir(inputElementsDir)
-        if os.path.isdir("{}/{}".format(inputElementsDir, f))
-    ]
-
-    # create symlinks for input elements
-    for el_id in el_ids:
-        folder_in = "{}/{}".format(inputElementsDir, el_id)
-        for element_path in os.listdir(folder_in):
-            folder_out = "{}/{}".format(serverElementsDir, el_id)
-            folder_out_media = "{}/media".format(folder_out)
-            if not os.path.exists(folder_out):
-                os.makedirs(folder_out_media)
-            os.symlink(
-                "{}/{}".format(folder_in, element_path),
-                "{}/{}".format(folder_out_media, element_path),
-            )
-
-
 def str2bool(v):
     if isinstance(v, bool):
         return v
