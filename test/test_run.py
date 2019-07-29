@@ -7,13 +7,7 @@ from util import (
     InvalidPipDep,
     should_add_pipdep,
     should_add_dockerline,
-    create_server_config,
-    create_symlinks,
-    get_viewer_etype,
-    verify_viewer_args,
     InvalidArgumentsError,
-    InvalidViewerConfigError,
-    WorkingDirectorNotFoundError,
 )
 
 
@@ -99,68 +93,3 @@ class TestMtriage(unittest.TestCase):
         p3 = ["RUN apt-get install -y vim", "RUN curl -o https://smthn", "RUN it"]
         self.assertTrue(should_add_dockerline("RUN apt get install -y curl", p3))
         self.assertFalse(should_add_dockerline("RUN curl -o https://smthn", p3))
-
-    def test_create_server_config(self):
-        validConfig = {"port": 8080, "etype": "Any"}
-        badJsonConfig = "amnotthejsons"
-        badConfigPath = "temp/test/baddir/pathpath"
-
-        with self.assertRaises(IOError):
-            create_server_config(badConfigPath, validConfig)
-
-        create_server_config(self.SERVER_CONFIG_PATH, badJsonConfig)
-        self.assertTrue(os.path.exists(self.SERVER_CONFIG_PATH))
-        with open(self.SERVER_CONFIG_PATH, "r") as f:
-            config = json.load(f)
-            with self.assertRaises(TypeError):
-                port = config["port"]
-
-        create_server_config(self.SERVER_CONFIG_PATH, validConfig)
-
-        # check file exists and is json loadable
-        self.assertTrue(os.path.exists(self.SERVER_CONFIG_PATH))
-        with open(self.SERVER_CONFIG_PATH, "r") as f:
-            config = json.load(f)
-            self.assertTrue(config["port"], 8080)
-            self.assertTrue(config["etype"], "Any")
-
-    def test_create_symlinks(self):
-        with self.assertRaises(OSError):
-            create_symlinks("badInputDir", self.SERVER_ELEMENTS_DIR)
-
-        with self.assertRaises(OSError):
-            create_symlinks(self.VIEWER_INPUT_DIR, "badelementsdir")
-
-        create_symlinks(self.VIEWER_INPUT_DIR, self.SERVER_ELEMENTS_DIR)
-        self.assertTrue(os.path.exists(self.TEST_ELEMENT_DIR))
-        with open(self.TEST_MEDIA_PATH, "r") as f:
-            test = f.readline()
-            self.assertEqual(test, "test")
-
-    def test_get_viewer_etype(self):
-        with self.assertRaises(IOError):
-            get_viewer_etype("invaldPath")
-        etype = get_viewer_etype(self.VIEWER_CONFIG_PATH)
-        self.assertEqual(etype, "Any")
-
-    def test_verify_viewer_args(self):
-        with self.assertRaises(InvalidArgumentsError):
-            verify_viewer_args(None, "aViewersDir", "aViewerName")
-
-        with self.assertRaises(InvalidArgumentsError):
-            verify_viewer_args("anInputDir", "aViewersDir", None)
-
-        with self.assertRaises(WorkingDirectorNotFoundError):
-            verify_viewer_args("nonExistentInputDir", "aViewersDir", "aViewerName")
-
-        with self.assertRaises(InvalidArgumentsError):
-            verify_viewer_args(
-                self.VIEWER_INPUT_DIR, "aViewersDir", "nonExistentViewerName"
-            )
-
-        vDir, vConfigPath = verify_viewer_args(
-            self.VIEWER_INPUT_DIR, self.VIEWERS_DIR, self.VIEWER_NAME
-        )
-
-        self.assertEqual(vDir, self.VIEWER_DIR)
-        self.assertEqual(vConfigPath, self.VIEWER_CONFIG_PATH)

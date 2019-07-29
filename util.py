@@ -16,10 +16,6 @@ class InvalidViewerConfigError(Exception):
     pass
 
 
-class WorkingDirectorNotFoundError(Exception):
-    pass
-
-
 def get_subdirs(d):
     whitelist = ["__pycache__"]
     return [
@@ -85,35 +81,6 @@ def add_deps(dep_path, deps, should_add):
                 deps.append(line)
 
 
-def verify_viewer_args(inputDir, viewersDir, viewerName):
-    if inputDir == None:
-        raise InvalidArgumentsError("No input directory supplied for viewer plugin.")
-
-    if viewerName == None:
-        raise InvalidArgumentsError("No viewer plugin name supplied.")
-
-    if not os.path.exists(inputDir):
-        raise WorkingDirectorNotFoundError(
-            "The input directory {} does not exist. ".format(inputDir)
-        )
-
-    viewerDir = "{}/{}".format(viewersDir, viewerName)
-    viewerConfigPath = "{}/config.json".format(viewerDir)
-
-    if not os.path.exists(viewerDir):
-        raise InvalidArgumentsError(
-            "The viewer plugin '{}' does not exist.".format(viewerName)
-        )
-
-    if not os.path.isfile(viewerConfigPath):
-        raise InvalidArgumentsError(
-            "Viewer config does not exist in the folder {}".format(viewerConfigPath)
-        )
-
-    return viewerDir, viewerConfigPath
-
-
-def create_symlinks(inputElementsDir, serverElementsDir):
     # clean if exists
     if not os.path.exists(inputElementsDir):
         raise OSError("Server elements dir does not exist")
@@ -140,18 +107,6 @@ def create_symlinks(inputElementsDir, serverElementsDir):
                 "{}/{}".format(folder_in, element_path),
                 "{}/{}".format(folder_out_media, element_path),
             )
-
-
-def get_viewer_etype(viewerConfigPath):
-    with open(viewerConfigPath, "r") as f:
-        viewerConfig = json.load(f)
-        viewerEType = viewerConfig["etype"]
-        return viewerEType
-
-
-def create_server_config(configPath, configDict):
-    with open(configPath, "w") as config:
-        json.dump(configDict, config)
 
 
 def str2bool(v):
