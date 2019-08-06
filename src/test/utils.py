@@ -8,15 +8,19 @@ TEMP_ELEMENT_DIR = "../temp/test"
 
 
 def scaffold_empty(selname, elements=[], analysers=[]):
-    os.makedirs(f"{TEMP_ELEMENT_DIR}/{selname}/{Analyser.DERIVED_EXT}")
+    derived_dir = f"{TEMP_ELEMENT_DIR}/{selname}/{Analyser.DERIVED_EXT}"
+    if not os.path.exists(derived_dir):
+        os.makedirs(derived_dir)
 
     for element in elements:
-        os.makedirs(f"{TEMP_ELEMENT_DIR}/{selname}/{Analyser.DATA_EXT}/{element}")
+        element_dir = f"{TEMP_ELEMENT_DIR}/{selname}/{Analyser.DATA_EXT}/{element}"
+        if not os.path.exists(element_dir):
+            os.makedirs(element_dir)
         if len(analysers) > 0:
             for analyser in analysers:
-                os.makedirs(
-                    f"{TEMP_ELEMENT_DIR}/{selname}/{Analyser.DERIVED_EXT}/{analyser}/{element}"
-                )
+                analyser_dir = f"{TEMP_ELEMENT_DIR}/{selname}/{Analyser.DERIVED_EXT}/{analyser}/{element}"
+                if not os.path.exists(analyser_dir):
+                    os.makedirs(analyser_dir)
 
 
 def get_element_path(selname, elementId, analyser=None):

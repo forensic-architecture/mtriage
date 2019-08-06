@@ -163,7 +163,7 @@ def clean(args):
     sp.call(["docker", "rmi", NAME])
 
 
-def __run_lib_tests():
+def __run_core_tests():
     returncode = sp.call(
         [
             "docker",
@@ -180,7 +180,7 @@ def __run_lib_tests():
             "python",
             "-m",
             "pytest",
-            "test",
+            ".",
         ]
     )
     if returncode is 1:
@@ -198,7 +198,7 @@ def __run_runpy_tests():
 def test(args):
     print("Creating container to run tests...")
     print("----------------------------------")
-    __run_lib_tests()
+    __run_core_tests()
     __run_runpy_tests()
     print("----------------------------------")
     print("All tests for mtriage done.")

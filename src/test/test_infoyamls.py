@@ -1,6 +1,5 @@
-import unittest
+import pytest
 import yaml
-from test.utils import get_info_path
 from os import listdir
 
 
@@ -13,29 +12,31 @@ def is_valid_arg(arg):
     return True
 
 
-class TestInfoYamls(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.ALL_ANALYSERS = listdir("lib/analysers")
-        self.ALL_SELECTORS = listdir("lib/selectors")
+@pytest.fixture
+def additionals():
+    obj = lambda: None
+    obj.ALL_ANALYSERS = listdir("lib/analysers")
+    obj.ALL_SELECTORS = listdir("lib/selectors")
+    return obj
 
-    def test_selectors(self):
-        # selector infos
-        for sel in self.ALL_SELECTORS:
-            with open(get_info_path("selector", sel)) as f:
-                info = yaml.safe_load(f)
-            self.assertTrue("desc" in info)
-            self.assertTrue("args" in info)
-            self.assertTrue(isinstance(info["args"], list))
-            for arg in info["args"]:
-                self.assertTrue(is_valid_arg(arg))
 
-        # analyser infos
-        for ana in self.ALL_ANALYSERS:
-            with open(get_info_path("analyser", ana)) as f:
-                info = yaml.safe_load(f)
-            self.assertTrue("desc" in info)
-            self.assertTrue("args" in info)
-            self.assertTrue(isinstance(info["args"], list))
-            for arg in info["args"]:
-                self.assertTrue(is_valid_arg(arg))
+def test_selectors(additionals, utils):
+    # selector infos
+    for sel in additionals.ALL_SELECTORS:
+        with open(utils.get_info_path("selector", sel)) as f:
+            info = yaml.safe_load(f)
+        assert "desc" in info
+        assert "args" in info
+        assert isinstance(info["args"], list)
+        for arg in info["args"]:
+            assert is_valid_arg(arg)
+
+    # analyser infos
+    for ana in additionals.ALL_ANALYSERS:
+        with open(utils.get_info_path("analyser", ana)) as f:
+            info = yaml.safe_load(f)
+        assert "desc" in info
+        assert "args" in info
+        assert isinstance(info["args"], list)
+        for arg in info["args"]:
+            assert is_valid_arg(arg)
