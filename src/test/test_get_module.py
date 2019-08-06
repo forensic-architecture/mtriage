@@ -1,8 +1,8 @@
-from lib.common.get_module import get_module
-import unittest
+import pytest
 import shutil
 from os import listdir, makedirs
 from os.path import isdir
+from lib.common.get_module import get_module
 
 
 def make_empty_main_export(pth):
@@ -11,42 +11,43 @@ def make_empty_main_export(pth):
         f.write(INIT)
 
 
-class TestGetModule(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        """ Make imaginary selector and analysers """
-        # tests always run from src
-        self.EMPTY_SELECTOR = "./lib/selectors/empty"
-        self.EMPTY_ANALYSER = "./lib/analysers/empty"
+@pytest.fixture
+def additionals():
+    obj = lambda: None
+    """ Make imaginary selector and analysers """
+    # tests always run from src
+    obj.EMPTY_SELECTOR = "./lib/selectors/empty"
+    obj.EMPTY_ANALYSER = "./lib/analysers/empty"
 
-        if isdir(self.EMPTY_SELECTOR):
-            shutil.rmtree(self.EMPTY_SELECTOR)
-        if isdir(self.EMPTY_ANALYSER):
-            shutil.rmtree(self.EMPTY_ANALYSER)
+    if isdir(obj.EMPTY_SELECTOR):
+        shutil.rmtree(obj.EMPTY_SELECTOR)
+    if isdir(obj.EMPTY_ANALYSER):
+        shutil.rmtree(obj.EMPTY_ANALYSER)
 
-        makedirs(self.EMPTY_SELECTOR)
-        make_empty_main_export(self.EMPTY_SELECTOR)
-        makedirs(self.EMPTY_ANALYSER)
-        make_empty_main_export(self.EMPTY_ANALYSER)
+    makedirs(obj.EMPTY_SELECTOR)
+    make_empty_main_export(obj.EMPTY_SELECTOR)
+    makedirs(obj.EMPTY_ANALYSER)
+    make_empty_main_export(obj.EMPTY_ANALYSER)
+    yield obj
+    if isdir(obj.EMPTY_SELECTOR):
+        shutil.rmtree(obj.EMPTY_SELECTOR)
+    if isdir(obj.EMPTY_ANALYSER):
+        shutil.rmtree(obj.EMPTY_ANALYSER)
 
-    @classmethod
-    def tearDownClass(self):
-        if isdir(self.EMPTY_SELECTOR):
-            shutil.rmtree(self.EMPTY_SELECTOR)
-        if isdir(self.EMPTY_ANALYSER):
-            shutil.rmtree(self.EMPTY_ANALYSER)
 
-    def test_raises_when_faulty(self):
-        with self.assertRaises(ModuleNotFoundError):
-            get_module("selector", "smth")
+# NOTE: additionals added as arg to ensure fixture setup is run
+def test_raises_when_faulty(additionals):
+    with pytest.raises(ModuleNotFoundError):
+        get_module("selector", "smth")
 
-        with self.assertRaises(ModuleNotFoundError):
-            get_module("analyser", "smth")
+    with pytest.raises(ModuleNotFoundError):
+        get_module("analyser", "smth")
 
-        with self.assertRaisesRegex(ImportError, "must be 'selector' or 'analyser'"):
-            get_module("neitherthing", "smth")
+    with pytest.raises(ImportError, match="must be 'selector' or 'analyser'"):
+        get_module("neitherthing", "smth")
 
-    def test_imports_main(self):
-        # main just exported as 'True', to check import logic is correct
-        self.assertTrue(get_module("selector", "empty"))
-        self.assertTrue(get_module("analyser", "empty"))
+
+def test_imports_main(additionals):
+    # main just exported as 'True', to check import logic is correct
+    assert get_module("selector", "empty")
+    assert get_module("analyser", "empty")

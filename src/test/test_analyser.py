@@ -1,10 +1,9 @@
+import pytest
+import os
 from lib.common.analyser import Analyser
 from lib.common.exceptions import InvalidAnalyserElements
 from lib.common.etypes import Etype
-import os
-import pytest
 from lib.common.mtmodule import MTModule
-from test.utils import listOfDictsEqual
 
 
 class EmptyAnalyser(Analyser):
@@ -161,7 +160,7 @@ def test_cast_elements(utils, additionals):
     sel2_cast_elements = additionals.emptyAnalyser._Analyser__cast_elements(
         sel2_element_dict, sel2outdir
     )
-    assert listOfDictsEqual(sel2expected, sel2_cast_elements)
+    assert utils.listOfDictsEqual(sel2expected, sel2_cast_elements)
 
     for el in ["el1", "el2"]:
         with open(
@@ -190,7 +189,7 @@ def test_cast_elements(utils, additionals):
     sel1an1_cast_elements = additionals.emptyAnalyser._Analyser__cast_elements(
         sel1an1_element_dict, sel1outdir
     )
-    assert listOfDictsEqual(sel1an1expected, sel1an1_cast_elements)
+    assert utils.listOfDictsEqual(sel1an1expected, sel1an1_cast_elements)
 
     with open(
         f"{utils.get_element_path('sel1', 'el2', analyser='an2')}/out.txt", "w"
@@ -211,7 +210,7 @@ def test_cast_elements(utils, additionals):
     sel1an2_cast_elements = additionals.emptyAnalyser._Analyser__cast_elements(
         sel1an2_element_dict, sel1outdir
     )
-    assert listOfDictsEqual(sel1an2expected, sel1an2_cast_elements)
+    assert utils.listOfDictsEqual(sel1an2expected, sel1an2_cast_elements)
 
     media = {
         "sel1": {
@@ -285,4 +284,4 @@ def test_cast_elements(utils, additionals):
     ]
 
     elements = additionals.emptyAnalyser._Analyser__get_in_elements(media)
-    assert listOfDictsEqual(elements, expected)
+    assert utils.listOfDictsEqual(elements, expected)

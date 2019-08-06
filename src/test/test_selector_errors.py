@@ -1,6 +1,6 @@
-from lib.common.selector import Selector
+import pytest
 import os
-import unittest
+from lib.common.selector import Selector
 from lib.common.etypes import cast_to_etype, Etype
 from lib.common.exceptions import (
     ElementShouldRetryError,
@@ -8,14 +8,7 @@ from lib.common.exceptions import (
     SelectorIndexError,
     EtypeCastError,
 )
-from test.utils import (
-    TEMP_ELEMENT_DIR,
-    scaffold_empty,
-    scaffold_elementmap,
-    cleanup,
-    get_element_path,
-    dictsEqual,
-)
+from test.utils import scaffold_elementmap
 
 
 class BasicErrorSelector(Selector):
@@ -59,87 +52,85 @@ class BadIndexSelector(Selector):
         pass
 
 
-class TestSelectorErrors(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        indexModule = "indexErrorSelector"
-        indexConfig = {"error": "index"}
-        self.indexErrorSelector = BasicErrorSelector(
-            indexConfig, indexModule, TEMP_ELEMENT_DIR
-        )
+@pytest.fixture
+def additionals(utils):
+    obj = lambda: None
+    indexModule = "indexErrorSelector"
+    indexConfig = {"error": "index"}
+    obj.indexErrorSelector = BasicErrorSelector(
+        indexConfig, indexModule, utils.TEMP_ELEMENT_DIR
+    )
 
-        castModule = "castErrorSelector"
-        castConfig = {}
-        self.castErrorSelector = BasicErrorSelector(
-            castConfig, castModule, TEMP_ELEMENT_DIR
-        )
+    castModule = "castErrorSelector"
+    castConfig = {}
+    obj.castErrorSelector = BasicErrorSelector(
+        castConfig, castModule, utils.TEMP_ELEMENT_DIR
+    )
 
-        retrieveModule = "retrieveErrorSelector"
-        retrieveConfig = {}
-        self.retrieveErrorSelector = RetrieveErrorSelector(
-            retrieveConfig, retrieveModule, TEMP_ELEMENT_DIR
-        )
+    retrieveModule = "retrieveErrorSelector"
+    retrieveConfig = {}
+    obj.retrieveErrorSelector = RetrieveErrorSelector(
+        retrieveConfig, retrieveModule, utils.TEMP_ELEMENT_DIR
+    )
+    yield obj
+    utils.cleanup()
 
-    @classmethod
-    def tearDownClass(self):
-        cleanup()
 
-    def test_index_error(self):
-        with self.assertRaisesRegex(SelectorIndexError, "Selector index failed - test"):
-            self.indexErrorSelector.start_indexing()
+def test_index_error(additionals):
+    with pytest.raises(SelectorIndexError, match="Selector index failed - test"):
+        additionals.indexErrorSelector.start_indexing()
 
-    def test_retrieve_skip_error(self):
-        with self.assertRaisesRegex(ElementShouldSkipError, "test - skipping element"):
-            self.castErrorSelector.retrieve_element({"id": "skip"}, {})
 
-    def test_retrieve_retry_error(self):
-        with self.assertRaisesRegex(ElementShouldRetryError, "test - attempt retry"):
-            self.castErrorSelector.retrieve_element({"id": "retryN"}, {})
+def test_retrieve_skip_error(additionals):
+    with pytest.raises(ElementShouldSkipError, match="test - skipping element"):
+        additionals.castErrorSelector.retrieve_element({"id": "skip"}, {})
 
-    def test_integration_1(self):
-        self.assertEqual(self.castErrorSelector.retryCount, 0)
-        self.castErrorSelector.start_indexing()
-        self.castErrorSelector.start_retrieving()
 
-        skip_path = get_element_path("castErrorSelector", "skip")
-        self.assertFalse(os.path.exists(skip_path))
+def test_retrieve_retry_error(additionals):
+    with pytest.raises(ElementShouldRetryError, match="test - attempt retry"):
+        additionals.castErrorSelector.retrieve_element({"id": "retryN"}, {})
 
-        retryn_path = get_element_path("castErrorSelector", "retryN")
-        self.assertFalse(os.path.exists(retryn_path))
 
-        retry3_path = get_element_path("castErrorSelector", "retry3")
-        self.assertEqual(self.castErrorSelector.retryCount, 3)
-        self.assertFalse(os.path.exists(retry3_path))
+def test_integration_1(utils, additionals):
+    assert additionals.castErrorSelector.retryCount == 0
+    additionals.castErrorSelector.start_indexing()
+    additionals.castErrorSelector.start_retrieving()
 
-        pass_path = get_element_path("castErrorSelector", "pass")
-        self.assertFalse(os.path.exists(pass_path))
+    skip_path = utils.get_element_path("castErrorSelector", "skip")
+    assert not os.path.exists(skip_path)
 
-    def test_integration_2(self):
-        self.retrieveErrorSelector.start_indexing()
-        self.retrieveErrorSelector.start_retrieving()
+    retryn_path = utils.get_element_path("castErrorSelector", "retryN")
+    assert not os.path.exists(retryn_path)
 
-        skip_path = get_element_path("retrieveErrorSelector", "skip")
-        self.assertFalse(os.path.exists(skip_path))
+    retry3_path = utils.get_element_path("castErrorSelector", "retry3")
+    assert additionals.castErrorSelector.retryCount == 3
+    assert not os.path.exists(retry3_path)
 
-        retryn_path = get_element_path("retrieveErrorSelector", "retryN")
-        self.assertFalse(os.path.exists(retryn_path))
+    pass_path = utils.get_element_path("castErrorSelector", "pass")
+    assert not os.path.exists(pass_path)
 
-        retry3_path = get_element_path("retrieveErrorSelector", "retry3")
-        self.assertEqual(self.retrieveErrorSelector.retryCount, 3)
-        self.assertTrue(os.path.exists(retry3_path))
 
-        pass_path = get_element_path("retrieveErrorSelector", "pass")
-        self.assertTrue(os.path.exists(pass_path))
+def test_integration_2(utils, additionals):
+    additionals.retrieveErrorSelector.start_indexing()
+    additionals.retrieveErrorSelector.start_retrieving()
 
-        etype = cast_to_etype(retry3_path, Etype.Any)
-        expected = {
-            "base": retry3_path,
-            "etype": Etype.Any,
-            "media": {"all": [f"{retry3_path}/out.txt"]},
-        }
-        self.assertTrue(dictsEqual(etype, expected))
+    skip_path = utils.get_element_path("retrieveErrorSelector", "skip")
+    assert not os.path.exists(skip_path)
 
-    # def test_etype_cast_error(self):
-    #     with self.assertRaisesRegex(EtypeCastError, "Failed to cast - retrieved element was not Etype.Any"):
-    #         # TODO:
-    #         pass
+    retryn_path = utils.get_element_path("retrieveErrorSelector", "retryN")
+    assert not os.path.exists(retryn_path)
+
+    retry3_path = utils.get_element_path("retrieveErrorSelector", "retry3")
+    assert additionals.retrieveErrorSelector.retryCount == 3
+    assert os.path.exists(retry3_path)
+
+    pass_path = utils.get_element_path("retrieveErrorSelector", "pass")
+    assert os.path.exists(pass_path)
+
+    etype = cast_to_etype(retry3_path, Etype.Any)
+    expected = {
+        "base": retry3_path,
+        "etype": Etype.Any,
+        "media": {"all": [f"{retry3_path}/out.txt"]},
+    }
+    assert utils.dictsEqual(etype, expected)
