@@ -9,6 +9,9 @@ LOGPATH = "testlog.txt"
 def additionals(autouse=True):
     if os.path.exists(LOGPATH):
         os.remove(LOGPATH)
+    yield
+    if os.path.exists(LOGPATH):
+        os.remove(LOGPATH)
 
 
 def test_save_no_logs(additionals):
