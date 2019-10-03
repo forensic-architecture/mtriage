@@ -28,14 +28,6 @@ class YoutubeSelector(Selector):
     def get_out_etype(self):
         return Etype.AnnotatedVideo
 
-    def get_arg_names():
-        return {
-            "search_term": True,
-            "uploaded_before": True,
-            "uploaded_after": True,
-            "daily": False,
-        }
-
     def index(self, config):
         results = self._run(config)
         if len(results) > 0:
@@ -79,7 +71,7 @@ class YoutubeSelector(Selector):
 
         self.logger(f"Query: {config['search_term']}")
         self.logger(f"Start: {config['uploaded_after']}")
-        self.logger(f"End: {config['uploaded_after']}")
+        self.logger(f"End: {config['uploaded_before']}")
 
         if "daily" in config.keys() and config["daily"]:
             self.logger(
@@ -97,13 +89,18 @@ class YoutubeSelector(Selector):
                 new_results = self._add_search_to_obj(args_obj, results)
                 results = results + new_results
 
-        else:
+        elif "uploaded_after" in config.keys() and "uploaded_before" in config.keys():
             args_obj = {}
             args_obj["q"] = config["search_term"]
             args_obj["before"] = config["uploaded_before"]
             args_obj["after"] = config["uploaded_after"]
             new_results = self._add_search_to_obj(args_obj, results)
             results = results + new_results
+
+        else:
+            new_results = self._add_search_to_obj(args_obj, results)
+            results = results + new_results
+
 
         self.logger("\n\n----------------")
         self.logger(f"Scrape successful, {len(results) - 1} results.")
@@ -165,8 +162,8 @@ class YoutubeSelector(Selector):
         request = youtube.search().list(
             pageToken=pageToken,
             q=options["q"],
-            publishedBefore=options["before"],
-            publishedAfter=options["after"],
+            publishedBefore=options["before"] if "before" in options else "",
+            publishedAfter=options["after"] if "after" in options else "",
             part="id,snippet",
             maxResults=50,
             safeSearch="none",

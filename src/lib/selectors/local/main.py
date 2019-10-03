@@ -17,9 +17,6 @@ class LocalSelector(Selector):
     folder is recommended).
     """
 
-    def get_arg_names():
-        return {"source_folder": True}
-
     def index(self, config):
         if not os.path.exists(self.ELEMENT_MAP):
             return self._run(config)

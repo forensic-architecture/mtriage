@@ -28,6 +28,7 @@ import argparse
 import json
 import yaml
 import os
+import inspect
 from pathlib import Path
 from subprocess import check_output
 import shutil
@@ -68,9 +69,13 @@ def validate_yaml(cfg):
     if "config" not in cfg.keys() or not isinstance(cfg["config"], dict):
         raise InvalidConfigError("The 'config' attribute must exist.")
     # dynamically check all required args for module config exist
-    argnames = mod.get_arg_names()
-    for key in argnames.keys():
-        if argnames[key] is True and key not in cfg["config"].keys():
+    sfolder = os.path.dirname(inspect.getfile(mod))
+    info = Path(sfolder)/"info.yaml"
+    with open(info, "r") as f:
+        options = yaml.safe_load(f)
+    for option in options["args"]:
+        print(option)
+        if option["required"] is True and option["name"] not in cfg["config"].keys():
             raise InvalidConfigError(
                 f"The config you specified does not contain all the required arguments for the '{cfg['module']}' {mod_name}."
             )
