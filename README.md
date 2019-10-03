@@ -47,6 +47,7 @@ required. Ensure to read the documentation for each component you wish to use.
 Once you have Docker and Python installed, you can run mtriage using one of the
 examples provided. From this folder:
 ```bash
+pip install -r requirements.txt
 ./mtriage run examples/_demo/youtube.yaml 
 ```
 

@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------
 # python        3.6    (apt)
 # ==================================================================
-FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
+FROM ubuntu:18.04
 MAINTAINER Lachlan Kermode <lk@forensic-architecture.org>
 ENV LANG C.UTF-8
 RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \

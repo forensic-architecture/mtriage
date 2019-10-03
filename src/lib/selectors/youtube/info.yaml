@@ -6,11 +6,11 @@ args:
     input: string
   - name: uploaded_before
     desc: Only return videos uploaded before this date.
-    required: true
+    required: false
     input: date
   - name: uploaded_after
     desc: Only return videos uploaded after this date.
-    required: true
+    required: false
     input: date
   - name: daily
     desc: Query the Youtube API N times with the given search terms, where N is the number of days between the 'uploaded_after' and 'uploaded_before' dates. This heuristic returns more results for a given search term, but can fail due to exhausting the API's daily quota.
