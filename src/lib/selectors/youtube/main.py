@@ -66,12 +66,14 @@ class YoutubeSelector(Selector):
                 )
 
     def _run(self, config):
-
         results = []
 
         self.logger(f"Query: {config['search_term']}")
-        self.logger(f"Start: {config['uploaded_after']}")
-        self.logger(f"End: {config['uploaded_before']}")
+        if "uploaded_after" in config:
+            self.logger(f"Start: {config['uploaded_after']}")
+
+        if "uploaded_before" in config:
+            self.logger(f"End: {config['uploaded_before']}")
 
         if "daily" in config.keys() and config["daily"]:
             self.logger(
@@ -89,15 +91,15 @@ class YoutubeSelector(Selector):
                 new_results = self._add_search_to_obj(args_obj, results)
                 results = results + new_results
 
-        elif "uploaded_after" in config.keys() and "uploaded_before" in config.keys():
+        else:
             args_obj = {}
             args_obj["q"] = config["search_term"]
-            args_obj["before"] = config["uploaded_before"]
-            args_obj["after"] = config["uploaded_after"]
-            new_results = self._add_search_to_obj(args_obj, results)
-            results = results + new_results
 
-        else:
+            if "uploaded_before" in config.keys():
+                args_obj["before"] = config["uploaded_before"]
+            if "uploaded_after" in config.keys():
+                args_obj["after"] = config["uploaded_after"]
+
             new_results = self._add_search_to_obj(args_obj, results)
             results = results + new_results
 
@@ -134,7 +136,7 @@ class YoutubeSelector(Selector):
     def _youtube_search_all_pages(self, args):
         csv_obj = []
         self.logger(
-            f"Search terms: {args['q']}\n Start: {args['after']}\n End: {args['before']}"
+            f"Search terms: {args['q']}\n Start: {args['after'] if 'after' in args else ''}\n End: {args['before'] if 'before' in args else ''}"
         )
         try:
             s_res = self._youtube_search(args)
@@ -159,16 +161,22 @@ class YoutubeSelector(Selector):
             YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, credentials=GOOGLE_CREDS
         )
 
-        request = youtube.search().list(
-            pageToken=pageToken,
-            q=options["q"],
-            publishedBefore=options["before"] if "before" in options else "",
-            publishedAfter=options["after"] if "after" in options else "",
-            part="id,snippet",
-            maxResults=50,
-            safeSearch="none",
-            type="video",
-        )
+        args = {
+            "pageToken": pageToken,
+            "q": options["q"],
+            "part": "id,snippet",
+            "maxResults": 50,
+            "safeSearch": "none",
+            "type": "video",
+        }
+
+        if "before" in options:
+            args["publishedBefore"] = options["before"]
+        if "after" in options:
+            args["publishedAfter"] = options["after"]
+
+        request = youtube.search().list(**args)
+
         return request.execute()
 
     def _days_between(self, start, end):

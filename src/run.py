@@ -74,7 +74,6 @@ def validate_yaml(cfg):
     with open(info, "r") as f:
         options = yaml.safe_load(f)
     for option in options["args"]:
-        print(option)
         if option["required"] is True and option["name"] not in cfg["config"].keys():
             raise InvalidConfigError(
                 f"The config you specified does not contain all the required arguments for the '{cfg['module']}' {mod_name}."
