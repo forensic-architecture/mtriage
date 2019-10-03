@@ -1,0 +1,7 @@
+folder: temp/demo_twitter_select
+phase: "select"
+module: "twitter"
+config:
+  search_term: "al-Khamis OR Mustaba"
+  uploaded_before: "2016-03-13"
+  uploaded_after: "2016-03-17"
