@@ -20,8 +20,11 @@ NAME = "forensicarchitecture/mtriage"
 def get_cont_name():
     """ Get name of next mtriage instance based on existing containers. """
     names = sp.check_output(["docker", "ps", "-a", "--format", "{{.Names}}"])
-    if isinstance(names, bytes):
+    if isinstance(names, bytes) and len(names) is 0:
         names = []
+    elif isinstance(names, bytes):
+        names = names.decode(encoding="UTF-8")
+        names = names.split("\n")
     else:
         names = names.split("\n")
     seed = 1
