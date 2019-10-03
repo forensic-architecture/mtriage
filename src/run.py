@@ -50,7 +50,6 @@ def module_name(phase):
 
 
 def validate_yaml(cfg):
-    # validate
     if "folder" not in cfg.keys() or not isinstance(cfg["folder"], str):
         raise InvalidConfigError("The folder attribute must exist and be a string")
     if "phase" not in cfg.keys() or cfg["phase"] not in ["select", "analyse"]:
@@ -70,7 +69,7 @@ def validate_yaml(cfg):
         raise InvalidConfigError("The 'config' attribute must exist.")
     # dynamically check all required args for module config exist
     sfolder = os.path.dirname(inspect.getfile(mod))
-    info = Path(sfolder)/"info.yaml"
+    info = Path(sfolder) / "info.yaml"
     with open(info, "r") as f:
         options = yaml.safe_load(f)
     for option in options["args"]:

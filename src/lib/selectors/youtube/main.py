@@ -103,7 +103,6 @@ class YoutubeSelector(Selector):
             new_results = self._add_search_to_obj(args_obj, results)
             results = results + new_results
 
-
         self.logger("\n\n----------------")
         self.logger(f"Scrape successful, {len(results) - 1} results.")
 

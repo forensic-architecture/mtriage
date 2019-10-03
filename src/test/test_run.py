@@ -66,7 +66,7 @@ def test_bad_config():
     bad_youtube_config = {
         **good_select_module,
         "module": "youtube",
-        "config": {"search_term": "a search term", "uploaded_before": "212321"},
+        "config": {"uploaded_before": "212321"},
     }
     good_youtube_config = {
         **good_select_module,

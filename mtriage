@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import yaml
 import argparse
 import subprocess as sp
 import webbrowser
@@ -17,26 +18,7 @@ HOME_PATH = os.path.expanduser("~")
 NAME = "forensicarchitecture/mtriage"
 
 
-def get_cont_name():
-    """ Get name of next mtriage instance based on existing containers. """
-    names = sp.check_output(["docker", "ps", "-a", "--format", "{{.Names}}"])
-    if isinstance(names, bytes) and len(names) is 0:
-        names = []
-    elif isinstance(names, bytes):
-        names = names.decode(encoding="UTF-8")
-        names = names.split("\n")
-    else:
-        names = names.split("\n")
-    seed = 1
-    cont_name = "mtriage_{}".format(seed)
-    while cont_name in names:
-        seed += 1
-        cont_name = "mtriage_{}".format(seed)
-
-    return cont_name
-
-
-CONT_NAME = get_cont_name()
+CONT_NAME = "mtraige"  # default, changed at runtime
 
 
 def build(args):
@@ -163,7 +145,11 @@ def develop(args):
 
 
 def clean(args):
-    sp.call(["docker", "rmi", NAME])
+    ps = sp.Popen(["docker", "ps", "--filter", "name=mtriage", "-aq"], stdout=sp.PIPE)
+    try:
+        sp.check_output(["xargs", "docker", "rm"], stdin=ps.stdout)
+    except:
+        pass
 
 
 def __run_core_tests():
@@ -208,6 +194,11 @@ def test(args):
 
 
 def run(args):
+    # read yaml args to construct container name
+    yaml_path = os.path.abspath(args.yaml)
+    with open(yaml_path, "r") as f:
+        options = yaml.safe_load(f)
+    CONT_NAME = f"mtriage_{options['phase']}_{options['module']}-{os.path.basename(options['folder'])}"
     TAG_NAME = "dev-gpu" if args.gpu else "dev"
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
     # so that the call arguments are well formed.
@@ -225,7 +216,7 @@ def run(args):
             "-v",
             "{}:/mtriage".format(DIR_PATH),
             "-v",
-            "{}:/run_args.yaml".format(os.path.abspath(args.yaml)),
+            "{}:/run_args.yaml".format(yaml_path),
             "-v",
             "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
             "{}:{}".format(NAME, TAG_NAME),
