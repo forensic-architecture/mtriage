@@ -1,5 +1,6 @@
 import twint
 import json
+from urllib.request import urlretrieve
 from lib.common.selector import Selector
 from lib.common.etypes import Etype
 
@@ -30,7 +31,15 @@ class TwitterSelector(Selector):
 
     def retrieve_element(self, element, config):
         dest = element["base"]
-        # TODO(lachie): download all associated images, and video if it exists.
 
         with open(f"{dest}/tweet.json", "w+") as fp:
             json.dump(element, fp)
+
+        # retrieve photos
+        photos = element["photos"].split(",")
+        if len(photos) < 1 or photos[0] == '':
+            return
+
+        for url in photos:
+            fname = url.rsplit('/', 1)[-1]
+            urlretrieve(url, f"{dest}/{fname}")
