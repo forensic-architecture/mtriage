@@ -37,9 +37,9 @@ class TwitterSelector(Selector):
 
         # retrieve photos
         photos = element["photos"].split(",")
-        if len(photos) < 1 or photos[0] == '':
+        if len(photos) < 1 or photos[0] == "":
             return
 
         for url in photos:
-            fname = url.rsplit('/', 1)[-1]
+            fname = url.rsplit("/", 1)[-1]
             urlretrieve(url, f"{dest}/{fname}")
