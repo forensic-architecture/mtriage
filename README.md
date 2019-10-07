@@ -18,7 +18,8 @@ helping us to develop additional selectors and analysers, please consider
 joining [the conversaton on Discord](https://discord.gg/FJ4XsCg).
 
 ### selectors
-* youtube - search and download via the [v3 API](https://developers.google.com/youtube/v3/).
+* youtube - search by query with optional date range (time uploaded), download video and metadata. 
+* twitter - search by query, download tweets and images.
 * local - use media that already exists on your filesystem. 
 
 ### analysers
