@@ -1,8 +1,0 @@
-folder: temp/mexico
-phase: select
-module: youtube
-config:
-  search_term: caravanamigrante
-  uploaded_before: 2019-12-05T00:00:00Z
-  uploaded_after: 2018-11-20T00:00:00Z
-  daily: false
