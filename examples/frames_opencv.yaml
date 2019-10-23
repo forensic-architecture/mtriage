@@ -1,0 +1,8 @@
+folder: media/demo
+phase: analyse
+module: frames_opencv
+config:
+  dev: true
+  elements_in:
+    - youtube
+
