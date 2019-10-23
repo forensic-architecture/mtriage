@@ -4,7 +4,7 @@ from lib.common.get_module import get_module
 import shutil
 import json
 
-TEMP_ELEMENT_DIR = "../temp/test"
+TEMP_ELEMENT_DIR = "../media/test"
 
 
 def scaffold_empty(selname, elements=[], analysers=[]):

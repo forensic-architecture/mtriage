@@ -1,4 +1,4 @@
-folder: "temp/demo"
+folder: media/demo
 phase: "analyse"
 module: "frames"
 config:

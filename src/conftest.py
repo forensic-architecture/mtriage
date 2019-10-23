@@ -9,7 +9,7 @@ import test.utils as test_utils
 
 @pytest.fixture(scope="session", autouse=True)
 def test_element_dir():
-    return "../temp/test"
+    return "../media/test"
 
 
 # TODO(lachlan): create a special fixture to allow component-wise tests to analyse sub elements
