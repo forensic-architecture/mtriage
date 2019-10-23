@@ -317,7 +317,6 @@ class Analyser(MTModule):
             if dev:
                 raise e
             else:
-                print(e)
                 self.error_logger(
                     "unknown exception raised - skipping element", element
                 )

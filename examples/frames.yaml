@@ -1,10 +1,7 @@
 folder: media/demo
-phase: "analyse"
-module: "frames"
+phase: analyse
+module: frames
 config:
   elements_in:
-    - "youtube"
-  method: "opencv"
-  change_threshold: "1e-5"
-  sequential: false
+    - youtube
   fps: 1
