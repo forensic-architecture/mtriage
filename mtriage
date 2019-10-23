@@ -44,7 +44,6 @@ def build(args):
 
     # parse blacklist
     if args.blacklist:
-
         def extract_dep(csv_row):
             if len(csv_row) is 1:
                 return csv_row[0]
@@ -52,7 +51,7 @@ def build(args):
 
         with open(args.blacklist, "r") as f:
             bl = csv.reader(f, delimiter=" ")
-            BLACKLIST = list(map(extract_dep, bl))
+            BLACKLIST = list(filter(lambda x: len(x) > 1, map(extract_dep, bl)))
 
     print("Collecting partial dependencies from selector and analyser folders...")
 
@@ -134,12 +133,9 @@ def build(args):
 
 
 def develop(args):
-    yaml_path = os.path.abspath(args.yaml)
-    with open(yaml_path, "r") as f:
-        options = yaml.safe_load(f)
-    CONT_NAME = f"mtriage_{options['phase']}_{options['module']}-{os.path.basename(options['folder'])}"
-
+    CONT_NAME = "mtriage_developer"
     TAG_NAME = "dev-gpu" if args.gpu else "dev"
+
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
     # so that the call arguments are well formed.
     sp.call(
@@ -147,6 +143,7 @@ def develop(args):
             "docker",
             "run",
             "-it",
+            "--rm",
             "--name",
             CONT_NAME,
             "--runtime=nvidia" if args.gpu else "--ipc=host",
