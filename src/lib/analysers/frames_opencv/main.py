@@ -77,10 +77,13 @@ class FramesOpencvAnalyser(Analyser):
         METHOD = config.get("method")
 
         # defaults
-        if FPS_NUMBER is None: FPS_NUMBER = 1
-        if THRESHOLD is None: THRESHOLD = "1e-5"
+        if FPS_NUMBER is None:
+            FPS_NUMBER = 1
+        if THRESHOLD is None:
+            THRESHOLD = "1e-5"
         THRESHOLD = np.fromstring(THRESHOLD, dtype=np.float64, sep=" ")
-        if SEQUENTIAL is None: SEQUENTIAL = True
+        if SEQUENTIAL is None:
+            SEQUENTIAL = True
 
         dest = element["dest"]
         json = element["media"]["json"]
