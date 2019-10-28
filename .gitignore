@@ -28,3 +28,6 @@ credentials/**
 # other data
 data/**
 tags*
+
+blacklists/**
+whitelists/**

@@ -90,6 +90,12 @@ def str2bool(v):
         raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
+def extract_dep(csv_row):
+    if len(csv_row) is 1:
+        return csv_row[0]
+    return ""
+
+
 def get_env_config():
     ENV_FILE = "{}/.env".format(DIR_PATH)
     if os.path.exists(ENV_FILE):

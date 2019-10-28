@@ -27,7 +27,7 @@ def build(args):
     IS_GPU = args.gpu
 
     # setup
-    TAG_NAME = "dev-gpu" if IS_GPU else "dev"
+    TAG_NAME = "{}-gpu".format(args.tag) if IS_GPU else args.tag
     DOCKER_BASE = "core-gpu" if IS_GPU else "core-cpu"
 
     DOCKERFILE_PARTIAL = "partial.Dockerfile"
@@ -41,20 +41,7 @@ def build(args):
     SELECTORS_PATH = "{}/src/lib/selectors".format(DIR_PATH)
     BLACKLIST = []
 
-    # parse blacklist
-    if args.blacklist:
-
-        def extract_dep(csv_row):
-            if len(csv_row) is 1:
-                return csv_row[0]
-            return ""
-
-        with open(args.blacklist, "r") as f:
-            bl = csv.reader(f, delimiter=" ")
-            BLACKLIST = list(filter(lambda x: len(x) > 1, map(extract_dep, bl)))
-
     print("Collecting partial dependencies from selector and analyser folders...")
-
     with open(CORE_PIPDEPS) as cdeps:
         pipdeps = cdeps.readlines()
 
@@ -64,6 +51,22 @@ def build(args):
     # search all selectors/analysers for partials
     selectors = get_subdirs(SELECTORS_PATH)
     analysers = get_subdirs(ANALYSERS_PATH)
+
+    # parse blacklist
+    if not args.whitelist and args.blacklist:
+        with open(args.blacklist, "r") as f:
+            bl = csv.reader(f, delimiter=" ")
+            BLACKLIST = list(filter(lambda x: len(x) > 1, map(extract_dep, bl)))
+
+    elif args.whitelist:
+        # create blacklist from whitelist
+        BLACKLIST = selectors + analysers
+        with open(args.whitelist, "r") as f:
+            wl = csv.reader(f, delimiter=" ")
+            for row in wl:
+                dep = extract_dep(row)
+                if dep is not "":
+                    BLACKLIST.remove(dep)
 
     for selector in selectors:
         if selector in BLACKLIST:
@@ -87,16 +90,9 @@ def build(args):
         for line in f.readlines():
             dockerlines.append(line)
 
-    # create Dockerfile and requirements.txt for build
-    # if os.path.exists(BUILD_PIPFILE):
-    #     os.remove(BUILD_PIPFILE)
-
     with open(BUILD_PIPFILE, "w") as f:
         for dep in pipdeps:
             f.write(dep)
-
-    # if os.path.exists(BUILD_DOCKERFILE):
-    #     os.remove(BUILD_DOCKERFILE)
 
     with open(BUILD_DOCKERFILE, "w") as f:
         for line in dockerlines:
@@ -128,13 +124,15 @@ def build(args):
         print("Something went wrong! EEK.")
 
     # cleanup
-    os.remove(BUILD_DOCKERFILE)
-    os.remove(BUILD_PIPFILE)
+    if os.path.exists(BUILD_DOCKERFILE):
+        os.remove(BUILD_DOCKERFILE)
+    if os.path.exists(BUILD_PIPFILE):
+        os.remove(BUILD_PIPFILE)
 
 
 def develop(args):
     CONT_NAME = "mtriage_developer"
-    TAG_NAME = "dev-gpu" if args.gpu else "dev"
+    TAG_NAME = "{}-gpu".format(args.tag) if IS_GPU else args.tag
 
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
     # so that the call arguments are well formed.
@@ -216,7 +214,7 @@ def run(args):
     with open(yaml_path, "r") as f:
         options = yaml.safe_load(f)
     CONT_NAME = f"mtriage_{options['phase']}_{options['module']}-{os.path.basename(options['folder'])}"
-    TAG_NAME = "dev-gpu" if args.gpu else "dev"
+    TAG_NAME = "{}-gpu".format(args.tag) if args.gpu else args.tag
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
     # so that the call arguments are well formed.
     sp.call(
@@ -257,11 +255,15 @@ if __name__ == "__main__":
 
     run_p = subparsers.add_parser("run")
     run_p.add_argument("yaml", type=yaml_type)
+    run_p.add_argument("--tag", default="dev")
     run_p.add_argument("--gpu", action="store_true")
     # TODO: accept an interactive option at -i
 
     dev_p = subparsers.add_parser("dev")
+    dev_p.add_argument("--whitelist")
     dev_p.add_argument("--blacklist")
+    dev_p.add_argument("--tag", default="dev")
+    dev_p.add_argument("--gpu", action="store_true")
     dev_p.add_argument(
         "command",
         choices=DEV_COMMANDS.keys(),
@@ -269,7 +271,6 @@ if __name__ == "__main__":
         const="develop",
         nargs="?",
     )
-    dev_p.add_argument("--gpu", action="store_true")
 
     args = parser.parse_args()
 
