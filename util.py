@@ -5,6 +5,7 @@ import argparse
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
+
 class InvalidPipDep(Exception):
     pass
 
@@ -87,6 +88,7 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError("Boolean value expected.")
+
 
 def get_env_config():
     ENV_FILE = "{}/.env".format(DIR_PATH)
