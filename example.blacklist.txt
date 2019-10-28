@@ -4,7 +4,8 @@
 convert_audio
 extract_audio
 fastai_model
-# frames
+frames
+imagededup
 frames_opencv
 keras_pretrained
 ocr
@@ -12,6 +13,6 @@ ranking
 yolov3
 
 ### SELECTORS
-# local
-# twitter
-# youtube
+local
+twitter
+youtube
