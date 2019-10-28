@@ -14,7 +14,6 @@ from util import *
 VIEWER_NAME = "forensicarchitecture/mviewer"
 CONT_VIEWER_NAME = VIEWER_NAME.replace("/", "_")
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-ENV_FILE = "{}/.env".format(DIR_PATH)
 HOME_PATH = os.path.expanduser("~")
 NAME = "forensicarchitecture/mtriage"
 
@@ -150,7 +149,7 @@ def develop(args):
             "--runtime=nvidia" if args.gpu else "--ipc=host",
             "--env",
             "BASE_DIR=/mtriage",
-            "--env-file={}".format(ENV_FILE),
+            get_env_config(),
             "--privileged",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
@@ -177,7 +176,7 @@ def __run_core_tests():
             "run",
             "--env",
             "BASE_DIR=/mtriage",
-            "--env-file={}".format(ENV_FILE),
+            get_env_config(),
             "--rm",
             "-v",
             "{}:/mtriage".format(DIR_PATH),
@@ -229,7 +228,7 @@ def run(args):
             "--runtime=nvidia" if args.gpu else "--ipc=host",
             "--env",
             "BASE_DIR=/mtriage",
-            "--env-file={}".format(ENV_FILE),
+            get_env_config(),
             "--privileged",
             "-v",
             "{}:/mtriage".format(DIR_PATH),

@@ -1,6 +1,6 @@
-folder: media/demo_youtube_select
-phase: "select"
-module: "youtube"
+folder: media/demo_official
+phase: select
+module: youtube
 config:
   search_term: "Triple chaser"
   uploaded_before: "2015-10-02T00:00:00Z"
