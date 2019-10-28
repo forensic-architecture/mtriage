@@ -1,0 +1,17 @@
+# lines that begin with a # will be ignored.
+
+### ANALYSERS
+convert_audio
+extract_audio
+fastai_model
+# frames
+frames_opencv
+keras_pretrained
+ocr
+ranking
+yolov3
+
+### SELECTORS
+# local
+# twitter
+# youtube

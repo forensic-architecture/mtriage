@@ -1,6 +1,0 @@
-folder: temp/tear_gas_mexico
-phase: analyse
-module: ranking
-config:
-  elements_in:
-    - youtube/fastai_model

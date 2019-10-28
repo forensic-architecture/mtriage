@@ -1,5 +1,4 @@
-# folder: "temp/tear_gas_mexico"
-folder: "temp/demo_output"
+folder: media/demo_output
 phase: "analyse"
 module: "fastai_model"
 config:

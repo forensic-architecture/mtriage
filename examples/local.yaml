@@ -1,0 +1,5 @@
+folder: media/demo_output2
+phase: "select"
+module: "local"
+config:
+  source_folder: media/test_vid

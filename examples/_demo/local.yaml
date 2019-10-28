@@ -1,5 +1,0 @@
-folder: temp/demo_output2
-phase: "select"
-module: "local"
-config:
-  source_folder: "temp/test_vid"

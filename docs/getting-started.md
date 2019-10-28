@@ -31,7 +31,6 @@ To get to know mtriage, we're going to create a workflow that uses four componen
 1. Youtube (selector)
 2. Frames (analyser)
 3. YOLOv3 (analyser)
-4. VideoMap (viewer)
 
 This workflow will yield an interactive visualisation of where objects are detected in videos that looks as follows (each cell represents a video, and red frames represent an object detection):
 

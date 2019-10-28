@@ -17,8 +17,8 @@ class TestMtriage(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        self.VIEWER_INPUT_DIR = "temp/test/inputDir"
-        self.VIEWERS_DIR = "temp/test/viewers"
+        self.VIEWER_INPUT_DIR = "media/test/inputDir"
+        self.VIEWERS_DIR = "media/test/viewers"
         self.VIEWER_NAME = "viewer"
         os.makedirs(self.VIEWER_INPUT_DIR)
         self.VIEWER_DIR = "{}/{}".format(self.VIEWERS_DIR, self.VIEWER_NAME)
@@ -27,7 +27,7 @@ class TestMtriage(unittest.TestCase):
         self.VIEWER_CONFIG_PATH = "{}/config.json".format(self.VIEWER_DIR)
         with open(self.VIEWER_CONFIG_PATH, "w") as config:
             json.dump(self.VIEWER_CONFIG, config)
-        self.SERVER_DIR = "temp/test/server"
+        self.SERVER_DIR = "media/test/server"
         self.SERVER_ELEMENTS_DIR = "{}/elements".format(self.SERVER_DIR)
         self.SERVER_CONFIG_PATH = "{}/config.json".format(self.SERVER_DIR)
         os.makedirs(self.SERVER_ELEMENTS_DIR)

@@ -1,4 +1,4 @@
-folder: temp/demo_twitter_select
+folder: media/demo_twitter_select
 phase: "select"
 module: "twitter"
 config:

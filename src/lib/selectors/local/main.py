@@ -13,7 +13,7 @@ class LocalSelector(Selector):
     with its extension.
 
     n.b. the directory being imported must be located within the mtriage
-    directory to be accessible inside the docker container (the temp
+    directory to be accessible inside the docker container (the media
     folder is recommended).
     """
 

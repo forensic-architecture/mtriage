@@ -1,4 +1,4 @@
-folder: "temp/demo_output"
+folder: media/demo_output
 phase: "analyse"
 module: "yolov3"
 config:

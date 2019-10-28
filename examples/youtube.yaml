@@ -1,4 +1,4 @@
-folder: temp/demo_youtube_select
+folder: media/demo_youtube_select
 phase: "select"
 module: "youtube"
 config:
