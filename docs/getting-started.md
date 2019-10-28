@@ -17,23 +17,82 @@ git clone https://github.com/forensic-architecture/mtriage.git
 
 Mtriage does not require any dependencies but [Python](https://www.python.org/) 3 and [Docker CE](https://docs.docker.com/install/). Mtriage should work with Python 2.x as well, but we recommend using 3. If you have a CUDA GPU, you can use [Nvidia Docker](https://github.com/NVIDIA/nvidia-docker) instead of Docker to make certain analysers more performant.
 
-Once you have a Python and a Docker installed, run the test suite to ensure that everython is working. This command may take a while, as the first time you run mtriage it takes some time to appropriately prepare. Mtriage commands will run much faster afterwards:
+Once you have a Python and a Docker installed, install the three dependencies in requirements.txt. Two of these are for testing (pytest and black); the only runtime dependency is pyyaml. 
+```
+cd mtriage
+pip install -r requirements.txt
+```
+
+Once the dependencies have been installed, run the test suite to ensure that everython is working. This command may take a while, as the first time you run mtriage it will download the [latest Docker image](https://cloud.docker.com/u/forensicarchitecture/repository/docker/forensicarchitecture/mtriage). Mtriage commands will run much faster after this first one:
 
 ```bash
-cd mtriage
-./mtriage test
+./mtriage dev test
 ```
 
 Assuming this command completed and all the tests passed, you are now ready to run mtriage workflows. 
 
-## Creating a workflow
-To get to know mtriage, we're going to create a workflow that uses four components components:
-1. Youtube (selector)
-2. Frames (analyser)
-3. YOLOv3 (analyser)
+## Running a Workflow
+To get to know mtriage, we're going to run a workflow using four components:
 
-This workflow will yield an interactive visualisation of where objects are detected in videos that looks as follows (each cell represents a video, and red frames represent an object detection):
+1. **youtube**: a selector that takes a search term and time period, and the downloads all videos returned from that search as mtriage elements.
+2. **frames**: extracts images at a rate of one frame per second from video elements. 
+3. **yolov3**: makes predictions over one or more images using [YoloV3](https://pjreddie.com/darknet/yolo/) object detection. Predictions are saved in a JSON file.
+4. **ranking**: takes JSON predictions and ranks them, so that the highest predictions are prioritised.
 
-TODO: add picture.
+This workflow will produce a folder structure that is ready to be interactively visualised using [mtriage-viewer](https://github.com/forensic-architecture/mtriage-viewer/). TODO: link tutorial for mtriage-viewer here and at end.
 
-TODO: add CLI commands to specify once done.
+### YAML configs 
+
+Mtriage workflows are orchestrated using YAML files. When a new component (either an [analsyer](src/lib/analysers) or a [selector](src/lib/selectors) is added to mtriage, we also add an [example YAML](examples) file that shows how to configure and run it. These config files are very simple, and mostly consist of configuration specific to the component that is being run. For example, here is the config for the youtube run we'll do in a second:
+
+```yaml
+folder: media/demo_official
+phase: select
+module: youtube
+config:
+  search_term: "Triple chaser"
+  uploaded_before: "2015-10-02T00:00:00Z"
+  uploaded_after: "2015-10-01T00:00:00Z"
+  daily: true
+```
+
+
+In order to analyse media with mtriage, we first need to find and download that media. This is the role of selectors: they designate and index a 'media space', and then download the media in that space as local mtriage elements. Run the following command to select some sample media using the [youtube](src/lib/selectors/youtube) analyser and the config above:
+
+```bash
+./mtriage run examples/youtube.yaml
+```
+
+After running the command, you should start seeing logs indicating that a scrape has been successful and that videos are being downloaded. Once this command has finished, we can sample frames from the downloaded videos using the following config:
+
+```yaml
+folder: media/demo_official
+phase: analyse
+module: frames
+config:
+  elements_in:
+    - youtube
+  fps: 1
+```
+
+This config specifies that, using the 'media/demo_official' folder as a work directory (in which we just ran the Youtube selector), and the elements created from the 'youtube' selector as input, run the frames analyser. We can run this using the following command:
+
+```bash
+./mtriage run examples/frame.yaml
+```
+
+Finally we will use the 'yolov3' analyser to detect objects in the frames just sampled. This is the config:
+
+```yaml
+folder: media/demo_official
+phase: analyse
+module: yolov3
+config:
+  elements_in:
+    - youtube/frames
+```
+
+Voila! If you look inside media/demo_official/youtube/derived/yolov3, you should see a set of folders that contain JSON files that contain a set of labels, scores, and frame numbers. In practice, you shouldn't need to dive inside mtriage working directories in this way, as you can use [mtriage-viewer](https://github.com/forensic-architecture/mtriage-viewer) to easily visualise the elements produced by various elements.
+
+TODO: add link to mtriage-viewer tutorial.
+TODO: add another section explaining how to chain all three passes using the meta analyser.

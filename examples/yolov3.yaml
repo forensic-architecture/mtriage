@@ -1,6 +1,6 @@
-folder: media/demo_output
-phase: "analyse"
-module: "yolov3"
+folder: media/demo_official
+phase: analyse
+module: yolov3
 config:
   elements_in:
-    - "youtube/frames"
+    - youtube/frames
