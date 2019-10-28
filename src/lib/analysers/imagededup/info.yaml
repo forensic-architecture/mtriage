@@ -1,0 +1,7 @@
+desc: Deduplicate images in a collection using https://github.com/idealo/imagededup.
+args:
+  - name: threshold
+    desc: The max Hamming distance threshold between two images below which retrieved duplicates are valid. See https://idealo.github.io/imagededup/methods/hashing/ for more information.
+    required: false
+    input: int
+

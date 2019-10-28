@@ -28,6 +28,7 @@ credentials/**
 # other data
 data/**
 tags*
+logfile.log
 
 blacklists/**
 whitelists/**
