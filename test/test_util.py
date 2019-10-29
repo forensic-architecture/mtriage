@@ -11,6 +11,7 @@ from util import (
 class TestUtil(unittest.TestCase):
     """ Test the util functions at mtriage's outer layer.
     """
+
     def test_name_and_ver(self):
         name, ver = name_and_ver("numpy")
         self.assertEqual(name, "numpy")
