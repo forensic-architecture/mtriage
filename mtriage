@@ -3,8 +3,8 @@
 import os
 import argparse
 import sys
-from commands import build, develop, clean, test, run
 from util import str2yamlfile
+from commands import build, develop, clean, test, run
 
 DEV_COMMANDS = {"develop": develop, "build": build, "test": test, "clean": clean}
 

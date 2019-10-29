@@ -1,7 +1,4 @@
 import unittest
-import os
-import shutil
-import json
 from util import (
     name_and_ver,
     InvalidPipDep,
@@ -11,40 +8,9 @@ from util import (
 )
 
 
-class TestMtriage(unittest.TestCase):
+class TestUtil(unittest.TestCase):
     """ Tests the file that orchestrates mtriage.
     """
-
-    @classmethod
-    def setUpClass(self):
-        self.VIEWER_INPUT_DIR = "media/test/inputDir"
-        self.VIEWERS_DIR = "media/test/viewers"
-        self.VIEWER_NAME = "viewer"
-        os.makedirs(self.VIEWER_INPUT_DIR)
-        self.VIEWER_DIR = "{}/{}".format(self.VIEWERS_DIR, self.VIEWER_NAME)
-        os.makedirs(self.VIEWER_DIR)
-        self.VIEWER_CONFIG = {"etype": "Any"}
-        self.VIEWER_CONFIG_PATH = "{}/config.json".format(self.VIEWER_DIR)
-        with open(self.VIEWER_CONFIG_PATH, "w") as config:
-            json.dump(self.VIEWER_CONFIG, config)
-        self.SERVER_DIR = "media/test/server"
-        self.SERVER_ELEMENTS_DIR = "{}/elements".format(self.SERVER_DIR)
-        self.SERVER_CONFIG_PATH = "{}/config.json".format(self.SERVER_DIR)
-        os.makedirs(self.SERVER_ELEMENTS_DIR)
-        self.TEST_ELEMENT = "test_element"
-        self.TEST_MEDIA = "test_media.txt"
-        self.TEST_ELEMENT_DIR = "{}/{}".format(self.VIEWER_INPUT_DIR, self.TEST_ELEMENT)
-        os.makedirs(self.TEST_ELEMENT_DIR)
-        self.TEST_MEDIA_PATH = "{}/{}".format(self.TEST_ELEMENT_DIR, self.TEST_MEDIA)
-        with open(self.TEST_MEDIA_PATH, "w") as m:
-            m.write("test")
-
-    @classmethod
-    def tearDownClass(self):
-        shutil.rmtree(self.VIEWERS_DIR)
-        shutil.rmtree(self.VIEWER_INPUT_DIR)
-        shutil.rmtree(self.SERVER_DIR)
-
     def test_name_and_ver(self):
         name, ver = name_and_ver("numpy")
         self.assertEqual(name, "numpy")
