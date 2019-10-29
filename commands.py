@@ -1,6 +1,7 @@
 import os
 import csv
 import yaml
+import argparse
 import subprocess as sp
 from util import *
 
@@ -23,7 +24,7 @@ def __run(cmd, cli_args, *args):
 
 
 def __run_core_tests(args):
-    returncode = __run(
+    return __run(
         [
             "docker",
             "run",
@@ -44,16 +45,11 @@ def __run_core_tests(args):
         args,
     )
 
-    if returncode is 1:
-        exit(returncode)
-
 
 def __run_runpy_tests(args):
     """ NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
     using the LOCAL python (could be 2 or 3). """
-    returncode = __run(["python", "-m", "pytest", "test/"], args)
-    if returncode is 1:
-        exit(returncode)
+    return __run(["python", "-m", "pytest", "test/"], args)
 
 
 def build(args, is_testing=False):
@@ -208,11 +204,14 @@ def clean(args):
         pass
 
 
-def test(args):
+def run_tests(args):
     print("Creating container to run tests...")
     print("----------------------------------")
-    __run_core_tests(args)
-    __run_runpy_tests(args)
+    core = __run_core_tests(args)
+    outer = __run_runpy_tests(args)
+
+    if core >= 1 or outer >= 1:
+        exit(1)
     print("----------------------------------")
     print("All tests for mtriage done.")
 
@@ -248,3 +247,30 @@ def run(args):
         ],
         args,
     )
+
+
+def parse_args(cli_args):
+    parser = argparse.ArgumentParser(description="mtriage dev scripts")
+    subparsers = parser.add_subparsers(dest="__base")
+
+    run_p = subparsers.add_parser("run")
+    run_p.add_argument("yaml", type=str2yamlfile)
+    run_p.add_argument("--tag", default="dev")
+    run_p.add_argument("--gpu", action="store_true")
+    run_p.add_argument("--dry", action="store_true")
+
+    dev_p = subparsers.add_parser("dev")
+    dev_p.add_argument("--whitelist")
+    dev_p.add_argument("--blacklist")
+    dev_p.add_argument("--tag", default="dev")
+    dev_p.add_argument("--gpu", action="store_true")
+    dev_p.add_argument("--dry", action="store_true")
+    dev_p.add_argument(
+        "command",
+        choices=["develop", "build", "test", "clean"],
+        default="develop",
+        const="develop",
+        nargs="?",
+    )
+
+    return parser.parse_args(cli_args)
