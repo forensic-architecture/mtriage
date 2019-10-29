@@ -9,7 +9,9 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 HOME_PATH = os.path.expanduser("~")
 
 
-def __run(cmd, *args):
+def __run(cmd, cli_args, *args):
+    if cli_args.dry:
+        return cmd
     try:
         returncode = sp.call(cmd)
         if len(args) >= 1:
@@ -20,7 +22,7 @@ def __run(cmd, *args):
             print(args[1])
 
 
-def __run_core_tests():
+def __run_core_tests(args):
     returncode = __run(
         [
             "docker",
@@ -38,17 +40,18 @@ def __run_core_tests():
             "-m",
             "pytest",
             ".",
-        ]
+        ],
+        args,
     )
 
     if returncode is 1:
         exit(returncode)
 
 
-def __run_runpy_tests():
+def __run_runpy_tests(args):
     """ NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
     using the LOCAL python (could be 2 or 3). """
-    returncode = __run(["python", "-m", "pytest", "test/"])
+    returncode = __run(["python", "-m", "pytest", "test/"], args)
     if returncode is 1:
         exit(returncode)
 
@@ -151,20 +154,20 @@ def build(args, is_testing=False):
         ".",
     ]
 
-    if not args.dry:
-        __run(
-            cmd,
-            "Build successful, run with: \n\tpython run.py develop",
-            "Something went wrong! EEK",
-        )
-    # else:
-    #     print(dir())
+    res = __run(
+        cmd,
+        args,
+        "Build successful, run with: \n\tpython run.py develop",
+        "Something went wrong! EEK",
+    )
 
     # cleanup
     if os.path.exists(BUILD_DOCKERFILE):
         os.remove(BUILD_DOCKERFILE)
     if os.path.exists(BUILD_PIPFILE):
         os.remove(BUILD_PIPFILE)
+
+    return res
 
 
 def develop(args):
@@ -173,7 +176,7 @@ def develop(args):
 
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
     # so that the call arguments are well formed.
-    __run(
+    return __run(
         [
             "docker",
             "run",
@@ -192,7 +195,8 @@ def develop(args):
             "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
             "{}:{}".format(NAME, TAG_NAME),
             "/bin/bash",
-        ]
+        ],
+        args,
     )
 
 
@@ -207,8 +211,8 @@ def clean(args):
 def test(args):
     print("Creating container to run tests...")
     print("----------------------------------")
-    __run_core_tests()
-    __run_runpy_tests()
+    __run_core_tests(args)
+    __run_runpy_tests(args)
     print("----------------------------------")
     print("All tests for mtriage done.")
 
@@ -220,9 +224,10 @@ def run(args):
         options = yaml.safe_load(f)
     CONT_NAME = f"mtriage_{options['phase']}_{options['module']}-{os.path.basename(options['folder'])}"
     TAG_NAME = "{}-gpu".format(args.tag) if args.gpu else args.tag
+
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
     # so that the call arguments are well formed.
-    __run(
+    return __run(
         [
             "docker",
             "run",
@@ -240,5 +245,6 @@ def run(args):
             "-v",
             "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
             "{}:{}".format(NAME, TAG_NAME),
-        ]
+        ],
+        args,
     )
