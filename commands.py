@@ -49,7 +49,7 @@ def __run_core_tests(args):
 def __run_runpy_tests(args):
     """ NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
     using the LOCAL python (could be 2 or 3). """
-    return __run(["python", "-m", "pytest", "-s", "test/"], args)
+    return __run(["python", "-m", "pytest", "test/"], args)
 
 
 def build(args, is_testing=False):

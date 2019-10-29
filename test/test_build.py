@@ -81,3 +81,16 @@ class TestBuild(unittest.TestCase):
         self.assertListEqual(
             pipfile, core_deps + read_deps("youtube") + read_deps("twitter")
         )
+
+    def test_custom_tags(self):
+        args = parse_args(["dev", "build", "--tag", "CUSTOM_TAG", "--dry"])
+        cmd, dfile, pipfile = build(args)
+        self.assertTrue(
+            dockerimage_tag_matches(cmd, "forensicarchitecture/mtriage:CUSTOM_TAG")
+        )
+
+        args = parse_args(
+            ["run", "examples/youtube.yaml", "--tag", "CUSTOM_TAG", "--dry"]
+        )
+        cmd = run(args)
+        self.assertTrue(cmd[-1] == "forensicarchitecture/mtriage:CUSTOM_TAG")
