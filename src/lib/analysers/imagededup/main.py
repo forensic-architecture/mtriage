@@ -25,11 +25,12 @@ class ImagededupAnalyser(Analyser):
 
         encodings = self.phasher.encode_images(image_dir=basedir)
         duplicates = self.phasher.find_duplicates_to_remove(
-            image_dir=basedir,
-            max_distance_threshold=threshold,
+            image_dir=basedir, max_distance_threshold=threshold
         )
 
-        self.logger(f"{len(duplicates)} duplicates found, copying over all other files...")
+        self.logger(
+            f"{len(duplicates)} duplicates found, copying over all other files..."
+        )
 
         for pname in element["media"]["images"]:
             path = Path(pname)
