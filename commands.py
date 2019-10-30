@@ -267,7 +267,7 @@ def run(args):
 
 def parse_args(cli_args):
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
-    subparsers = parser.add_subparsers(dest="__base")
+    subparsers = parser.add_subparsers(dest="base")
 
     run_p = subparsers.add_parser("run")
     run_p.add_argument("yaml", type=str2yamlfile)
