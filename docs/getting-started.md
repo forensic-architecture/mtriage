@@ -57,7 +57,11 @@ config:
 ```
 
 
-In order to analyse media with mtriage, we first need to find and download that media. This is the role of selectors: they designate and index a 'media space', and then download the media in that space as local mtriage elements. Run the following command to select some sample media using the [youtube](src/lib/selectors/youtube) analyser and the config above:
+In order to analyse media with mtriage, we first need to find and download that media. This is the role of selectors: they designate and index a 'media space', and then download the media in that space as local mtriage elements. In this example we'll use the [youtube](src/lib/selectors/youtube) selector, which searches and downloads videos from Youtube.
+
+Some components require a little extra config, such as creating an account for a platform or API and configuring mtriage with credentials, and the youtube selector is an example of this. Read and follow the instructions in the [youtube setup](docs/components/youtube.md) doc, and then return here to continue.
+
+Once you've configured mtriage with youtube credentials, you can run the following command to select some sample media to use the [youtube](src/lib/selectors/youtube) analyser via the config listed above:
 
 ```bash
 ./mtriage run examples/youtube.yaml
