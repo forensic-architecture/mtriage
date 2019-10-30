@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
-
 from .utils import *
 
 
@@ -216,7 +215,18 @@ class YOLOLayer(nn.Module):
         if targets is None:
             return output, 0
         else:
-            iou_scores, class_mask, obj_mask, noobj_mask, tx, ty, tw, th, tcls, tconf = build_targets(
+            (
+                iou_scores,
+                class_mask,
+                obj_mask,
+                noobj_mask,
+                tx,
+                ty,
+                tw,
+                th,
+                tcls,
+                tconf,
+            ) = build_targets(
                 pred_boxes=pred_boxes,
                 pred_cls=pred_cls,
                 target=targets,

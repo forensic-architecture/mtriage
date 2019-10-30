@@ -1,0 +1,8 @@
+folder: media/demo_official
+phase: analyse
+module: imagededup
+config:
+  elements_in:
+    - youtube/frames
+  threshold: 3
+  method: dhash

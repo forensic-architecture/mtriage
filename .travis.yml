@@ -2,13 +2,14 @@ language: python
 services: docker
 before_install:
 - pip install -r requirements.txt
-- ./mtriage dev build
-- ./mtriage dev build --gpu
-script:
-- cp .env.example .env
-- ./mtriage dev test
 - black --check mtriage
+- black --check util.py
+- black --check commands.py
 - black --check test/
 - black --check src/
+script:
+- ./mtriage dev build
+- ./mtriage dev build --gpu
+- ./mtriage dev test
 after_success:
 - bash scripts/travis_docker.sh
