@@ -24,7 +24,9 @@ class ImagededupAnalyser(Analyser):
             "whash": methods.WHash,
         }.get(hasher_key)
         if hasher is None:
-            raise InvalidAnalyserConfigError(f"'{hasher_key}' is not a valid method for imagededup.")
+            raise InvalidAnalyserConfigError(
+                f"'{hasher_key}' is not a valid method for imagededup."
+            )
 
         self.hasher = hasher()
 
