@@ -5,3 +5,4 @@ config:
   elements_in:
     - youtube/frames
   threshold: 3
+  method: dhash
