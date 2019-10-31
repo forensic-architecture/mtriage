@@ -82,10 +82,18 @@ config:
 This config specifies that, using the 'media/demo_official' folder as a work directory (in which we just ran the Youtube selector), and the elements created from the 'youtube' selector as input, run the frames analyser. We can run this using the following command:
 
 ```bash
-./mtriage run examples/frame.yaml
+./mtriage run examples/frames.yaml
 ```
 
-Finally we will use the 'yolov3' analyser to detect objects in the frames just sampled. This is the config:
+Finally we will use the 'yolov3' analyser to detect objects in the frames just sampled. 
+Before we run the analyser, we need to download the pretrained 'yolov3' weights:
+
+```bash
+cd src/lib/analysers/yolov3/config
+bash download_weights.sh
+```
+
+This is the config we will use for running the 'yolov3' analyser:
 
 ```yaml
 folder: media/demo_official
@@ -94,6 +102,12 @@ module: yolov3
 config:
   elements_in:
     - youtube/frames
+```
+
+We can run the 'yolov3' analyser using the following command:
+
+```bash
+./mtriage run examples/youtube.yaml
 ```
 
 Voila! If you look inside media/demo_official/youtube/derived/yolov3, you should see a set of folders that contain JSON files that contain a set of labels, scores, and frame numbers. In practice, you shouldn't need to dive inside mtriage working directories in this way, as you can use [mtriage-viewer](https://github.com/forensic-architecture/mtriage-viewer) to easily visualise the elements produced by various elements.
