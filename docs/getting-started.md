@@ -91,6 +91,7 @@ Before we run the analyser, we need to download the pretrained 'yolov3' weights:
 ```bash
 cd src/lib/analysers/yolov3/config
 bash download_weights.sh
+cd ../../../../../
 ```
 
 This is the config we will use for running the 'yolov3' analyser:
