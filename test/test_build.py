@@ -1,6 +1,7 @@
 import unittest
 import os
 import csv
+import re
 from commands import parse_args, build, develop, clean, run_tests, run, DIR_PATH
 
 
@@ -14,6 +15,16 @@ def get_tag_str(cmd, tag):
     if idx <= len(cmd) - 1:
         return cmd[idx + 1]
     return None
+
+
+def get_volumes(cmd):
+    idx = 0
+    volumes = []
+    while len(cmd) - 1 > idx:
+        if cmd[idx] == "-v":
+            volumes.append(cmd[idx + 1])
+        idx += 1
+    return volumes
 
 
 def dockerimage_tag_matches(cmd, expected):
@@ -94,3 +105,20 @@ class TestBuild(unittest.TestCase):
         )
         cmd = run(args)
         self.assertTrue(cmd[-1] == "forensicarchitecture/mtriage:CUSTOM_TAG")
+
+    def test_dev_tag(self):
+        dev_args = parse_args(["run", "examples/frames.yaml", "--dev", "--dry"])
+        cmd = run(dev_args)
+        vs = get_volumes(cmd)
+        media_re = r".*/mtriage/media:/mtriage/media$"
+        for v in vs:
+            self.assertNotRegexpMatches(v, media_re)
+
+        no_dev_args = parse_args(["run", "examples/frames.yaml", "--dry"])
+        cmd = run(no_dev_args)
+        vs = get_volumes(cmd)
+        matched = False
+        for v in vs:
+            if re.match(media_re, v) is not None:
+                matched = True
+        self.assertTrue(matched)
