@@ -242,7 +242,7 @@ def run(args):
             get_env_config(),
             "--privileged",
             "-v",
-            "{}:/mtriage".format(DIR_PATH),
+            "{}/media:/mtriage/media".format(DIR_PATH),
             "-v",
             "{}:/run_args.yaml".format(yaml_path),
             "-v",
