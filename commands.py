@@ -49,7 +49,8 @@ def __run_core_tests(args):
 def __run_runpy_tests(args):
     """ NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
     using the LOCAL python (could be 2 or 3). """
-    return __run(["python", "-m", "pytest", "test/"], args)
+    cmd = ["python", "-m", "pytest", "-s", "test/"] if args.verbose else ["python", "-m", "pytest", "test/"]
+    return __run(cmd, args)
 
 
 def build(args, is_testing=False):
@@ -84,6 +85,11 @@ def build(args, is_testing=False):
     # search all selectors/analysers for partials
     selectors = get_subdirs(SELECTORS_PATH)
     analysers = get_subdirs(ANALYSERS_PATH)
+
+    if not 'whitelist' in args:
+        args.whitelist = False
+    if not 'blacklist' in args:
+        args.blacklist = False
 
     # parse blacklist
     if not args.whitelist and args.blacklist:
@@ -242,7 +248,7 @@ def run(args):
             get_env_config(),
             "--privileged",
             "-v",
-            "{}/media:/mtriage/media".format(DIR_PATH),
+            ("{}/media:/mtriage/media" if not args.dev else "{}:/mtriage").format(DIR_PATH),
             "-v",
             "{}:/run_args.yaml".format(yaml_path),
             "-v",
@@ -262,6 +268,7 @@ def parse_args(cli_args):
     run_p.add_argument("--tag", default="dev")
     run_p.add_argument("--gpu", action="store_true")
     run_p.add_argument("--dry", action="store_true")
+    run_p.add_argument("--dev", action="store_true")
 
     dev_p = subparsers.add_parser("dev")
     dev_p.add_argument("--whitelist")
@@ -269,6 +276,7 @@ def parse_args(cli_args):
     dev_p.add_argument("--tag", default="dev")
     dev_p.add_argument("--gpu", action="store_true")
     dev_p.add_argument("--dry", action="store_true")
+    dev_p.add_argument("--verbose", action="store_true")
     dev_p.add_argument(
         "command",
         choices=["develop", "build", "test", "clean"],
