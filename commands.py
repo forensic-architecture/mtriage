@@ -49,7 +49,11 @@ def __run_core_tests(args):
 def __run_runpy_tests(args):
     """ NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
     using the LOCAL python (could be 2 or 3). """
-    cmd = ["python", "-m", "pytest", "-s", "test/"] if args.verbose else ["python", "-m", "pytest", "test/"]
+    cmd = (
+        ["python", "-m", "pytest", "-s", "test/"]
+        if args.verbose
+        else ["python", "-m", "pytest", "test/"]
+    )
     return __run(cmd, args)
 
 
@@ -86,9 +90,9 @@ def build(args, is_testing=False):
     selectors = get_subdirs(SELECTORS_PATH)
     analysers = get_subdirs(ANALYSERS_PATH)
 
-    if not 'whitelist' in args:
+    if not "whitelist" in args:
         args.whitelist = False
-    if not 'blacklist' in args:
+    if not "blacklist" in args:
         args.blacklist = False
 
     # parse blacklist
@@ -248,7 +252,9 @@ def run(args):
             get_env_config(),
             "--privileged",
             "-v",
-            ("{}/media:/mtriage/media" if not args.dev else "{}:/mtriage").format(DIR_PATH),
+            ("{}/media:/mtriage/media" if not args.dev else "{}:/mtriage").format(
+                DIR_PATH
+            ),
             "-v",
             "{}:/run_args.yaml".format(yaml_path),
             "-v",

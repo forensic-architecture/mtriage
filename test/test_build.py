@@ -16,12 +16,13 @@ def get_tag_str(cmd, tag):
         return cmd[idx + 1]
     return None
 
+
 def get_volumes(cmd):
     idx = 0
     volumes = []
     while len(cmd) - 1 > idx:
         if cmd[idx] == "-v":
-            volumes.append(cmd[idx+1])
+            volumes.append(cmd[idx + 1])
         idx += 1
     return volumes
 
@@ -121,6 +122,3 @@ class TestBuild(unittest.TestCase):
             if re.match(media_re, v) is not None:
                 matched = True
         self.assertTrue(matched)
-
-
-
