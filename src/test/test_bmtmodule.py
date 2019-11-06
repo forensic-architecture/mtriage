@@ -23,7 +23,8 @@ def test_class_variables(additionals):
     assert additionals.mod._BMTModule__LOGS == []
     assert additionals.mod._BMTModule__LOGS_DIR == f"{additionals.BASE_DIR}/logs"
     assert (
-        additionals.mod._BMTModule__LOGS_FILE == f"{additionals.BASE_DIR}/logs/empty.txt"
+        additionals.mod._BMTModule__LOGS_FILE
+        == f"{additionals.BASE_DIR}/logs/empty.txt"
     )
     assert os.path.exists(f"{additionals.BASE_DIR}/logs")
 

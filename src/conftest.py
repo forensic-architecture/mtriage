@@ -2,6 +2,7 @@
 Setup global fixtures for modular-wise tests.
 """
 import pytest
+
 # import requests
 import os
 import test.utils as test_utils

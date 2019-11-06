@@ -243,7 +243,7 @@ class BAnalyser(MTModule):
         # |   |   |   +-- element1
         # |   |   |   +-- element2
         for selector in selectors:
-            all_media[selector] = {BAnalyser.DATA_EXT: {},BAnalyser.DERIVED_EXT: {}}
+            all_media[selector] = {BAnalyser.DATA_EXT: {}, BAnalyser.DERIVED_EXT: {}}
 
             # add all original elements
             data_pass = f"{self.BASE_DIR}/{selector}/{BAnalyser.DATA_EXT}"
