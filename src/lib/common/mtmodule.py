@@ -1,17 +1,22 @@
 from abc import ABC, abstractmethod
 from lib.common.util import save_logs
-from lib.common.exceptions import ImproperLoggedPhaseError
+from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotList
 from lib.common.etypes import Etype
 from functools import partial, wraps
+from types import GeneratorType
 import os
+import multiprocessing
 
 
 class MTModule(ABC):
     def __init__(self, NAME, BASE_DIR):
         self.NAME = NAME
         self.BASE_DIR = BASE_DIR
-        self.__LOGS = []
+        self.BATCHES = multiprocessing.cpu_count()
+
+        # logging setup
         self.PHASE_KEY = None
+        self.__LOGS = []
         self.__LOGS_DIR = f"{self.BASE_DIR}/logs"
         self.__LOGS_FILE = f"{self.__LOGS_DIR}/{self.NAME}.txt"
 
@@ -33,6 +38,27 @@ class MTModule(ABC):
                 if not isinstance(self, MTModule):
                     raise ImproperLoggedPhaseError(function.__name__)
                 self.PHASE_KEY = phase_key
+                ret_val = function(self, *args)
+                self.save_and_clear_logs()
+                return ret_val
+
+            return wrapper
+
+        return decorator
+
+    @staticmethod
+    def batched_logged_phase(phase_key):
+        def decorator(function):
+            @wraps(function)
+            def wrapper(self, *args):
+                if not isinstance(self, MTModule):
+                    raise ImproperLoggedPhaseError(function.__name__)
+                if len(args) != 1 or not isinstance(args[0], GeneratorType):
+                    raise BatchedPhaseArgNotList(function.__name__)
+
+                self.PHASE_KEY = phase_key
+
+                # ls_to_batch = args[0]
                 ret_val = function(self, *args)
                 self.save_and_clear_logs()
                 return ret_val

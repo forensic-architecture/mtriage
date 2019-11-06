@@ -52,27 +52,27 @@ class Analyser(MTModule):
     DATA_EXT = "data"
     DERIVED_EXT = "derived"
 
-    def __init__(self, config, module, dir):
+    def __init__(self, config, module, directory):
         try:
-            super().__init__(module, dir)
-        except PermissionError as e:
+            super().__init__(module, directory)
+        except PermissionError:
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
         if not "elements_in" in config:
             raise InvalidAnalyserConfigError(
                 "The config must contain an 'elements_in' indicating the analyser's input."
             )
-        elif type(config["elements_in"]) is not list or len(config["elements_in"]) is 0:
+        if not isinstance(config["elements_in"], list) or not config["elements_in"]:
             raise InvalidAnalyserConfigError(
                 "The 'elements_in' must be a list containing at least one string"
             )
 
-        if type(module) is not str or module == "":
+        if not isinstance(module, str) or module == "":
             raise InvalidAnalyserConfigError(
                 "You must provide a name for your analyser"
             )
 
-        if type(dir) is not str:
+        if not isinstance(directory, str):
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
         self.CONFIG = config
@@ -92,7 +92,8 @@ class Analyser(MTModule):
         # NOTE: generic error handling protocol may get undescriptive in development
         # should probably toggle off during development
         self.__pre_analyse()
-        self.__analyse()
+        all_media = self.__get_all_media()
+        self.__analyse(all_media)
         self.__post_analyse()
         self.save_and_clear_logs()
 
@@ -145,9 +146,8 @@ class Analyser(MTModule):
         self.pre_analyse(self.CONFIG)
 
     @MTModule.logged_phase("analyse")
-    def __analyse(self):
-        all_media = self.__get_all_media()
-        elements = self.__get_in_elements(all_media)
+    def __analyse(self, media):
+        elements = self.__get_in_elements(media)
 
         for element in elements:
             success = self.__attempt_analyse(5, element, self.CONFIG)

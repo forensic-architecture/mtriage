@@ -64,6 +64,13 @@ class ImproperLoggedPhaseError(Exception):
         )
 
 
+class BatchedPhaseArgNotList(Exception):
+    def __init__(self, fname):
+        super().__init__(
+            f"""The method '{fname}' cannot be batched. The 'batched_logged_phase' decorator can only be applied to a function that takes a generator as its first and only argument. """
+        )
+
+
 class MTriageStorageCorruptedError(Exception):
     def __init__(self, fname):
         super().__init__(

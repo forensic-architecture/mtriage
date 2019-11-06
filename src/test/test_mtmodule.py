@@ -1,6 +1,6 @@
 import pytest
 import os
-from lib.common.exceptions import ImproperLoggedPhaseError
+from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotList
 from lib.common.mtmodule import MTModule
 
 
@@ -28,28 +28,28 @@ def test_class_variables(additionals):
     assert os.path.exists(f"{additionals.BASE_DIR}/logs")
 
 
-def test_logged_phase_decorator(additionals):
+def test_batched_logged_phase_decorator(additionals):
     # logged_phase decorator should only work on methods that are of a class that inherits from MTModule
     class BadClass:
-        @MTModule.logged_phase("somekey")
+        @MTModule.batched_logged_phase("somekey")
         def improper_func(self):
             pass
 
     class GoodClass(MTModule):
-        @MTModule.logged_phase("somekey")
-        def proper_func(self):
+        @MTModule.batched_logged_phase("somekey")
+        def proper_func(self, with_list):
             self.logger("we did something.")
             return "no error"
 
-    with pytest.raises(ImproperLoggedPhaseError, match="inherits from MTModule"):
-        bc = BadClass()
-        bc.improper_func()
-
     # test that a decorated method carries through its return value
     gc = GoodClass("my_good_mod", additionals.BASE_DIR)
-    assert gc.proper_func() == "no error"
 
-    # test that logged_phase generated logs correctly when called
+    with pytest.raises(BatchedPhaseArgNotList):
+        gc.proper_func(1)
+
+    eg_gen = (a for a in ["a", "b", "c"])
+    assert gc.proper_func(eg_gen) == "no error"
+
     with open(f"{additionals.BASE_DIR}/logs/my_good_mod.txt", "r") as f:
         lines = f.readlines()
         assert len(lines) == 1
