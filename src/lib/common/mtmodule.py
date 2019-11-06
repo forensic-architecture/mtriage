@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from lib.common.util import save_logs
-from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotList
+from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotGenerator
 from lib.common.etypes import Etype
 from functools import partial, wraps
 from types import GeneratorType
@@ -54,7 +54,7 @@ class MTModule(ABC):
                 if not isinstance(self, MTModule):
                     raise ImproperLoggedPhaseError(function.__name__)
                 if len(args) != 1 or not isinstance(args[0], GeneratorType):
-                    raise BatchedPhaseArgNotList(function.__name__)
+                    raise BatchedPhaseArgNotGenerator(function.__name__)
 
                 self.PHASE_KEY = phase_key
 

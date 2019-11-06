@@ -1,6 +1,6 @@
 import pytest
 import os
-from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotList
+from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotGenerator
 from lib.common.mtmodule import MTModule
 
 
@@ -44,7 +44,7 @@ def test_batched_logged_phase_decorator(additionals):
     # test that a decorated method carries through its return value
     gc = GoodClass("my_good_mod", additionals.BASE_DIR)
 
-    with pytest.raises(BatchedPhaseArgNotList):
+    with pytest.raises(BatchedPhaseArgNotGenerator):
         gc.proper_func(1)
 
     eg_gen = (a for a in ["a", "b", "c"])
