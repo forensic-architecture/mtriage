@@ -53,15 +53,15 @@ def test_logged_phase_decorator(additionals):
     assert gc._MTModule__LOGS == []
 
 
-def test_batched_logged_phase_decorator(additionals):
+def test_batched_phase_decorator(additionals):
     # logged_phase decorator should only work on methods that are of a class that inherits from MTModule
     class BadClass:
-        @MTModule.batched_logged_phase("somekey")
+        @MTModule.batched_phase("somekey")
         def improper_func(self):
             pass
 
     class GoodClass(MTModule):
-        @MTModule.batched_logged_phase("somekey")
+        @MTModule.batched_phase("somekey")
         def proper_func(self, with_list):
             self.logger("we did something.")
             return "no error"

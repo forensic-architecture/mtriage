@@ -47,7 +47,10 @@ class MTModule(ABC):
         return decorator
 
     @staticmethod
-    def batched_logged_phase(phase_key):
+    def batched_phase(phase_key):
+        """
+        Run a phase in parallel using multiprocessing. Can only be applied to a class function that takes a single argument that is of GeneratorType.
+        """
         def decorator(function):
             @wraps(function)
             def wrapper(self, *args):
