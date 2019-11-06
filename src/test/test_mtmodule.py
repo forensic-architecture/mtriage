@@ -27,6 +27,7 @@ def test_class_variables(additionals):
     )
     assert os.path.exists(f"{additionals.BASE_DIR}/logs")
 
+
 def test_logged_phase_decorator(additionals):
     class BadClass:
         @MTModule.logged_phase("somekey")
@@ -62,23 +63,23 @@ def test_batched_phase_decorator(additionals):
 
     class GoodClass(MTModule):
         @MTModule.batched_phase("somekey")
-        def proper_func(self, with_list):
-            self.logger("we did something.")
+        def func(self, gen):
+            self.logger("This function only takes a generator of elements.")
+            return "no error"
+
+        @MTModule.batched_phase("secondkey")
+        def func_w_arg(self, gen, extra):
+            print(f"Running func with {list(gen)}, with extra arg {extra}.")
+
             return "no error"
 
     # test that a decorated method carries through its return value
     gc = GoodClass("my_good_mod", additionals.BASE_DIR)
 
     with pytest.raises(BatchedPhaseArgNotGenerator):
-        gc.proper_func(1)
+        gc.func(1)
 
-    eg_gen = (a for a in ["a", "b", "c"])
-    assert gc.proper_func(eg_gen) == "no error"
-
-    with open(f"{additionals.BASE_DIR}/logs/my_good_mod.txt", "r") as f:
-        lines = f.readlines()
-        assert len(lines) == 1
-        assert lines[0] == "my_good_mod: somekey: we did something.\n"
-
-    # check that logs were cleared after phase
-    assert gc._MTModule__LOGS == []
+    eg_gen = (a for a in range(0, 100))
+    assert gc.func(eg_gen) == "no error"
+    eg_gen = (a for a in range(0, 100))
+    assert gc.func_w_arg(eg_gen, 10) == "no error"

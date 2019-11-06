@@ -4,15 +4,38 @@ from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotGe
 from lib.common.etypes import Etype
 from functools import partial, wraps
 from types import GeneratorType
+from itertools import islice, chain
 import os
 import multiprocessing
+
+MAX_CPUS = multiprocessing.cpu_count() - 1
+MIN_ELEMENTS_PER_CPU = 4
+
+
+def get_batch_size(ls_len):
+    """ Determine the batch size for multiprocessing. """
+    if ls_len > MAX_CPUS * MIN_ELEMENTS_PER_CPU:
+        return ls_len // MAX_CPUS + 1
+    # TODO: improve this heuristic for splitting up jobs
+    return ls_len
+
+
+def chunks(iterable, size=1):
+    iterator = iter(iterable)
+    for first in iterator:
+        yield chain([first], islice(iterator, size - 1))
+
+
+def batch(iterable, n=1):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx : min(ndx + n, l)]
 
 
 class MTModule(ABC):
     def __init__(self, NAME, BASE_DIR):
         self.NAME = NAME
         self.BASE_DIR = BASE_DIR
-        self.BATCHES = multiprocessing.cpu_count()
 
         # logging setup
         self.PHASE_KEY = None
@@ -51,18 +74,30 @@ class MTModule(ABC):
         """
         Run a phase in parallel using multiprocessing. Can only be applied to a class function that takes a single argument that is of GeneratorType.
         """
-        def decorator(function):
-            @wraps(function)
+
+        def decorator(innards):
+            @wraps(innards)
             def wrapper(self, *args):
                 if not isinstance(self, MTModule):
-                    raise ImproperLoggedPhaseError(function.__name__)
-                if len(args) != 1 or not isinstance(args[0], GeneratorType):
-                    raise BatchedPhaseArgNotGenerator(function.__name__)
+                    raise ImproperLoggedPhaseError(innards.__name__)
+                if len(args) < 1 or not isinstance(args[0], GeneratorType):
+                    raise BatchedPhaseArgNotGenerator(innards.__name__)
 
                 self.PHASE_KEY = phase_key
 
-                # ls_to_batch = args[0]
-                ret_val = function(self, *args)
+                all_elements = list(args[0])
+                batch_size = get_batch_size(len(all_elements))
+                other_args = args[1:]
+                # each chunk is a generator
+                # cs = batch(all_elements, n=batch_size)
+                #
+                # for idx, c in enumerate(cs):
+                #     p = multiprocessing.Process(target=innards, args=(self, c, *other_args))
+                #     p.start()
+
+                # TODO: work out how to consolidate logs
+                ret_val = innards(self, all_elements, *other_args)
+
                 self.save_and_clear_logs()
                 return ret_val
 
