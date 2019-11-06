@@ -14,7 +14,7 @@ from lib.common.exceptions import (
     InvalidAnalyserElements,
     EtypeCastError,
 )
-from lib.common.mtmodule import MTModule
+from lib.common.bmtmodule import BMTModule as MTModule
 from lib.common.etypes import Etype, cast_to_etype
 
 
@@ -42,7 +42,7 @@ def check_valid_element_folder(comp, element_dir):
         )
 
 
-class Analyser(MTModule):
+class BAnalyser(MTModule):
     """ A Analyser is a pass that creates derived workables from retrieved data.
 
         The working directory of the selector is passed during class instantiation, and can be referenced in the
@@ -52,27 +52,27 @@ class Analyser(MTModule):
     DATA_EXT = "data"
     DERIVED_EXT = "derived"
 
-    def __init__(self, config, module, dir):
+    def __init__(self, config, module, directory):
         try:
-            super().__init__(module, dir)
-        except PermissionError as e:
+            super().__init__(module, directory)
+        except PermissionError:
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
         if not "elements_in" in config:
             raise InvalidAnalyserConfigError(
                 "The config must contain an 'elements_in' indicating the analyser's input."
             )
-        elif type(config["elements_in"]) is not list or len(config["elements_in"]) is 0:
+        if not isinstance(config["elements_in"], list) or not config["elements_in"]:
             raise InvalidAnalyserConfigError(
                 "The 'elements_in' must be a list containing at least one string"
             )
 
-        if type(module) is not str or module == "":
+        if not isinstance(module, str) or module == "":
             raise InvalidAnalyserConfigError(
                 "You must provide a name for your analyser"
             )
 
-        if type(dir) is not str:
+        if not isinstance(directory, str):
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
         self.CONFIG = config
@@ -115,7 +115,7 @@ class Analyser(MTModule):
             if len(parts) is 1:
                 # check selector exists
                 selname = parts[0]
-                element_dir = f"{self.BASE_DIR}/{selname}/{Analyser.DATA_EXT}/"
+                element_dir = f"{self.BASE_DIR}/{selname}/{BAnalyser.DATA_EXT}/"
                 check_valid_element_folder(comp, element_dir)
                 all_parts.append((selname, None))
             elif len(parts) is 2:
@@ -127,7 +127,7 @@ class Analyser(MTModule):
                 selname = parts[0]
                 analysername = parts[1]
                 element_dir = (
-                    f"{self.BASE_DIR}/{selname}/{Analyser.DERIVED_EXT}/{analysername}"
+                    f"{self.BASE_DIR}/{selname}/{BAnalyser.DERIVED_EXT}/{analysername}"
                 )
                 check_valid_element_folder(comp, element_dir)
                 all_parts.append((selname, analysername))
@@ -243,10 +243,10 @@ class Analyser(MTModule):
         # |   |   |   +-- element1
         # |   |   |   +-- element2
         for selector in selectors:
-            all_media[selector] = {Analyser.DATA_EXT: {}, Analyser.DERIVED_EXT: {}}
+            all_media[selector] = {BAnalyser.DATA_EXT: {},BAnalyser.DERIVED_EXT: {}}
 
             # add all original elements
-            data_pass = f"{self.BASE_DIR}/{selector}/{Analyser.DATA_EXT}"
+            data_pass = f"{self.BASE_DIR}/{selector}/{BAnalyser.DATA_EXT}"
             _elements = [
                 f
                 for f in os.listdir(data_pass)
@@ -254,10 +254,10 @@ class Analyser(MTModule):
             ]
 
             for el_id in _elements:
-                all_media[selector][Analyser.DATA_EXT][el_id] = f"{data_pass}/{el_id}"
+                all_media[selector][BAnalyser.DATA_EXT][el_id] = f"{data_pass}/{el_id}"
 
             # add all derived elements
-            derived_dir = f"{self.BASE_DIR}/{selector}/{Analyser.DERIVED_EXT}"
+            derived_dir = f"{self.BASE_DIR}/{selector}/{BAnalyser.DERIVED_EXT}"
 
             if not os.path.exists(derived_dir):
                 continue
@@ -269,7 +269,7 @@ class Analyser(MTModule):
             ]
 
             for _analyser in analysers:
-                all_media[selector][Analyser.DERIVED_EXT][_analyser] = {}
+                all_media[selector][BAnalyser.DERIVED_EXT][_analyser] = {}
                 _dpath = f"{derived_dir}/{_analyser}"
 
                 _elements = [
@@ -279,7 +279,7 @@ class Analyser(MTModule):
                 ]
 
                 for el_id in _elements:
-                    all_media[selector][Analyser.DERIVED_EXT][_analyser][
+                    all_media[selector][BAnalyser.DERIVED_EXT][_analyser][
                         el_id
                     ] = f"{derived_dir}/{_analyser}/{el_id}"
 
@@ -287,7 +287,7 @@ class Analyser(MTModule):
 
     def __get_out_dir(self, selector):
         """Returns the path to a derived dir from a string selector"""
-        derived_dir = f"{self.BASE_DIR}/{selector}/{Analyser.DERIVED_EXT}/{self.NAME}"
+        derived_dir = f"{self.BASE_DIR}/{selector}/{BAnalyser.DERIVED_EXT}/{self.NAME}"
 
         return derived_dir
 
