@@ -27,6 +27,31 @@ def test_class_variables(additionals):
     )
     assert os.path.exists(f"{additionals.BASE_DIR}/logs")
 
+def test_logged_phase_decorator(additionals):
+    class BadClass:
+        @MTModule.logged_phase("somekey")
+        def improper_func(self):
+            pass
+
+    class GoodClass(MTModule):
+        @MTModule.logged_phase("somekey")
+        def proper_func(self):
+            self.logger("we did something.")
+            return "no error"
+
+    # test that a decorated method carries through its return value
+    gc = GoodClass("my_good_mod", additionals.BASE_DIR)
+
+    assert gc.proper_func() == "no error"
+
+    with open(f"{additionals.BASE_DIR}/logs/my_good_mod.txt", "r") as f:
+        lines = f.readlines()
+        assert len(lines) == 1
+        assert lines[0] == "my_good_mod: somekey: we did something.\n"
+
+    # check that logs were cleared after phase
+    assert gc._MTModule__LOGS == []
+
 
 def test_batched_logged_phase_decorator(additionals):
     # logged_phase decorator should only work on methods that are of a class that inherits from MTModule
