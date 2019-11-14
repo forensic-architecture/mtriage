@@ -50,9 +50,9 @@ def __run_runpy_tests(args):
     """ NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
     using the LOCAL python (could be 2 or 3). """
     cmd = (
-        ["python", "-m", "pytest", "-s", "test/"]
+        ["python3", "-m", "pytest", "-s", "test/"]
         if args.verbose
-        else ["python", "-m", "pytest", "test/"]
+        else ["python3", "-m", "pytest", "test/"]
     )
     return __run(cmd, args)
 
