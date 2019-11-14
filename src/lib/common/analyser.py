@@ -54,7 +54,7 @@ class Analyser(MTModule):
 
     def __init__(self, config, module, directory):
         try:
-            super().__init__(module, directory)
+            super().__init__(config, module, directory)
         except PermissionError:
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 

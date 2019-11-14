@@ -21,7 +21,7 @@ class Selector(MTModule):
     """
 
     def __init__(self, config, module, folder):
-        super().__init__(module, folder)
+        super().__init__(config, module, folder)
         self.DIR = f"{self.BASE_DIR}/{self.NAME}"
         self.CONFIG = config
         self.ELEMENT_DIR = f"{self.DIR}/data"

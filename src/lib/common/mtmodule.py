@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from lib.common.util import save_logs
+from lib.common.util import save_logs, hashdict
 from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotGenerator
 from lib.common.etypes import Etype
 from functools import partial, wraps
@@ -7,6 +7,7 @@ from types import GeneratorType
 from itertools import islice, chain
 import os
 import multiprocessing
+import struct
 
 MAX_CPUS = multiprocessing.cpu_count() - 1
 MIN_ELEMENTS_PER_CPU = 4
@@ -31,11 +32,36 @@ def batch(iterable, n=1):
     for ndx in range(0, l, n):
         yield iterable[ndx : min(ndx + n, l)]
 
+def db_run(dbfile, q, batches_running):
+    with open(dbfile, 'ab') as f:
+        while batches_running.value is not 0:
+            try:
+                done_info = q.get_nowait()             
+                f.write(struct.pack('II', *done_info))
+                f.flush()
+            except:
+                pass
+        while q.qsize() > 0:   
+            done_info = q.get()             
+            f.write(struct.pack('II', *done_info))
+            f.flush()
+
+        f.close()
+
+def process_batch(innards, self, done_dict, done_queue, batch_num, c, other_args):
+    for idx, i in enumerate(c):
+        if idx not in done_dict:            
+            innards(self, [i], *other_args)
+            done_queue.put((batch_num, idx))
+        else:
+            print("Batch %d item %d already done, skipping job." % (batch_num, idx))
 
 class MTModule(ABC):
-    def __init__(self, NAME, BASE_DIR):
+    def __init__(self, CONFIG, NAME, BASE_DIR):
         self.NAME = NAME
         self.BASE_DIR = BASE_DIR
+
+        self.UNIQUE_ID = hashdict(CONFIG)
 
         # logging setup
         self.PHASE_KEY = None
@@ -89,23 +115,59 @@ class MTModule(ABC):
                 batch_size = get_batch_size(len(all_elements))
                 other_args = args[1:]
                 # each chunk is a generator
-                # cs = batch(all_elements, n=batch_size)
-                #
-                # for idx, c in enumerate(cs):
-                #     p = multiprocessing.Process(target=innards, args=(self, c, *other_args))
-                #     p.start()
+                cs = batch(all_elements, n=batch_size)
+                
+                manager = multiprocessing.Manager()
 
-                # TODO: work out how to consolidate logs
-                ret_val = innards(self, all_elements, *other_args)
+                # switch logs to multiprocess access list
+                self.__LOGS = manager.list()
+                done_queue = manager.Queue()
+                batches_running = manager.Value('i', 1)
+
+                dbfile = self.UNIQUE_ID+".db"
+
+                done_dict = {}
+                try:
+                    with open(dbfile, 'rb') as f:
+                        _bytes = f.read(8)
+                        while _bytes:
+                            entry = struct.unpack("II", _bytes)
+                            if entry[0] not in done_dict:
+                                done_dict[entry[0]] = {}
+                            done_dict[entry[0]][entry[1]] = 1 
+                            _bytes = f.read(8)
+                        f.close()
+                except:
+                    pass
+
+                db_process = multiprocessing.Process(target=db_run, args=(dbfile, done_queue, batches_running))
+                db_process.start()
+
+                processes = []
+                for idx, c in enumerate(cs):
+                    _done_dict = {}
+                    if idx in done_dict:
+                        _done_dict = done_dict[idx]
+                    p = multiprocessing.Process(target=process_batch, args=(innards, self, _done_dict, done_queue, idx, c, other_args))
+                    p.start()
+                    processes.append(p)
+
+                for p in processes:
+                    p.join()
+
+                batches_running.value = 0
+                db_process.join()
+
+                os.remove(dbfile)
+                ret_val = 'no error' #innards(self, all_elements, *other_args)
 
                 self.save_and_clear_logs()
                 return ret_val
-
             return wrapper
-
         return decorator
 
     def save_and_clear_logs(self):
+        print(self.__LOGS)
         save_logs(self.__LOGS, self.__LOGS_FILE)
         self.__LOGS = []
 

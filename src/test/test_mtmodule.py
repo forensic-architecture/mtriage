@@ -12,7 +12,7 @@ class EmptyMTModule(MTModule):
 def additionals(utils):
     obj = lambda: None
     obj.BASE_DIR = utils.TEMP_ELEMENT_DIR
-    obj.mod = EmptyMTModule("empty", obj.BASE_DIR)
+    obj.mod = EmptyMTModule({}, "empty", obj.BASE_DIR)
     yield obj
     utils.cleanup()
 
@@ -41,7 +41,7 @@ def test_logged_phase_decorator(additionals):
             return "no error"
 
     # test that a decorated method carries through its return value
-    gc = GoodClass("my_good_mod", additionals.BASE_DIR)
+    gc = GoodClass({}, "my_good_mod", additionals.BASE_DIR)
 
     assert gc.proper_func() == "no error"
 
@@ -55,12 +55,6 @@ def test_logged_phase_decorator(additionals):
 
 
 def test_batched_phase_decorator(additionals):
-    # logged_phase decorator should only work on methods that are of a class that inherits from MTModule
-    class BadClass:
-        @MTModule.batched_phase("somekey")
-        def improper_func(self):
-            pass
-
     class GoodClass(MTModule):
         @MTModule.batched_phase("somekey")
         def func(self, gen):
@@ -69,12 +63,11 @@ def test_batched_phase_decorator(additionals):
 
         @MTModule.batched_phase("secondkey")
         def func_w_arg(self, gen, extra):
-            print(f"Running func with {list(gen)}, with extra arg {extra}.")
-
+            self.logger(f"Running func with {list(gen)}, with extra arg {extra}.")
             return "no error"
 
     # test that a decorated method carries through its return value
-    gc = GoodClass("my_good_mod", additionals.BASE_DIR)
+    gc = GoodClass({}, "my_good_mod", additionals.BASE_DIR)
 
     with pytest.raises(BatchedPhaseArgNotGenerator):
         gc.func(1)
