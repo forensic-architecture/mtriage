@@ -2,6 +2,7 @@ import ntpath
 import json
 import hashlib
 
+
 def serialize_dict(_dict):
     ret = ""
     for key in _dict:
@@ -12,10 +13,12 @@ def serialize_dict(_dict):
             ret += f"{key}{val}"
     return ret
 
+
 def hashdict(_dict):
     m = hashlib.md5()
-    m.update(serialize_dict(_dict).encode('utf-8'))
+    m.update(serialize_dict(_dict).encode("utf-8"))
     return m.hexdigest()
+
 
 def save_logs(logs, filepath):
     if len(logs) <= 0:

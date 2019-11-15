@@ -32,29 +32,32 @@ def batch(iterable, n=1):
     for ndx in range(0, l, n):
         yield iterable[ndx : min(ndx + n, l)]
 
+
 def db_run(dbfile, q, batches_running):
-    with open(dbfile, 'ab') as f:
+    with open(dbfile, "ab") as f:
         while batches_running.value is not 0:
             try:
-                done_info = q.get_nowait()             
-                f.write(struct.pack('II', *done_info))
+                done_info = q.get_nowait()
+                f.write(struct.pack("II", *done_info))
                 f.flush()
             except:
                 pass
-        while q.qsize() > 0:   
-            done_info = q.get()             
-            f.write(struct.pack('II', *done_info))
+        while q.qsize() > 0:
+            done_info = q.get()
+            f.write(struct.pack("II", *done_info))
             f.flush()
 
         f.close()
 
+
 def process_batch(innards, self, done_dict, done_queue, batch_num, c, other_args):
     for idx, i in enumerate(c):
-        if idx not in done_dict:            
+        if idx not in done_dict:
             innards(self, [i], *other_args)
             done_queue.put((batch_num, idx))
         else:
             print("Batch %d item %d already done, skipping job." % (batch_num, idx))
+
 
 class MTModule(ABC):
     def __init__(self, CONFIG, NAME, BASE_DIR):
@@ -116,31 +119,33 @@ class MTModule(ABC):
                 other_args = args[1:]
                 # each chunk is a generator
                 cs = batch(all_elements, n=batch_size)
-                
+
                 manager = multiprocessing.Manager()
 
                 # switch logs to multiprocess access list
                 self.__LOGS = manager.list()
                 done_queue = manager.Queue()
-                batches_running = manager.Value('i', 1)
+                batches_running = manager.Value("i", 1)
 
                 dbfile = f"{self.BASE_DIR}/{self.UNIQUE_ID}.db"
 
                 done_dict = {}
                 try:
-                    with open(dbfile, 'rb') as f:
+                    with open(dbfile, "rb") as f:
                         _bytes = f.read(8)
                         while _bytes:
                             entry = struct.unpack("II", _bytes)
                             if entry[0] not in done_dict:
                                 done_dict[entry[0]] = {}
-                            done_dict[entry[0]][entry[1]] = 1 
+                            done_dict[entry[0]][entry[1]] = 1
                             _bytes = f.read(8)
                         f.close()
                 except:
                     pass
 
-                db_process = multiprocessing.Process(target=db_run, args=(dbfile, done_queue, batches_running))
+                db_process = multiprocessing.Process(
+                    target=db_run, args=(dbfile, done_queue, batches_running)
+                )
                 db_process.start()
 
                 processes = []
@@ -148,7 +153,18 @@ class MTModule(ABC):
                     _done_dict = {}
                     if idx in done_dict:
                         _done_dict = done_dict[idx]
-                    p = multiprocessing.Process(target=process_batch, args=(innards, self, _done_dict, done_queue, idx, c, other_args))
+                    p = multiprocessing.Process(
+                        target=process_batch,
+                        args=(
+                            innards,
+                            self,
+                            _done_dict,
+                            done_queue,
+                            idx,
+                            c,
+                            other_args,
+                        ),
+                    )
                     p.start()
                     processes.append(p)
 
@@ -160,12 +176,14 @@ class MTModule(ABC):
 
                 if remove_db:
                     os.remove(dbfile)
-                
-                ret_val = 'no error'
+
+                ret_val = "no error"
 
                 self.save_and_clear_logs()
                 return ret_val
+
             return wrapper
+
         return decorator
 
     def save_and_clear_logs(self):

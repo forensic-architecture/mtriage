@@ -4,6 +4,7 @@ from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotGe
 from lib.common.mtmodule import MTModule
 from test.utils import scaffold_empty
 
+
 class EmptyMTModule(MTModule):
     pass
 
@@ -82,16 +83,16 @@ def test_batched_phase_decorator(additionals):
 
     with open(f"{additionals.BASE_DIR}/logs/my_good_mod.txt", "r") as f:
         lines = f.readlines()
-        assert(len(lines) == 100)
+        assert len(lines) == 100
 
     # test db file generation
     eg_gen = (a for a in range(0, 100))
     assert gc.func_no_remove(eg_gen) == "no error"
 
     dbfile = f"{gc.BASE_DIR}/{gc.UNIQUE_ID}.db"
-    with open(dbfile, 'rb') as f:
+    with open(dbfile, "rb") as f:
         _bytes = f.read()
-        assert(len(_bytes) == 800) # 2 4-byte entries per item for 100 items
+        assert len(_bytes) == 800  # 2 4-byte entries per item for 100 items
 
     os.remove(dbfile)
 
@@ -104,7 +105,7 @@ def test_batched_phase_decorator(additionals):
 
     with open(f"{additionals.BASE_DIR}/logs/my_good_mod.txt", "r") as f:
         lines = f.readlines()
-        assert(len(lines) == 150)
+        assert len(lines) == 150
 
     # test function with argument
     eg_gen = (a for a in range(0, 100))
