@@ -96,7 +96,7 @@ class MTModule(ABC):
         return decorator
 
     @staticmethod
-    def batched_phase(phase_key):
+    def batched_phase(phase_key, remove_db=True):
         """
         Run a phase in parallel using multiprocessing. Can only be applied to a class function that takes a single argument that is of GeneratorType.
         """
@@ -124,7 +124,7 @@ class MTModule(ABC):
                 done_queue = manager.Queue()
                 batches_running = manager.Value('i', 1)
 
-                dbfile = self.UNIQUE_ID+".db"
+                dbfile = f"{self.BASE_DIR}/{self.UNIQUE_ID}.db"
 
                 done_dict = {}
                 try:
@@ -158,8 +158,10 @@ class MTModule(ABC):
                 batches_running.value = 0
                 db_process.join()
 
-                os.remove(dbfile)
-                ret_val = 'no error' #innards(self, all_elements, *other_args)
+                if remove_db:
+                    os.remove(dbfile)
+                
+                ret_val = 'no error'
 
                 self.save_and_clear_logs()
                 return ret_val

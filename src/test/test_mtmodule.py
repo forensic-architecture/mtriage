@@ -2,7 +2,7 @@ import pytest
 import os
 from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotGenerator
 from lib.common.mtmodule import MTModule
-
+from test.utils import scaffold_empty
 
 class EmptyMTModule(MTModule):
     pass
@@ -61,6 +61,10 @@ def test_batched_phase_decorator(additionals):
             self.logger("This function only takes a generator of elements.")
             return "no error"
 
+        @MTModule.batched_phase("somekey", False)
+        def func_no_remove(self, gen):
+            return "no error"
+
         @MTModule.batched_phase("secondkey")
         def func_w_arg(self, gen, extra):
             self.logger(f"Running func with {list(gen)}, with extra arg {extra}.")
@@ -72,7 +76,36 @@ def test_batched_phase_decorator(additionals):
     with pytest.raises(BatchedPhaseArgNotGenerator):
         gc.func(1)
 
+    # test parallel logs
     eg_gen = (a for a in range(0, 100))
     assert gc.func(eg_gen) == "no error"
+
+    with open(f"{additionals.BASE_DIR}/logs/my_good_mod.txt", "r") as f:
+        lines = f.readlines()
+        assert(len(lines) == 100)
+
+    # test db file generation
+    eg_gen = (a for a in range(0, 100))
+    assert gc.func_no_remove(eg_gen) == "no error"
+
+    dbfile = f"{gc.BASE_DIR}/{gc.UNIQUE_ID}.db"
+    with open(dbfile, 'rb') as f:
+        _bytes = f.read()
+        assert(len(_bytes) == 800) # 2 4-byte entries per item for 100 items
+
+    os.remove(dbfile)
+
+    # test that a function is resumed properly
+    eg_gen = (a for a in range(0, 50))
+    assert gc.func_no_remove(eg_gen) == "no error"
+
+    eg_gen = (a for a in range(0, 100))
+    assert gc.func(eg_gen) == "no error"
+
+    with open(f"{additionals.BASE_DIR}/logs/my_good_mod.txt", "r") as f:
+        lines = f.readlines()
+        assert(len(lines) == 150)
+
+    # test function with argument
     eg_gen = (a for a in range(0, 100))
     assert gc.func_w_arg(eg_gen, 10) == "no error"
