@@ -110,9 +110,13 @@ class TestBuild(unittest.TestCase):
         dev_args = parse_args(["run", "examples/frames.yaml", "--dev", "--dry"])
         cmd = run(dev_args)
         vs = get_volumes(cmd)
-        media_re = r".*/mtriage/media:/mtriage/media$"
+        media_re = r".*/mtriage/src:/mtriage/src$"
+        has_src = False
         for v in vs:
-            self.assertNotRegexpMatches(v, media_re)
+            if re.match(media_re, v):
+                has_src = True
+                break
+        self.assertTrue(has_src)
 
         no_dev_args = parse_args(["run", "examples/frames.yaml", "--dry"])
         cmd = run(no_dev_args)
@@ -121,4 +125,4 @@ class TestBuild(unittest.TestCase):
         for v in vs:
             if re.match(media_re, v) is not None:
                 matched = True
-        self.assertTrue(matched)
+        self.assertFalse(matched)

@@ -240,6 +240,19 @@ def run(args):
 
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
     # so that the call arguments are well formed.
+    volumes = [
+        "-v",
+        "{}/media:/mtriage/media".format(DIR_PATH),
+        "-v",
+        "{}/credentials:/mtriage/credentials".format(DIR_PATH),
+        "-v",
+        "{}:/run_args.yaml".format(yaml_path),
+        "-v",
+        "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
+    ]
+    if args.dev:
+        volumes += ["-v", "{}/src:/mtriage/src".format(DIR_PATH)]
+
     return __run(
         [
             "docker",
@@ -251,14 +264,7 @@ def run(args):
             "BASE_DIR=/mtriage",
             get_env_config(),
             "--privileged",
-            "-v",
-            ("{}/media:/mtriage/media" if not args.dev else "{}:/mtriage").format(
-                DIR_PATH
-            ),
-            "-v",
-            "{}:/run_args.yaml".format(yaml_path),
-            "-v",
-            "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
+            *volumes,
             "{}:{}".format(NAME, TAG_NAME),
         ],
         args,
