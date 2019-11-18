@@ -1,36 +1,17 @@
 from abc import ABC, abstractmethod
-from lib.common.util import save_logs, hashdict
-from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotGenerator
-from lib.common.etypes import Etype
+import os
+import struct
+import multiprocessing
 from functools import partial, wraps
 from types import GeneratorType
 from itertools import islice, chain
-import os
-import multiprocessing
-import struct
 
-MAX_CPUS = multiprocessing.cpu_count() - 1
-MIN_ELEMENTS_PER_CPU = 4
+from lib.common.util import save_logs, hashdict, get_batch_size, batch
+from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotGenerator
+from lib.common.etypes import Etype
 
-
-def get_batch_size(ls_len):
-    """ Determine the batch size for multiprocessing. """
-    if ls_len > MAX_CPUS * MIN_ELEMENTS_PER_CPU:
-        return ls_len // MAX_CPUS + 1
-    # TODO: improve this heuristic for splitting up jobs
-    return ls_len
-
-
-def chunks(iterable, size=1):
-    iterator = iter(iterable)
-    for first in iterator:
-        yield chain([first], islice(iterator, size - 1))
-
-
-def batch(iterable, n=1):
-    l = len(iterable)
-    for ndx in range(0, l, n):
-        yield iterable[ndx : min(ndx + n, l)]
+TWO_INTS = "II"
+RET_VAL_TESTS_ONLY = "no error"
 
 
 def db_run(dbfile, q, batches_running):
@@ -48,15 +29,6 @@ def db_run(dbfile, q, batches_running):
             f.flush()
 
         f.close()
-
-
-def process_batch(innards, self, done_dict, done_queue, batch_num, c, other_args):
-    for idx, i in enumerate(c):
-        if idx not in done_dict:
-            innards(self, [i], *other_args)
-            done_queue.put((batch_num, idx))
-        else:
-            print("Batch %d item %d already done, skipping job." % (batch_num, idx))
 
 
 class MTModule(ABC):
@@ -98,6 +70,14 @@ class MTModule(ABC):
 
         return decorator
 
+    def process_batch(self, innards, done_dict, done_queue, batch_num, c, other_args):
+        for idx, i in enumerate(c):
+            if idx not in done_dict:
+                innards(self, [i], *other_args)
+                done_queue.put((batch_num, idx))
+            else:
+                print("Batch %d item %d already done, skipping job." % (batch_num, idx))
+
     @staticmethod
     def batched_phase(phase_key, remove_db=True):
         """
@@ -132,12 +112,12 @@ class MTModule(ABC):
                 done_dict = {}
                 try:
                     with open(dbfile, "rb") as f:
-                        _bytes = f.read(8)
+                        _bytes = f.read(8)  # 8 bytes = two unsiged ints
                         while _bytes:
-                            entry = struct.unpack("II", _bytes)
-                            if entry[0] not in done_dict:
-                                done_dict[entry[0]] = {}
-                            done_dict[entry[0]][entry[1]] = 1
+                            fst, snd = struct.unpack(TWO_INTS, _bytes)
+                            if fst not in done_dict:
+                                done_dict[fst] = {}
+                            done_dict[fst][snd] = 1
                             _bytes = f.read(8)
                         f.close()
                 except:
@@ -154,16 +134,8 @@ class MTModule(ABC):
                     if idx in done_dict:
                         _done_dict = done_dict[idx]
                     p = multiprocessing.Process(
-                        target=process_batch,
-                        args=(
-                            innards,
-                            self,
-                            _done_dict,
-                            done_queue,
-                            idx,
-                            c,
-                            other_args,
-                        ),
+                        target=self.process_batch,
+                        args=(innards, _done_dict, done_queue, idx, c, other_args),
                     )
                     p.start()
                     processes.append(p)
@@ -177,10 +149,8 @@ class MTModule(ABC):
                 if remove_db:
                     os.remove(dbfile)
 
-                ret_val = "no error"
-
                 self.save_and_clear_logs()
-                return ret_val
+                return RET_VAL_TESTS_ONLY
 
             return wrapper
 
