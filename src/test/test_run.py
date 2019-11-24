@@ -54,11 +54,11 @@ def test_bad_config():
     bad_analyse_module = {**good_phase_analyse, "module": "not an analyser"}
     good_select_module = {**good_phase_select, "module": "local"}
     write_config(bad_select_module)
-    with pytest.raises(InvalidConfigError, match="No selector named 'not a selector'"):
+    with pytest.raises(InvalidConfigError, match="No select module named 'not a selector'"):
         validate_config()
 
     write_config(bad_analyse_module)
-    with pytest.raises(InvalidConfigError, match="No analyser named 'not an analyser'"):
+    with pytest.raises(InvalidConfigError, match="No analyse module named 'not an analyser'"):
         validate_config()
 
     # the select module requires a 'source_folder' arg

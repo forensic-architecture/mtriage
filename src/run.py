@@ -45,10 +45,6 @@ from lib.common.exceptions import (
 CONFIG_PATH = "/run_args.yaml"
 
 
-def module_name(phase):
-    return "selector" if phase == "select" else "analyser"
-
-
 def validate_yaml(cfg):
     if "folder" not in cfg.keys() or not isinstance(cfg["folder"], str):
         raise InvalidConfigError("The folder attribute must exist and be a string")
@@ -58,12 +54,10 @@ def validate_yaml(cfg):
     if "module" not in cfg.keys():
         raise InvalidConfigError("You must specify a module")
 
-    mod_name = module_name(cfg["phase"])
-
     try:
-        mod = get_module(mod_name, cfg["module"])
+        mod = get_module(cfg["phase"], cfg["module"])
     except ModuleNotFoundError as e:
-        raise InvalidConfigError(f"No {mod_name} named '{cfg['module']}'")
+        raise InvalidConfigError(f"No {cfg['phase']} module named '{cfg['module']}'")
 
     if "config" not in cfg.keys() or not isinstance(cfg["config"], dict):
         raise InvalidConfigError("The 'config' attribute must exist.")
@@ -75,7 +69,7 @@ def validate_yaml(cfg):
     for option in options["args"]:
         if option["required"] is True and option["name"] not in cfg["config"].keys():
             raise InvalidConfigError(
-                f"The config you specified does not contain all the required arguments for the '{cfg['module']}' {mod_name}."
+                f"The config you specified does not contain all the required arguments for the '{cfg['module']}' {cfg['phase']}."
             )
 
 
@@ -89,8 +83,7 @@ def _run_yaml():
     if not os.path.exists(cfg["folder"]):
         os.makedirs(cfg["folder"])
 
-    mod_name = module_name(cfg["phase"])
-    Mod = get_module(mod_name, cfg["module"])
+    Mod = get_module(cfg["phase"], cfg["module"])
     the_module = Mod(cfg["config"], cfg["module"], cfg["folder"])
     if cfg["phase"] == "select":
         the_module.start_indexing()
