@@ -1,23 +1,34 @@
 import pytest
 import os
 import yaml
-from run import validate_yaml
+from run import validate_phase
 from lib.common.exceptions import InvalidConfigError
+
+ARGS = "/run_args.yaml"
+
+
+@pytest.fixture(autouse=True)
+def teardown():
+    yield None
+    try:
+        os.remove(ARGS)
+    except:
+        pass
 
 
 def write_config(vl):
-    with open("/run_args.yaml", "w") as c:
+    with open(ARGS, "w") as c:
         yaml.dump(vl, c, default_flow_style=False)
 
 
 def validate_config():
-    with open("/run_args.yaml", "r") as c:
+    with open(ARGS, "r") as c:
         cfg = yaml.safe_load(c)
-    validate_yaml(cfg)
+    validate_phase(cfg)
 
 
 def test_bad_yaml():
-    with open("/run_args.yaml", "w") as c:
+    with open(ARGS, "w") as c:
         c.write('foo: "an escaped \\\' single quote"')
 
     with pytest.raises(yaml.YAMLError):
@@ -54,11 +65,15 @@ def test_bad_config():
     bad_analyse_module = {**good_phase_analyse, "module": "not an analyser"}
     good_select_module = {**good_phase_select, "module": "local"}
     write_config(bad_select_module)
-    with pytest.raises(InvalidConfigError, match="No select module named 'not a selector'"):
+    with pytest.raises(
+        InvalidConfigError, match="No select module named 'not a selector'"
+    ):
         validate_config()
 
     write_config(bad_analyse_module)
-    with pytest.raises(InvalidConfigError, match="No analyse module named 'not an analyser'"):
+    with pytest.raises(
+        InvalidConfigError, match="No analyse module named 'not an analyser'"
+    ):
         validate_config()
 
     # the select module requires a 'source_folder' arg
@@ -101,3 +116,13 @@ def test_bad_config():
 
         write_config(good_youtube_config)
         validate_config()
+
+
+# def test_yaml_types():
+#     bad_config = {"folder": "media/test_official"}
+#     write_config(bad_config)
+#     with pytest.raises(
+#         InvalidConfigError,
+#         match="no phase must include 'select' or 'analyse' attributes",
+#     ):
+#         validate_config()

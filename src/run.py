@@ -25,13 +25,12 @@ Attributes:
 """
 
 import argparse
-import json
 import yaml
 import os
 import inspect
 from pathlib import Path
 from subprocess import check_output
-import shutil
+from enum import Enum
 
 from lib.common.get_module import get_module
 from lib.common.exceptions import (
@@ -45,13 +44,23 @@ from lib.common.exceptions import (
 CONFIG_PATH = "/run_args.yaml"
 
 
-def validate_yaml(cfg):
-    if "folder" not in cfg.keys() or not isinstance(cfg["folder"], str):
+class YamlType(Enum):
+    WHOLE = 0
+    COMPONENT = 1
+    PHASE = 2
+
+
+def validate_phase(cfg: dict) -> YamlType:
+    # assume we are passing a single phase
+    keys = cfg.keys()
+
+    if "folder" not in keys or not isinstance(cfg["folder"], str):
         raise InvalidConfigError("The folder attribute must exist and be a string")
-    if "phase" not in cfg.keys() or cfg["phase"] not in ["select", "analyse"]:
+
+    if cfg["phase"] not in ["select", "analyse"]:
         raise InvalidConfigError("The phase attribute must be either select or analyse")
 
-    if "module" not in cfg.keys():
+    if "module" not in keys:
         raise InvalidConfigError("You must specify a module")
 
     try:
@@ -59,7 +68,7 @@ def validate_yaml(cfg):
     except ModuleNotFoundError as e:
         raise InvalidConfigError(f"No {cfg['phase']} module named '{cfg['module']}'")
 
-    if "config" not in cfg.keys() or not isinstance(cfg["config"], dict):
+    if "config" not in keys or not isinstance(cfg["config"], dict):
         raise InvalidConfigError("The 'config' attribute must exist.")
     # dynamically check all required args for module config exist
     sfolder = os.path.dirname(inspect.getfile(mod))
@@ -73,11 +82,27 @@ def validate_yaml(cfg):
             )
 
 
+def load_yaml(cfg: dict):
+    keys = cfg.keys()
+
+    if "folder" not in keys or not isinstance(cfg["folder"], str):
+        raise InvalidConfigError("The folder attribute must exist and be a string")
+
+    if "config" not in keys or not isinstance(cfg["config"], dict):
+        raise InvalidConfigError("The 'config' attribute must exist.")
+
+    config = cfg["config"]
+
+    if "phase" not in keys or module not in "keys":
+        # assume config is for full pass
+        validate_full(config)
+
+
 def _run_yaml():
     with open(CONFIG_PATH, "r") as c:
         cfg = yaml.safe_load(c)
 
-    validate_yaml(cfg)
+    yaml_type = validate_phase(cfg)
 
     # done validating, run appropriate phase
     if not os.path.exists(cfg["folder"]):
