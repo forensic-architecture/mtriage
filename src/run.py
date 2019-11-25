@@ -50,26 +50,12 @@ class YamlType(Enum):
     PHASE = 2
 
 
-def validate_phase(cfg: dict) -> YamlType:
-    # assume we are passing a single phase
-    keys = cfg.keys()
-
-    if "folder" not in keys or not isinstance(cfg["folder"], str):
-        raise InvalidConfigError("The folder attribute must exist and be a string")
-
-    if cfg["phase"] not in ["select", "analyse"]:
-        raise InvalidConfigError("The phase attribute must be either select or analyse")
-
-    if "module" not in keys:
-        raise InvalidConfigError("You must specify a module")
-
+def validate_module(phase: str, module: str, cfg: dict):
     try:
-        mod = get_module(cfg["phase"], cfg["module"])
+        mod = get_module(phase, module)
     except ModuleNotFoundError as e:
-        raise InvalidConfigError(f"No {cfg['phase']} module named '{cfg['module']}'")
+        raise InvalidConfigError(f"No {phase} module named '{module}'")
 
-    if "config" not in keys or not isinstance(cfg["config"], dict):
-        raise InvalidConfigError("The 'config' attribute must exist.")
     # dynamically check all required args for module config exist
     sfolder = os.path.dirname(inspect.getfile(mod))
     info = Path(sfolder) / "info.yaml"
@@ -78,11 +64,11 @@ def validate_phase(cfg: dict) -> YamlType:
     for option in options["args"]:
         if option["required"] is True and option["name"] not in cfg["config"].keys():
             raise InvalidConfigError(
-                f"The config you specified does not contain all the required arguments for the '{cfg['module']}' {cfg['phase']}."
+                f"The config you specified does not contain all the required arguments for the '{module}' {phase}."
             )
 
 
-def load_yaml(cfg: dict):
+def validate_yaml(cfg: dict):
     keys = cfg.keys()
 
     if "folder" not in keys or not isinstance(cfg["folder"], str):
@@ -93,16 +79,31 @@ def load_yaml(cfg: dict):
 
     config = cfg["config"]
 
-    if "phase" not in keys or module not in "keys":
-        # assume config is for full pass
-        validate_full(config)
+    if "phase" in keys or "module" in keys:
+        # confirm good phase yaml
+        if "module" not in keys:
+            raise InvalidConfigError(
+                "If you specified a phase, you must specify a module"
+            )
+        if "phase" not in keys:
+            raise InvalidConfigError(
+                "If you specified a module, you must specify a phase"
+            )
+        if cfg["phase"] not in ["select", "analyse"]:
+            raise InvalidConfigError(
+                "The phase attribute must be either select or analyse"
+            )
+        validate_module(cfg["phase"], cfg["module"], config)
+    else:
+        # confirm good yaml for full
+        pass
 
 
 def _run_yaml():
     with open(CONFIG_PATH, "r") as c:
         cfg = yaml.safe_load(c)
 
-    yaml_type = validate_phase(cfg)
+    yaml_type = validate_yaml(cfg)
 
     # done validating, run appropriate phase
     if not os.path.exists(cfg["folder"]):

@@ -1,7 +1,7 @@
 import pytest
 import os
 import yaml
-from run import validate_phase
+from run import validate_yaml
 from lib.common.exceptions import InvalidConfigError
 
 ARGS = "/run_args.yaml"
@@ -16,15 +16,15 @@ def teardown():
         pass
 
 
-def write_config(vl):
+def write(vl):
     with open(ARGS, "w") as c:
         yaml.dump(vl, c, default_flow_style=False)
 
 
-def validate_config():
+def validate():
     with open(ARGS, "r") as c:
         cfg = yaml.safe_load(c)
-    validate_phase(cfg)
+    validate_yaml(cfg)
 
 
 def test_bad_yaml():
@@ -32,49 +32,49 @@ def test_bad_yaml():
         c.write('foo: "an escaped \\\' single quote"')
 
     with pytest.raises(yaml.YAMLError):
-        validate_config()
+        validate()
 
 
-def test_bad_config():
+def test_validate_phase():
     empty = {}
-    bad_folder = {"folder": 1}
-    good_folder = {"folder": "legit"}
+    bad_folder = {"folder": 1, "config": {}}
+    good_folder = {"folder": "legit", "config": {}}
 
-    write_config(empty)
+    write(empty)
     with pytest.raises(
         InvalidConfigError, match="The folder attribute must exist and be a string"
     ):
-        validate_config()
+        validate()
 
-    write_config(bad_folder)
+    write(bad_folder)
     with pytest.raises(
         InvalidConfigError, match="The folder attribute must exist and be a string"
     ):
-        validate_config()
+        validate()
 
     bad_phase = {**good_folder, "phase": "not a phase"}
     good_phase_select = {**good_folder, "phase": "select"}
     good_phase_analyse = {**good_folder, "phase": "analyse"}
-    write_config(bad_phase)
+    write(bad_phase)
     with pytest.raises(
-        InvalidConfigError, match="The phase attribute must be either select or analyse"
+        InvalidConfigError, match="specified a phase, you must specify a module"
     ):
-        validate_config()
+        validate()
 
     bad_select_module = {**good_phase_select, "module": "not a selector"}
     bad_analyse_module = {**good_phase_analyse, "module": "not an analyser"}
     good_select_module = {**good_phase_select, "module": "local"}
-    write_config(bad_select_module)
+    write(bad_select_module)
     with pytest.raises(
         InvalidConfigError, match="No select module named 'not a selector'"
     ):
-        validate_config()
+        validate()
 
-    write_config(bad_analyse_module)
+    write(bad_analyse_module)
     with pytest.raises(
         InvalidConfigError, match="No analyse module named 'not an analyser'"
     ):
-        validate_config()
+        validate()
 
     # the select module requires a 'source_folder' arg
     bad_local_config = {**good_select_module, "config": {}}
@@ -94,35 +94,35 @@ def test_bad_config():
     }
 
     if os.path.exists("/mtriage/credentials/google.json"):
-        write_config(good_select_module)
+        write(good_select_module)
         with pytest.raises(
             InvalidConfigError, match="The 'config' attribute must exist."
         ):
-            validate_config()
+            validate()
 
-        write_config(bad_local_config)
+        write(bad_local_config)
         with pytest.raises(
             InvalidConfigError,
             match="The config you specified does not contain all the required arguments for the 'local' selector.",
         ):
-            validate_config()
+            validate()
 
-        write_config(bad_youtube_config)
+        write(bad_youtube_config)
         with pytest.raises(
             InvalidConfigError,
             match="The config you specified does not contain all the required arguments for the 'youtube' selector.",
         ):
-            validate_config()
+            validate()
 
-        write_config(good_youtube_config)
-        validate_config()
+        write(good_youtube_config)
+        validate()
 
 
-# def test_yaml_types():
-#     bad_config = {"folder": "media/test_official"}
-#     write_config(bad_config)
-#     with pytest.raises(
-#         InvalidConfigError,
-#         match="no phase must include 'select' or 'analyse' attributes",
-#     ):
-#         validate_config()
+def test_validate():
+    bad_config = {"folder": "media/test_official", "config": {}}
+    write(bad_config)
+    with pytest.raises(
+        InvalidConfigError,
+        match="no phase must include 'select' or 'analyse' attributes",
+    ):
+        validate()
