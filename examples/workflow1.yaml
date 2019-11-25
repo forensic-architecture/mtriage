@@ -1,0 +1,20 @@
+folder: media/demo_official
+select:
+  module: youtube
+  config:
+    search_term: "Triple chaser"
+    uploaded_before: "2015-10-02T00:00:00Z"
+    uploaded_after: "2015-10-01T00:00:00Z"
+    daily: true
+analyse:
+  - name: extract_audio
+    config:
+      output_ext: mp3
+  - name: convert_audio
+    config:
+      input_ext: mp3
+      output_ext: wav
+
+dev: true
+delete_cache: true
+

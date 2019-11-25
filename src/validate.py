@@ -1,0 +1,74 @@
+import os
+import yaml
+import inspect
+from pathlib import Path
+from lib.common.exceptions import InvalidYamlError
+from lib.common.get_module import get_module
+
+def validate_module(phase: str, module: str, cfg: dict):
+    try:
+        mod = get_module(phase, module)
+    except ModuleNotFoundError as e:
+        raise InvalidYamlError(f"No {phase} module named '{module}'")
+
+    # dynamically check all required args for module config exist
+    sfolder = os.path.dirname(inspect.getfile(mod))
+    info = Path(sfolder) / "info.yaml"
+    with open(info, "r") as f:
+        options = yaml.safe_load(f)
+    for option in options["args"]:
+        if option["required"] is True and option["name"] not in cfg["config"].keys():
+            raise InvalidYamlError(
+                f"The config you specified does not contain all the required arguments for the '{module}' {phase}."
+            )
+
+
+def validate_yaml(cfg: dict) -> bool:
+    """
+    Confirms all values on YAML, and returns True if a full pass (select and analyse) is specified, or False if a
+    single phase.
+    """
+    keys = cfg.keys()
+
+    if "folder" not in keys or not isinstance(cfg["folder"], str):
+        raise InvalidYamlError("The folder attribute must exist and be a string")
+
+    if "phase" in keys or "module" in keys:
+        # confirm good phase yaml
+        if "module" not in keys:
+            raise InvalidYamlError(
+                "If you specified a phase, you must specify a module"
+            )
+        if "phase" not in keys:
+            raise InvalidYamlError(
+                "If you specified a module, you must specify a phase"
+            )
+
+        if "config" not in keys or not isinstance(cfg["config"], dict):
+            raise InvalidYamlError("The 'config' attribute must exist.")
+
+        config = cfg["config"]
+
+        if cfg["phase"] not in ["select", "analyse"]:
+            raise InvalidYamlError(
+                "The phase attribute must be either select or analyse"
+            )
+        validate_module(cfg["phase"], cfg["module"], config)
+        return False
+    else:
+        if "analyse" not in keys:
+            raise InvalidYamlError(
+                "You must include an 'analyse' attribute"
+            )
+        # confirm good yaml for full
+        if "elements_in" in keys:
+            # bypassing selector...
+            pass
+
+        elif "select" in keys:
+            # run select then analyse
+            pass
+
+
+
+
