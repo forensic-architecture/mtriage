@@ -18,6 +18,8 @@ def validate_module(phase: str, module: str, cfg: dict):
     with open(info, "r") as f:
         options = yaml.safe_load(f)
     for option in options["args"]:
+        if "config" not in cfg:
+            cfg["config"] = {}
         if option["required"] is True and option["name"] not in cfg["config"].keys():
             raise InvalidYamlError(
                 f"The config you specified does not contain all the required arguments for the '{module}' {phase}."
@@ -45,8 +47,8 @@ def validate_analyse(cfg: dict):
 
 def validate_yaml(cfg: dict) -> bool:
     """
-    Confirms all values on YAML, and returns True if a full pass (select and analyse) is specified, or False if a
-    single phase.
+    Confirms all values on YAML.
+    Returns True if a full pass (select and analyse) is specified, or False if a single phase.
     """
     keys = cfg.keys()
 
@@ -84,8 +86,11 @@ def validate_yaml(cfg: dict) -> bool:
                 raise InvalidYamlError(
                     "You have specified 'elements_in', and so at least one 'analyse' module must be specified."
                 )
-            validate_analyse(cfg["analyse"])
 
         elif "select" in keys:
             # run select then analyse
-            pass
+            validate_name(cfg["select"])
+            validate_module("select", cfg["select"]["name"], cfg["select"])
+
+        validate_analyse(cfg["analyse"])
+        return True

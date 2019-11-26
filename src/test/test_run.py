@@ -6,6 +6,11 @@ from lib.common.exceptions import InvalidYamlError
 from test.utils import scaffold_empty, cleanup
 
 ARGS = "/run_args.yaml"
+BASELINE = {"folder": "media/test_official"}
+WITH_ELS = {**BASELINE, "elements_in": "sel1"}
+WITH_SELECT = {**BASELINE, "select": {"name": "local", "config": {"source_folder": "/a-folder"}}}
+GOOD_ANALYSE_DICT = {**WITH_ELS, "analyse": {"name": "frames"}}
+GOOD_SELECT_ANALYSE = {**WITH_SELECT, "analyse": [{"name": "frames"}, {"name": "imagededup"}]}
 
 
 @pytest.fixture(autouse=True)
@@ -124,22 +129,33 @@ def test_validate_phase():
         write(good_youtube_config)
         validate()
 
+        # should return False to indicate this is a single phase config, see 'validate_yaml' docstring for more info
+        res = validate_yaml(good_youtube_config)
+        assert res == False
+
 
 def test_validate():
-    baseline = {"folder": "media/test_official", "config": {}}
-    write_and_validate(baseline, "specify either 'elements_in' or 'select'")
+    write_and_validate(BASELINE, "specify either 'elements_in' or 'select'")
 
-    scaffold_empty("sel1", elements=["el1", "el2"])
+    write_and_validate(WITH_ELS, "at least one 'analyse' module must be specified")
 
-    with_els = {**baseline, "elements_in": "sel1"}
-    write_and_validate(with_els, "at least one 'analyse' module must be specified")
-
-    bad_analyse = {**with_els, "analyse": None}
+    bad_analyse = {**WITH_ELS, "analyse": None}
     write_and_validate(bad_analyse, "must be a dict or list")
 
-    bad_analyse_dict = {**with_els, "analyse": {}}
+    bad_analyse_dict = {**WITH_ELS, "analyse": {}}
     write_and_validate(bad_analyse_dict, "containing at least a 'name' attribute")
 
-    good_analyse_dict = {**with_els, "analyse": {"name": "frames"}}
-    write(good_analyse_dict)
+    write(GOOD_ANALYSE_DICT)
     validate()
+
+    write(GOOD_SELECT_ANALYSE)
+    validate()
+
+def test_config_types():
+    res = validate_yaml(GOOD_ANALYSE_DICT)
+    assert res == True
+
+    res = validate_yaml(GOOD_SELECT_ANALYSE)
+    assert res == True
+
+
