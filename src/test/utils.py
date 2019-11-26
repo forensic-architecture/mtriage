@@ -7,7 +7,7 @@ import json
 TEMP_ELEMENT_DIR = "../media/test_official"
 
 
-def scaffold_empty(selector: str, elements: list=[], analysers: list=[]):
+def scaffold_empty(selector: str, elements: list = [], analysers: list = []):
     """
     Scaffold an mtriage folder. One folder per element in the elements list will be created in the TEMP_ELEMENT_DIR.
     If an analysers list is passed, mocks of derived elements will be created in the appropriate folders.

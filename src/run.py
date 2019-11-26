@@ -30,13 +30,14 @@ from validate import validate_yaml
 
 CONFIG_PATH = "/run_args.yaml"
 
+
 def _run_yaml():
     with open(CONFIG_PATH, "r") as c:
         cfg = yaml.safe_load(c)
 
-    is_full = validate_yaml(cfg)
+    is_single_phase = validate_yaml(cfg)
 
-    if not is_full:
+    if is_single_phase:
         # run single phase
         if not os.path.exists(cfg["folder"]):
             os.makedirs(cfg["folder"])

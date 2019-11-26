@@ -8,9 +8,15 @@ from test.utils import scaffold_empty, cleanup
 ARGS = "/run_args.yaml"
 BASELINE = {"folder": "media/test_official"}
 WITH_ELS = {**BASELINE, "elements_in": "sel1"}
-WITH_SELECT = {**BASELINE, "select": {"name": "local", "config": {"source_folder": "/a-folder"}}}
+WITH_SELECT = {
+    **BASELINE,
+    "select": {"name": "local", "config": {"source_folder": "/a-folder"}},
+}
 GOOD_ANALYSE_DICT = {**WITH_ELS, "analyse": {"name": "frames"}}
-GOOD_SELECT_ANALYSE = {**WITH_SELECT, "analyse": [{"name": "frames"}, {"name": "imagededup"}]}
+GOOD_SELECT_ANALYSE = {
+    **WITH_SELECT,
+    "analyse": [{"name": "frames"}, {"name": "imagededup"}],
+}
 
 
 @pytest.fixture(autouse=True)
@@ -38,6 +44,7 @@ def write_and_validate(config, regex):
     write(config)
     with pytest.raises(InvalidYamlError, match=regex):
         validate()
+
 
 def test_bad_yaml():
     with open(ARGS, "w") as c:
@@ -129,9 +136,9 @@ def test_validate_phase():
         write(good_youtube_config)
         validate()
 
-        # should return False to indicate this is a single phase config, see 'validate_yaml' docstring for more info
+        # should return True to indicate this is a single phase config, see 'validate_yaml' docstring for more info
         res = validate_yaml(good_youtube_config)
-        assert res == False
+        assert res == True
 
 
 def test_validate():
@@ -151,11 +158,10 @@ def test_validate():
     write(GOOD_SELECT_ANALYSE)
     validate()
 
+
 def test_config_types():
     res = validate_yaml(GOOD_ANALYSE_DICT)
-    assert res == True
+    assert res == False
 
     res = validate_yaml(GOOD_SELECT_ANALYSE)
-    assert res == True
-
-
+    assert res == False
