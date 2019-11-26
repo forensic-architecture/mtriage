@@ -39,6 +39,8 @@ def _run_yaml():
 
     if is_single_phase:
         # run single phase
+        # NB: this is actually only for backwards compatibility. could remove as the new config fmt is expressive
+        # enough to accommodate running a single phase of analyser or selector just as easily.
         if not os.path.exists(cfg["folder"]):
             os.makedirs(cfg["folder"])
 
@@ -50,8 +52,32 @@ def _run_yaml():
         else:  # analyse
             the_module.start_analysing()
     else:
-        # run select then analyse
-        pass
+        # run select
+        sel = cfg["select"]
+        Selector = get_module("select", sel["name"])
+        selector = Selector(
+            sel["config"] if "config" in sel.keys() else {}, sel["name"], cfg["folder"]
+        )
+        selector.start_indexing()
+        selector.start_retrieving()
+
+        # then analyse if specified
+        if "analyse" not in cfg:
+            return
+
+        ana = cfg["analyse"]
+        if isinstance(ana, dict):
+            # run a single analyser
+            Analyser = get_module("analyse", ana["name"])
+            analyser = Analyser(ana["config"] if "config" in ana.keys() else {}, ana["name"], cfg["folder"])
+            analyser.start_analysing()
+
+        else:
+            # run the meta analyser to chain them all together
+            # Analyser = get_module("analyse", "meta")
+            # meta_cfg = {"children": }
+            # analyser = Analyser()
+            raise NotImplemented("Chaining analysers is not yet implemented.")
 
 
 if __name__ == "__main__":
