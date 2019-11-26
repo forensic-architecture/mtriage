@@ -3,6 +3,7 @@ import os
 import yaml
 from run import validate_yaml
 from lib.common.exceptions import InvalidYamlError
+from test.utils import scaffold_empty, cleanup
 
 ARGS = "/run_args.yaml"
 
@@ -11,6 +12,7 @@ ARGS = "/run_args.yaml"
 def teardown():
     yield None
     try:
+        cleanup()
         os.remove(ARGS)
     except:
         pass
@@ -26,6 +28,11 @@ def validate():
         cfg = yaml.safe_load(c)
     validate_yaml(cfg)
 
+
+def write_and_validate(config, regex):
+    write(config)
+    with pytest.raises(InvalidYamlError, match=regex):
+        validate()
 
 def test_bad_yaml():
     with open(ARGS, "w") as c:
@@ -119,10 +126,20 @@ def test_validate_phase():
 
 
 def test_validate():
-    bad_config = {"folder": "media/test_official", "config": {}}
-    write(bad_config)
-    with pytest.raises(
-        InvalidYamlError,
-        match="must include an 'analyse' attribute",
-    ):
-        validate()
+    baseline = {"folder": "media/test_official", "config": {}}
+    write_and_validate(baseline, "specify either 'elements_in' or 'select'")
+
+    scaffold_empty("sel1", elements=["el1", "el2"])
+
+    with_els = {**baseline, "elements_in": "sel1"}
+    write_and_validate(with_els, "at least one 'analyse' module must be specified")
+
+    bad_analyse = {**with_els, "analyse": None}
+    write_and_validate(bad_analyse, "must be a dict or list")
+
+    bad_analyse_dict = {**with_els, "analyse": {}}
+    write_and_validate(bad_analyse_dict, "containing at least a 'name' attribute")
+
+    good_analyse_dict = {**with_els, "analyse": {"name": "frames"}}
+    write(good_analyse_dict)
+    validate()

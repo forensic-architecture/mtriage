@@ -5,6 +5,7 @@ from pathlib import Path
 from lib.common.exceptions import InvalidYamlError
 from lib.common.get_module import get_module
 
+
 def validate_module(phase: str, module: str, cfg: dict):
     try:
         mod = get_module(phase, module)
@@ -21,6 +22,25 @@ def validate_module(phase: str, module: str, cfg: dict):
             raise InvalidYamlError(
                 f"The config you specified does not contain all the required arguments for the '{module}' {phase}."
             )
+
+
+def validate_name(cfg: dict):
+    if "name" not in cfg.keys():
+        raise InvalidYamlError(
+            "Each analyse component must be a dict containing at least a 'name' attribute."
+        )
+
+
+def validate_analyse(cfg: dict):
+    if not isinstance(cfg, dict) and not isinstance(cfg, list):
+        raise InvalidYamlError("The 'analyse' attribute must be a dict or list.")
+    if isinstance(cfg, dict):
+        validate_name(cfg)
+        validate_module("analyse", cfg["name"], cfg)
+    else:
+        for _cfg in cfg:
+            validate_name(_cfg)
+            validate_module("analyse", _cfg["name"], _cfg)
 
 
 def validate_yaml(cfg: dict) -> bool:
@@ -56,19 +76,16 @@ def validate_yaml(cfg: dict) -> bool:
         validate_module(cfg["phase"], cfg["module"], config)
         return False
     else:
-        if "analyse" not in keys:
-            raise InvalidYamlError(
-                "You must include an 'analyse' attribute"
-            )
-        # confirm good yaml for full
+        if "elements_in" not in keys and "select" not in keys:
+            raise InvalidYamlError("You must specify either 'elements_in' or 'select'.")
         if "elements_in" in keys:
             # bypassing selector...
-            pass
+            if "analyse" not in keys:
+                raise InvalidYamlError(
+                    "You have specified 'elements_in', and so at least one 'analyse' module must be specified."
+                )
+            validate_analyse(cfg["analyse"])
 
         elif "select" in keys:
             # run select then analyse
             pass
-
-
-
-
