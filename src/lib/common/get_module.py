@@ -11,9 +11,7 @@ def get_module(_from, key):
     elif _from == "analyse":
         module_folder = f"lib.analysers"
     else:
-        raise ImportError(
-            "The phase argument must be either 'select' or 'analyse'"
-        )
+        raise ImportError("The phase argument must be either 'select' or 'analyse'")
 
     pth = f"{module_folder}.{key}"
     mod = import_module(pth)

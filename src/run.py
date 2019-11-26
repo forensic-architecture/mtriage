@@ -69,7 +69,11 @@ def _run_yaml():
         if isinstance(ana, dict):
             # run a single analyser
             Analyser = get_module("analyse", ana["name"])
-            analyser = Analyser(ana["config"] if "config" in ana.keys() else {}, ana["name"], cfg["folder"])
+            analyser = Analyser(
+                ana["config"] if "config" in ana.keys() else {},
+                ana["name"],
+                cfg["folder"],
+            )
             analyser.start_analysing()
 
         else:

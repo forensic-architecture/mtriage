@@ -11,6 +11,7 @@ class MetaAnalyser(Analyser):
     It runs element-wise, meaning that all children analysers are run to completion for each element
     (rather than running the first child analyser on all elements, then the second, and so on).
     """
+
     def get_in_etype(self):
         return self.children[0].get_in_etype()
 
@@ -27,7 +28,6 @@ class MetaAnalyser(Analyser):
             # the 'elements_in' attribute is needed for config validation, but is short-circuited
             # in the 'analyse_element' below ...?
             child_config["elements_in"] = ["NOT NEEDED"]
-
 
             ChildAnalyser = get_module("analyser", child_name)
             if ChildAnalyser is None:
