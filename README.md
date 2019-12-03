@@ -69,7 +69,7 @@ and running. Subsequent uses will be much faster.
 
 ## options 
 
-`./mtriage run`
+### `./mtriage run`
 
 The primary command to trigger new mtriage workflows. Each run takes a YAML
 file that specifies which selectors and analysers to run (i.e. `./mtriage run
@@ -84,7 +84,7 @@ You can also pass the following flags to the run command:
 | `--tag` | Allows you to run mtriage with a custom build by passing the name of the Docker image tag you used during the custom build (see below) |
 | `--dry` | Primarily for testing. Will not run any command, but instead return the command that will be run. |
 
-`./mtriage dev build`
+`### ./mtriage dev build`
 
 The command to build an mtriage Docker image from source code. You won't need
 this unless you are developing mtriage, as the latest images are also on [Docker
@@ -98,7 +98,7 @@ Hub](https://hub.docker.com/repository/docker/forensicarchitecture/mtriage).
 | `--whitelist` | Give build a path to a whitelist that lists which components to include. |
 | `--dry` | Primarily for testing. Will not run any command, but instead return the command that will be run. |
 
-`./mtriage dev test`
+`### ./mtriage dev test`
 
 Run all mtriage tests. These run in two parts for the time being: one inside 
 Docker, and one on your local Python installation.
@@ -110,11 +110,11 @@ Docker, and one on your local Python installation.
 | `--tag` | Test with a custom tag. Will default to 'dev' or 'dev-gpu' |
 | `--dry` | Primarily for testing. Will not run any command, but instead return the command that will be run. |
 
-`./mtriage dev clean `
+`### ./mtriage dev clean `
 
 Remove all mtriage Docker containers, stopped or running.
 
-`./mtriage dev`
+### `./mtriage dev`
 
 Open a bash shell inside mtriage's Docker container. For debugging.
 
