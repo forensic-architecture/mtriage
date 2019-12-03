@@ -38,6 +38,7 @@ joining [the conversaton on Discord](https://discord.gg/FJ4XsCg).
 * ocr - analyse an image using optical character recognition from [Google Cloud Platform](https://cloud.google.com/vision/docs/ocr).
 * yolov3 - detect and classify objects in images using [YoloV3](https://pjreddie.com/darknet/yolo/) trained on [ImageNet](http://www.image-net.org/) classes.
 
+---
 
 ## setup 
 mtriage is currently in active development, and is not yet packaged in any way.
@@ -47,27 +48,26 @@ It uses [Docker](https://www.docker.com/products/docker-desktop) to manage depen
 
 Follow the instructions relevant to your operating system to install Docker CE.
 
-You also need to ensure that a version of [Python](https://www.python.org/downloads/) is installed on your computer.
-Most modern operating systems have a version installed by default. 
+You also need to ensure that [Python 3](https://www.python.org/downloads/) is installed on your computer. Most modern operating systems have a version installed by default. 
+
+Once you have Docker and Python installed, you can run mtriage using one of the
+examples provided. From this folder:
+```bash
+pip3 install -r requirements.txt
+```
 
 ### additional setup
 Depending on what components you intend to use, there may be additional setup
 required. Check the [component docs folder](./docs/components) before using an 
 analyser or if you run into an authentication or setup issue.
 
-## run 
-Once you have Docker and Python installed, you can run mtriage using one of the
-examples provided. From this folder:
-```bash
-pip install -r requirements.txt
-./mtriage run examples/_demo/youtube.yaml 
-```
-
 When you first run mtriage, it will download the necessary Docker images to
 your system. The first time you run it, it may take several minutes to get up
 and running. Subsequent uses will be much faster.
 
-## options 
+---
+
+## commands 
 
 ### `./mtriage run path/to/file.yaml`
 
