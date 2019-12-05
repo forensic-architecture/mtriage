@@ -4,21 +4,27 @@ from lib.common.get_module import get_module
 import shutil
 import json
 
-TEMP_ELEMENT_DIR = "../media/test"
+TEMP_ELEMENT_DIR = "../media/test_official"
 
 
-def scaffold_empty(selname, elements=[], analysers=[]):
-    derived_dir = f"{TEMP_ELEMENT_DIR}/{selname}/{Analyser.DERIVED_EXT}"
+def scaffold_empty(selector: str, elements: list = [], analysers: list = []):
+    """
+    Scaffold an mtriage folder. One folder per element in the elements list will be created in the TEMP_ELEMENT_DIR.
+    If an analysers list is passed, mocks of derived elements will be created in the appropriate folders.
+    Only a single selector should be passed, as derived elements are nested within a selector pass. To create multiple
+    selector passes, call this function multiple times.
+    """
+    derived_dir = f"{TEMP_ELEMENT_DIR}/{selector}/{Analyser.DERIVED_EXT}"
     if not os.path.exists(derived_dir):
         os.makedirs(derived_dir)
 
     for element in elements:
-        element_dir = f"{TEMP_ELEMENT_DIR}/{selname}/{Analyser.DATA_EXT}/{element}"
+        element_dir = f"{TEMP_ELEMENT_DIR}/{selector}/{Analyser.DATA_EXT}/{element}"
         if not os.path.exists(element_dir):
             os.makedirs(element_dir)
         if len(analysers) > 0:
             for analyser in analysers:
-                analyser_dir = f"{TEMP_ELEMENT_DIR}/{selname}/{Analyser.DERIVED_EXT}/{analyser}/{element}"
+                analyser_dir = f"{TEMP_ELEMENT_DIR}/{selector}/{Analyser.DERIVED_EXT}/{analyser}/{element}"
                 if not os.path.exists(analyser_dir):
                     os.makedirs(analyser_dir)
 

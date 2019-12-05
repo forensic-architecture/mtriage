@@ -38,16 +38,16 @@ def additionals():
 # NOTE: additionals added as arg to ensure fixture setup is run
 def test_raises_when_faulty(additionals):
     with pytest.raises(ModuleNotFoundError):
-        get_module("selector", "smth")
+        get_module("select", "smth")
 
     with pytest.raises(ModuleNotFoundError):
-        get_module("analyser", "smth")
+        get_module("analyse", "smth")
 
-    with pytest.raises(ImportError, match="must be 'selector' or 'analyser'"):
+    with pytest.raises(ImportError, match="must be either 'select' or 'analyse'"):
         get_module("neitherthing", "smth")
 
 
 def test_imports_main(additionals):
     # main just exported as 'True', to check import logic is correct
-    assert get_module("selector", "empty")
-    assert get_module("analyser", "empty")
+    assert get_module("select", "empty")
+    assert get_module("analyse", "empty")

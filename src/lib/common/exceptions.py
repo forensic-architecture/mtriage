@@ -36,9 +36,9 @@ class InvalidSelectorConfigError(Exception):
         super().__init__(f"Invalid selector config - {msg}")
 
 
-class InvalidConfigError(Exception):
+class InvalidYamlError(Exception):
     def __init__(self, msg):
-        super().__init__(f"Invalid config - {msg}")
+        super().__init__(f"Invalid YAML - {msg}")
 
 
 class ElementShouldSkipError(Exception):

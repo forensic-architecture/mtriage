@@ -16,11 +16,6 @@ __pycache__/
 build.Dockerfile
 build.requirements.txt
 
-# viewer server symlinks / config
-src/server/elements/**
-src/server/bin
-src/server/config.json
-
 # authentication files
 credentials/**
 .env
@@ -32,3 +27,4 @@ logfile.log
 
 blacklists/**
 whitelists/**
+config/**

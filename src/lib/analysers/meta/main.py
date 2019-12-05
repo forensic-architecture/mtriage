@@ -6,6 +6,12 @@ from lib.common.etypes import Etype, cast_to_etype
 
 
 class MetaAnalyser(Analyser):
+    """
+    An analyser that stacks a number of 'children' analysers together to form a chain analysis.
+    It runs element-wise, meaning that all children analysers are run to completion for each element
+    (rather than running the first child analyser on all elements, then the second, and so on).
+    """
+
     def get_in_etype(self):
         return self.children[0].get_in_etype()
 
@@ -19,8 +25,9 @@ class MetaAnalyser(Analyser):
             child_name = module["name"]
             child_config = module["config"]
 
-            # this is going to break everything?
-            child_config["elements_in"] = ["thisisahack"]
+            # the 'elements_in' attribute is needed for config validation, but is short-circuited
+            # in the 'analyse_element' below ...?
+            child_config["elements_in"] = ["NOT NEEDED"]
 
             ChildAnalyser = get_module("analyser", child_name)
             if ChildAnalyser is None:
@@ -40,7 +47,6 @@ class MetaAnalyser(Analyser):
             self.logger(f"Setup child analyser {child.NAME}")
 
     def analyse_element(self, element, config):
-
         src = None
         child_element = None
         for index, child in enumerate(self.children):
