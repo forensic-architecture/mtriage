@@ -46,7 +46,6 @@ class LocalSelector(Selector):
         base = element["base"]
 
         if self.is_aggregate():
-            self.logger("retrieving element agg")
             for mock_el in self.results:
                 self.__copyfile(
                     base, mock_el[2], mock_el[0], mock_el[1], f"{base}/{mock_el[0]}.{mock_el[1]}"
@@ -65,7 +64,6 @@ class LocalSelector(Selector):
         self.logger("Indexing local folder...")
         results = [["name", "extension", "path", "id"]]
         for root, dirs, files in os.walk(self.abs_src):
-            self.logger(dirs)
             for file in files:
                 f = file.split(".")
                 results.append([f[0], f[1], os.path.join(root, file), f"{f[0]}{f[1]}"])

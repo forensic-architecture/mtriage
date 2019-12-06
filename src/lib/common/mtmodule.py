@@ -7,9 +7,10 @@ import os
 
 
 class MTModule(ABC):
-    def __init__(self, NAME, BASE_DIR):
+    def __init__(self, NAME, BASE_DIR, CONFIG):
         self.NAME = NAME
         self.BASE_DIR = BASE_DIR
+        self.CONFIG = CONFIG
         self.__LOGS = []
         self.PHASE_KEY = None
         self.__LOGS_DIR = f"{self.BASE_DIR}/logs"
@@ -72,3 +73,6 @@ class MTModule(ABC):
             el_id = element["id"]
             context = context + f"{el_id}: "
         return context
+
+    def is_dev(self):
+        return "dev" in self.CONFIG and self.CONFIG["dev"]
