@@ -36,18 +36,21 @@ class Et:
         return {f"{self.id}{ext}": self.globit(path)}
 
     def globit(self, path):
-        glob = list(Path(path).rglob(self.regex))
+        glob = []
+        pth = Path(path)
+        if isinstance(self.regex, list):
+            for ext in self.regex:
+                glob.extend(pth.rglob(ext))
+        else:
+            glob = list(pth.rglob(self.regex))
+
         is_single = not self.is_array
 
         if len(glob) is 0:
-            raise EtypeCastError(
-                "Could not cast to '{etype}' etype: no media found in directory"
-            )
+            raise EtypeCastError(self)
 
         if is_single and len(glob) is not 1:
-            raise EtypeCastError(
-                "Could not cast to '{etype}' etype: more than one media item found."
-            )
+            raise EtypeCastError(self)
 
         elif is_single and self.id != "any":
             return glob[0]
@@ -84,10 +87,10 @@ def create_etypes():
     """ Etypes are basic and composite Ets wrapped into a nice namespace """
     etypes = SimpleNamespace(
         Any=Et("any", "*"),
-        Image=Et("image", "*.[bB][mM][pP]$"),
-        Video=Et("video", "*.[mM][pP][4]$"),
-        Audio=Et("audio", "*.([mM][pP][3])|([wW][aA][vV])$"),
-        Json=Et("json", "*.[jJ][sS][oO][nN]$"),
+        Image=Et("image", ["*.bmp", "*.jpg", "*.jpeg"]),
+        Video=Et("video", "*.mp4"),
+        Audio=Et("audio", ["*.mp3", "*.wav"]),
+        Json=Et("json", ".*\.[jJ][sS][oO][nN]$"),
     )
     etypes.ImageArray = etypes.Image.as_array()
     etypes.JsonArray = etypes.Json.as_array()
