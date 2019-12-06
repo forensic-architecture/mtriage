@@ -25,6 +25,3 @@ class ExtractTypesAnalyser(Analyser):
             filename = fp.name
             copyfile(fp, f"{dest}/{filename}")
             self.logger(f"{filename} extracted.")
-
-
-

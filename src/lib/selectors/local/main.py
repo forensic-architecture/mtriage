@@ -48,7 +48,11 @@ class LocalSelector(Selector):
         if self.is_aggregate():
             for mock_el in self.results:
                 self.__copyfile(
-                    base, mock_el[2], mock_el[0], mock_el[1], f"{base}/{mock_el[0]}.{mock_el[1]}"
+                    base,
+                    mock_el[2],
+                    mock_el[0],
+                    mock_el[1],
+                    f"{base}/{mock_el[0]}.{mock_el[1]}",
                 )
         else:
             src_path = element["path"]
