@@ -49,7 +49,7 @@ class Et:
         if len(glob) is 0:
             raise EtypeCastError(self)
 
-        if is_single and len(glob) is not 1:
+        if is_single and len(glob) is not 1 and self.id != "any":
             raise EtypeCastError(self)
 
         elif is_single and self.id != "any":

@@ -9,10 +9,10 @@ from lib.common.etypes import Etype
 
 class ImagededupAnalyser(Analyser):
     def get_in_etype(self):
-        return Etype.AnnotatedImageArray
+        return Etype.ImageArray
 
     def get_out_etype(self):
-        return Etype.AnnotatedImageArray
+        return Etype.ImageArray
 
     def __create_hasher(self, config):
         hasher_key = config["method"] if "method" in config else "phash"
