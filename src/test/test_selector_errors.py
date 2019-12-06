@@ -131,6 +131,6 @@ def test_integration_2(utils, additionals):
     expected = {
         "base": retry3_path,
         "etype": Etype.Any,
-        "media": {"all": [f"{retry3_path}/out.txt"]},
+        "media": {"any": [f"{retry3_path}/out.txt"]},
     }
     assert utils.dictsEqual(etype, expected)
