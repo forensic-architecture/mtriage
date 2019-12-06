@@ -41,6 +41,9 @@ class ImagededupAnalyser(Analyser):
     def pre_analyse(self, config):
         self.__create_hasher(config)
 
+    def is_dry(self):
+        return "dry" in self.CONFIG and self.CONFIG["dry"]
+
     def analyse_element(self, element, config):
         dest = element["dest"]
         basedir = element["base"]
@@ -55,9 +58,17 @@ class ImagededupAnalyser(Analyser):
             f"{len(duplicates)} duplicates found, copying over all other files..."
         )
 
+        self.logger("IMAGES TO REMOVE")
+        self.logger("------------------")
+        for dup in duplicates:
+            self.logger(dup)
+        self.logger("------------------")
+        if self.is_dry():
+            return
+
+        self.logger("Creating new element without duplicates..")
         for pname in element["media"]["images"]:
             path = Path(pname)
             if path.name not in duplicates:
                 copyfile(pname, f"{dest}/{path.name}")
-
         self.logger(f"{element['id']} images deduplicated.")
