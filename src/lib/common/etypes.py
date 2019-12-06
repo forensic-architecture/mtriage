@@ -7,6 +7,9 @@ from typing import List
 
 
 class Et:
+    """ Defines the primary operations that make up a basic Etype. Array functionality is built in
+        as a toggle on the simple type."""
+
     def __init__(self, _id, regex, is_array=False):
         self.id = _id
         self.regex = regex
@@ -62,6 +65,8 @@ class Et:
 
 
 class UnionEt:
+    """ A higher order Etype that allows the additive composition of Ets. """
+
     def __init__(self, *ets):
         self.ets = ets
 
@@ -93,13 +98,8 @@ def create_etypes():
         Image=Et("image", ["*.bmp", "*.jpg", "*.jpeg"]),
         Video=Et("video", "*.mp4"),
         Audio=Et("audio", ["*.mp3", "*.wav"]),
-        Json=Et("json", ".*\.[jJ][sS][oO][nN]$"),
+        Json=Et("json", "*.json"),
     )
-
-    # etypes.ImageArray = etypes.Image.as_array()
-    # etypes.JsonArray = etypes.Json.as_array()
-    # etypes.AnnotatedVideo = UnionEt(etypes.Video, etypes.Json)
-    # etypes.AnnotatedImageArray = UnionEt(etypes.ImageArray, etypes.Json)
 
     etypes.Union = lambda *args: UnionEt(*args)
     etypes.Array = lambda x: x.as_array()
@@ -110,20 +110,7 @@ def create_etypes():
 Etype = create_etypes()
 
 
-# NOTE: the 'get_any' expected an all in the ID
-
-
 def cast_to_etype(el_path, etype):
-    """ An etype return object consists of all the paths to media in that element.
-    For example:
-        {
-            "base": "path/to/element/dir",
-            "etype": Etype.Image,
-            "media": {
-                /* values in 'media' depend on the etype */
-            }
-        }
-    """
     return {
         "base": el_path,
         "etype": etype,
