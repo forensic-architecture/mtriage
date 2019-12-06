@@ -38,9 +38,9 @@ def _run_yaml():
     is_single_phase = validate_yaml(cfg)
 
     if is_single_phase:
-        print("-------------------------------------------------")
-        print("Note: you are using the deprecated legacy format.")
-        print("-------------------------------------------------")
+        print("-----------------------------------------------")
+        print("Note: you are using the deprecated YAML format.")
+        print("-----------------------------------------------")
         # run single phase
         # NB: this is actually only for backwards compatibility. could remove as the new config fmt is expressive
         # enough to accommodate running a single phase of analyser or selector just as easily.

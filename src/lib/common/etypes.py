@@ -13,7 +13,7 @@ class Et:
         self.is_array = is_array
 
     def __repr__(self):
-        return f"EType({self.id.capitalize()})"
+        return f"EType({self.id.capitalize()}{'Array' if self.is_array else ''})"
 
     def __str__(self):
         return self.__repr__()
@@ -30,6 +30,9 @@ class Et:
 
     def as_array(self):
         return Et(self.id, self.regex, is_array=True)
+
+    def array(self):
+        return self.as_array()
 
     def extract(self, path):
         ext = "s" if self.is_array else ""
@@ -68,7 +71,7 @@ class UnionEt:
             inner += f"{et}, "
         inner = inner[:-2]
 
-        return f"EType(Union({inner}))"
+        return f"Union({inner})"
 
     def __eq__(self, other):
         return all(
@@ -92,11 +95,11 @@ def create_etypes():
         Audio=Et("audio", ["*.mp3", "*.wav"]),
         Json=Et("json", ".*\.[jJ][sS][oO][nN]$"),
     )
-    etypes.ImageArray = etypes.Image.as_array()
-    etypes.JsonArray = etypes.Json.as_array()
 
-    etypes.AnnotatedVideo = UnionEt(etypes.Video, etypes.Json)
-    etypes.AnnotatedImageArray = UnionEt(etypes.ImageArray, etypes.Json)
+    # etypes.ImageArray = etypes.Image.as_array()
+    # etypes.JsonArray = etypes.Json.as_array()
+    # etypes.AnnotatedVideo = UnionEt(etypes.Video, etypes.Json)
+    # etypes.AnnotatedImageArray = UnionEt(etypes.ImageArray, etypes.Json)
 
     etypes.Union = lambda *args: UnionEt(*args)
     etypes.Array = lambda x: x.as_array()
