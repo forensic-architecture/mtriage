@@ -18,11 +18,18 @@ class LocalSelector(Selector):
     """
 
     def index(self, config):
-        if not os.path.exists(self.ELEMENT_MAP):
-            return self._run(config)
-        else:
+        self.logger(config["force"])
+        if ("force" in config) and (config["force"] is False) and os.path.exists(self.ELEMENT_MAP):
             self.logger("File already exists for index--not running again.")
             return None
+
+        self.abs_src = f"/mtriage/{config['source_folder']}"
+
+        if not os.path.exists(self.abs_src):
+            raise Exception("The 'source_folder' you specified for the 'local' selector does not exist.")
+            return None
+
+        # return self._run(config)
 
     def retrieve_element(self, element, config):
         base = element["base"]
@@ -38,8 +45,8 @@ class LocalSelector(Selector):
 
     def _run(self, config):
         results = [["name", "extension", "path", "id"]]
-        src = config["source_folder"]
-        for root, dirs, files in os.walk(src):
+        for root, dirs, files in os.walk(self.abs_src):
+            self.logger(dirs)
             for file in files:
                 f = file.split(".")
                 results.append([f[0], f[1], os.path.join(root, file), f"{f[0]}{f[1]}"])

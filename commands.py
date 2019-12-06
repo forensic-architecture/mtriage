@@ -37,7 +37,7 @@ def __run_core_tests(args):
             "--workdir",
             "/mtriage/src",
             "{}:dev".format(NAME),
-            "python",
+            "python3",
             "-m",
             "pytest",
             ".",
@@ -48,11 +48,11 @@ def __run_core_tests(args):
 
 def __run_runpy_tests(args):
     """ NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
-    using the LOCAL python (could be 2 or 3). """
+    using the LOCAL python 3. """
     cmd = (
-        ["python", "-m", "pytest", "-s", "test/"]
+        ["python3", "-m", "pytest", "-s", "test/"]
         if args.verbose
-        else ["python", "-m", "pytest", "test/"]
+        else ["python3", "-m", "pytest", "test/"]
     )
     return __run(cmd, args)
 
@@ -235,7 +235,11 @@ def run(args):
     yaml_path = os.path.abspath(args.yaml)
     with open(yaml_path, "r") as f:
         options = yaml.safe_load(f)
-    CONT_NAME = f"mtriage_{options['phase']}_{options['module']}-{os.path.basename(options['folder'])}"
+    CONT_NAME = "mtriage_{}_{}-{}".format(
+        options["phase"] if "phase" in options else "full",
+        options["module"] if "module" in options else "run",
+        os.path.basename(options["folder"]),
+    )
     TAG_NAME = "{}-gpu".format(args.tag) if args.gpu else args.tag
 
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available

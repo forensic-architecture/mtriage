@@ -3,4 +3,8 @@ args:
   - name: "source_folder"
     desc: The path to the source folder that represents the media space. Ensure that the path exists not only on the local filesystem, but also in the subsection that is mounted to Docker. The easiest way to ensure this is the case is to ensure that the 'source_folder' is a subdirectory of 'media'.
     required: true
-    input: "folder"
+    input: folder
+  - name: force
+    desc: If true, the selecting will be forced even if an element_map already exists. If false, will pass through the phase as if successful but not change anything. True by default.
+    required: false
+    input: bool

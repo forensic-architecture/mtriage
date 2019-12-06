@@ -38,6 +38,9 @@ def _run_yaml():
     is_single_phase = validate_yaml(cfg)
 
     if is_single_phase:
+        print("-------------------------------------------------")
+        print("Note: you are using the deprecated legacy format.")
+        print("-------------------------------------------------")
         # run single phase
         # NB: this is actually only for backwards compatibility. could remove as the new config fmt is expressive
         # enough to accommodate running a single phase of analyser or selector just as easily.
@@ -65,7 +68,7 @@ def _run_yaml():
             )
             selector.start_indexing()
             selector.start_retrieving()
-            base_cfg["elements_in"] = sel["name"]
+            base_cfg["elements_in"] = [sel["name"]]
 
         # then analyse if specified
         if "analyse" not in cfg:
