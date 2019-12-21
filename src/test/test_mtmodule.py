@@ -12,7 +12,7 @@ class EmptyMTModule(MTModule):
 def additionals(utils):
     obj = lambda: None
     obj.BASE_DIR = utils.TEMP_ELEMENT_DIR
-    obj.mod = EmptyMTModule("empty", obj.BASE_DIR)
+    obj.mod = EmptyMTModule("empty", obj.BASE_DIR, {})
     yield obj
     utils.cleanup()
 
