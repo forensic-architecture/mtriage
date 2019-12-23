@@ -46,7 +46,7 @@ def test_logged_phase_decorator(additionals):
         bc.improper_func()
 
     # test that a decorated method carries through its return value
-    gc = GoodClass("my_good_mod", additionals.BASE_DIR)
+    gc = GoodClass("my_good_mod", additionals.BASE_DIR, {})
     assert gc.proper_func() == "no error"
 
     # test that logged_phase generated logs correctly when called

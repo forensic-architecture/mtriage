@@ -115,21 +115,21 @@ def test_validate_phase():
     if os.path.exists("/mtriage/credentials/google.json"):
         write(good_select_module)
         with pytest.raises(
-            InvalidYamlError, match="The 'config' attribute must exist."
+            InvalidYamlError, match="config you specified does not contain all the required arguments"
         ):
             validate()
 
         write(bad_local_config)
         with pytest.raises(
             InvalidYamlError,
-            match="The config you specified does not contain all the required arguments for the 'local' selector.",
+            match="The config you specified does not contain all the required arguments for the 'local' selecter.",
         ):
             validate()
 
         write(bad_youtube_config)
         with pytest.raises(
             InvalidYamlError,
-            match="The config you specified does not contain all the required arguments for the 'youtube' selector.",
+            match="The config you specified does not contain all the required arguments for the 'youtube' selecter.",
         ):
             validate()
 
