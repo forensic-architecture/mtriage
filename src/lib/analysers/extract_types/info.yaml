@@ -1,0 +1,7 @@
+desc: Extract a set of file types from the element folder.
+args:
+  - name: exts
+    desc: A list of the extensions to extract, in rglob format (e.g. '*.jpg').
+    required: true
+
+

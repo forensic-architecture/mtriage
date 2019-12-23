@@ -17,7 +17,7 @@ SUPPORTED_MODELS = {
 
 class Resnet50Analyser(Analyser):
     def get_in_etype(self):
-        return Etype.AnnotatedImageArray
+        return Etype.Union(Etype.Image.array(), Etype.Json)
 
     def get_out_etype(self):
         return Etype.Json

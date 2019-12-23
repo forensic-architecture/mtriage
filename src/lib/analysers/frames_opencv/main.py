@@ -65,10 +65,10 @@ def opencv_frames(out_folder, fp, rate, threshold, sequential):
 
 class FramesOpencvAnalyser(Analyser):
     def get_in_etype(self):
-        return Etype.AnnotatedVideo
+        return Etype.Union(Etype.Video, Etype.Json)
 
     def get_out_etype(self):
-        return Etype.AnnotatedImageArray
+        return Etype.Union(Etype.Image.array(), Etype.Json)
 
     def analyse_element(self, element, config):
         FPS_NUMBER = config.get("fps")

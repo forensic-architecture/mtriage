@@ -9,10 +9,10 @@ from lib.common.etypes import Etype
 
 class ImagededupAnalyser(Analyser):
     def get_in_etype(self):
-        return Etype.AnnotatedImageArray
+        return Etype.Image.array()
 
     def get_out_etype(self):
-        return Etype.AnnotatedImageArray
+        return Etype.Image.array()
 
     def __create_hasher(self, config):
         hasher_key = config["method"] if "method" in config else "phash"
@@ -41,6 +41,9 @@ class ImagededupAnalyser(Analyser):
     def pre_analyse(self, config):
         self.__create_hasher(config)
 
+    def is_dry(self):
+        return "dry" in self.CONFIG and self.CONFIG["dry"]
+
     def analyse_element(self, element, config):
         dest = element["dest"]
         basedir = element["base"]
@@ -55,9 +58,17 @@ class ImagededupAnalyser(Analyser):
             f"{len(duplicates)} duplicates found, copying over all other files..."
         )
 
+        self.logger("IMAGES TO REMOVE")
+        self.logger("------------------")
+        for dup in duplicates:
+            self.logger(dup)
+        self.logger("------------------")
+        if self.is_dry():
+            return
+
+        self.logger("Creating new element without duplicates..")
         for pname in element["media"]["images"]:
             path = Path(pname)
             if path.name not in duplicates:
                 copyfile(pname, f"{dest}/{path.name}")
-
         self.logger(f"{element['id']} images deduplicated.")

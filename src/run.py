@@ -38,6 +38,9 @@ def _run_yaml():
     is_single_phase = validate_yaml(cfg)
 
     if is_single_phase:
+        print("-----------------------------------------------")
+        print("Note: you are using the deprecated YAML format.")
+        print("-----------------------------------------------")
         # run single phase
         # NB: this is actually only for backwards compatibility. could remove as the new config fmt is expressive
         # enough to accommodate running a single phase of analyser or selector just as easily.
@@ -51,15 +54,23 @@ def _run_yaml():
             the_module.start_retrieving()
         else:  # analyse
             the_module.start_analysing()
+
     else:
-        # run select
-        sel = cfg["select"]
-        Selector = get_module("select", sel["name"])
-        selector = Selector(
-            sel["config"] if "config" in sel.keys() else {}, sel["name"], cfg["folder"]
-        )
-        selector.start_indexing()
-        selector.start_retrieving()
+        base_cfg = {}
+        if "select" not in cfg and "elements_in" in cfg:
+            base_cfg["elements_in"] = cfg["elements_in"]
+        else:
+            # run select
+            sel = cfg["select"]
+            Selector = get_module("select", sel["name"])
+            selector = Selector(
+                sel["config"] if "config" in sel.keys() else {},
+                sel["name"],
+                cfg["folder"],
+            )
+            selector.start_indexing()
+            selector.start_retrieving()
+            base_cfg["elements_in"] = [sel["name"]]
 
         # then analyse if specified
         if "analyse" not in cfg:
@@ -70,7 +81,7 @@ def _run_yaml():
             # run a single analyser
             Analyser = get_module("analyse", ana["name"])
             analyser = Analyser(
-                ana["config"] if "config" in ana.keys() else {},
+                {**ana["config"], **base_cfg} if "config" in ana.keys() else base_cfg,
                 ana["name"],
                 cfg["folder"],
             )

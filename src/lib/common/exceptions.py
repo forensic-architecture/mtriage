@@ -73,7 +73,7 @@ class MTriageStorageCorruptedError(Exception):
 
 class EtypeCastError(Exception):
     def __init__(self, msg):
-        super().__init__(f"Could not cast etype: {msg}")
+        super().__init__(f"Could not cast element as {msg}")
 
 
 class InvalidElementsIn(Exception):

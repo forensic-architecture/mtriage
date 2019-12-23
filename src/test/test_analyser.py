@@ -140,21 +140,21 @@ def test_cast_elements(utils, additionals):
             "base": f"{sel2_base}/el4",
             "dest": f"{sel2outdir}/el4",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel2_base}/el4/out.txt"]},
+            "media": {"any": [f"{sel2_base}/el4/out.txt"]},
         },
         {
             "id": "el5",
             "base": f"{sel2_base}/el5",
             "dest": f"{sel2outdir}/el5",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel2_base}/el5/out.txt"]},
+            "media": {"any": [f"{sel2_base}/el5/out.txt"]},
         },
         {
             "id": "el6",
             "base": f"{sel2_base}/el6",
             "dest": f"{sel2outdir}/el6",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel2_base}/el6/out.txt"]},
+            "media": {"any": [f"{sel2_base}/el6/out.txt"]},
         },
     ]
     sel2_cast_elements = additionals.emptyAnalyser._Analyser__cast_elements(
@@ -175,14 +175,14 @@ def test_cast_elements(utils, additionals):
             "base": f"{sel1an1base}/el1",
             "dest": f"{sel1outdir}/el1",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel1an1base}/el1/out.txt"]},
+            "media": {"any": [f"{sel1an1base}/el1/out.txt"]},
         },
         {
             "id": "el2",
             "base": f"{sel1an1base}/el2",
             "dest": f"{sel1outdir}/el2",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel1an1base}/el2/out.txt"]},
+            "media": {"any": [f"{sel1an1base}/el2/out.txt"]},
         },
     ]
 
@@ -203,7 +203,7 @@ def test_cast_elements(utils, additionals):
             "base": f"{sel1an2base}/el2",
             "dest": f"{sel1outdir}/el2",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel1an2base}/el2/out.txt"]},
+            "media": {"any": [f"{sel1an2base}/el2/out.txt"]},
         }
     ]
 
@@ -244,42 +244,42 @@ def test_cast_elements(utils, additionals):
             "base": f"{sel1an1base}/el1",
             "dest": f"{sel1outdir}/el1",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel1an1base}/el1/out.txt"]},
+            "media": {"any": [f"{sel1an1base}/el1/out.txt"]},
         },
         {
             "id": "el2",
             "base": f"{sel1an1base}/el2",
             "dest": f"{sel1outdir}/el2",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel1an1base}/el2/out.txt"]},
+            "media": {"any": [f"{sel1an1base}/el2/out.txt"]},
         },
         {
             "id": "el2",
             "base": f"{sel1an2base}/el2",
             "dest": f"{sel1outdir}/el2",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel1an2base}/el2/out.txt"]},
+            "media": {"any": [f"{sel1an2base}/el2/out.txt"]},
         },
         {
             "id": "el4",
             "base": f"{sel2_base}/el4",
             "dest": f"{sel2outdir}/el4",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel2_base}/el4/out.txt"]},
+            "media": {"any": [f"{sel2_base}/el4/out.txt"]},
         },
         {
             "id": "el5",
             "base": f"{sel2_base}/el5",
             "dest": f"{sel2outdir}/el5",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel2_base}/el5/out.txt"]},
+            "media": {"any": [f"{sel2_base}/el5/out.txt"]},
         },
         {
             "id": "el6",
             "base": f"{sel2_base}/el6",
             "dest": f"{sel2outdir}/el6",
             "etype": Etype.Any,
-            "media": {"all": [f"{sel2_base}/el6/out.txt"]},
+            "media": {"any": [f"{sel2_base}/el6/out.txt"]},
         },
     ]
 

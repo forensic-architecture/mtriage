@@ -54,7 +54,7 @@ class Analyser(MTModule):
 
     def __init__(self, config, module, dir):
         try:
-            super().__init__(module, dir)
+            super().__init__(module, dir, config)
         except PermissionError as e:
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
@@ -74,8 +74,6 @@ class Analyser(MTModule):
 
         if type(dir) is not str:
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
-
-        self.CONFIG = config
 
     @abstractmethod
     def analyse_element(self, element, config):
@@ -313,8 +311,7 @@ class Analyser(MTModule):
                 )
                 return False
         except Exception as e:
-            dev = config["dev"] if "dev" in config else False
-            if dev:
+            if self.is_dev():
                 raise e
             else:
                 self.error_logger(

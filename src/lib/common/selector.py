@@ -21,9 +21,8 @@ class Selector(MTModule):
     """
 
     def __init__(self, config, module, folder):
-        super().__init__(module, folder)
+        super().__init__(module, folder, config)
         self.DIR = f"{self.BASE_DIR}/{self.NAME}"
-        self.CONFIG = config
         self.ELEMENT_DIR = f"{self.DIR}/data"
         self.ELEMENT_MAP = f"{self.DIR}/element_map.csv"
 
@@ -149,8 +148,7 @@ class Selector(MTModule):
                 return False
         # TODO: flag to turn this off during development should be passed during run
         except Exception as e:
-            dev = self.CONFIG["dev"] if "dev" in self.CONFIG else False
-            if dev:
+            if self.is_dev():
                 raise e
             else:
                 self.error_logger(

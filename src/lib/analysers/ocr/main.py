@@ -25,7 +25,7 @@ class OcrAnalyser(Analyser):
     """
 
     def get_in_etype(self):
-        return Etype.ImageArray
+        return Etype.Image.array()
 
     def get_out_etype(self):
         return Etype.Json

@@ -1,125 +1,118 @@
+import os
 from enum import Enum
 from pathlib import Path
 from lib.common.exceptions import EtypeCastError
+from types import SimpleNamespace
+from typing import List
 
 
-class Etype(Enum):
-    """ The 'Any' etype returns all paths to all media in an element
-    { "media": { "paths": [ /* all paths as strings */ ] } }
-    """
+class Et:
+    """ Defines the primary operations that make up a basic Etype. Array functionality is built in
+        as a toggle on the simple type."""
 
-    Any = 0
-    # a single image
-    Image = 1
-    # a single video
-    Video = 2
-    # a single audio
-    Audio = 3
-    # a single json
-    Json = 4
-    # a 1d array of Images
-    ImageArray = 5
-    # a 1d array of Jsons
-    JsonArray = 6
-    # a video + a json describing the video
-    AnnotatedVideo = 7
-    AnnotatedImageArray = 8
+    def __init__(self, _id, regex, is_array=False):
+        self.id = _id
+        self.regex = regex
+        self.is_array = is_array
 
+    def __repr__(self):
+        return f"EType({self.id.capitalize()}{'Array' if self.is_array else ''})"
 
-def globit(path, regex, is_single=False, etype=None):
-    glob = list(Path(path).rglob(regex))
+    def __str__(self):
+        return self.__repr__()
 
-    if len(glob) is 0:
-        raise EtypeCastError(
-            "Could not cast to '{etype}' etype: no media found in directory"
+    def __eq__(self, other):
+        return all(
+            [
+                isinstance(other, Et),
+                self.id == other.id,
+                self.regex == other.regex,
+                self.is_array == other.is_array,
+            ]
         )
 
-    if is_single and len(glob) is not 1:
-        raise EtypeCastError(
-            "Could not cast to '{etype}' etype: more than one media item found."
+    def as_array(self):
+        return Et(self.id, self.regex, is_array=True)
+
+    def array(self):
+        return self.as_array()
+
+    def extract(self, path):
+        ext = "s" if self.is_array else ""
+        return {f"{self.id}{ext}": self.globit(path)}
+
+    def globit(self, path):
+        glob = []
+        pth = Path(path)
+        if isinstance(self.regex, list):
+            for ext in self.regex:
+                glob.extend(pth.rglob(ext))
+        else:
+            glob = list(pth.rglob(self.regex))
+
+        is_single = not self.is_array
+
+        if len(glob) is 0:
+            raise EtypeCastError(self)
+
+        if is_single and len(glob) is not 1 and self.id != "any":
+            raise EtypeCastError(self)
+
+        elif is_single and self.id != "any":
+            return glob[0]
+
+        return [str(x) for x in glob]
+
+
+class UnionEt:
+    """ A higher order Etype that allows the additive composition of Ets. """
+
+    def __init__(self, *ets):
+        self.ets = ets
+
+    def __repr__(self):
+        inner = ""
+        for et in self.ets:
+            inner += f"{et}, "
+        inner = inner[:-2]
+
+        return f"Union({inner})"
+
+    def __eq__(self, other):
+        return all(
+            isinstance(other, UnionEt),
+            all([x == y for x, y in zip(self.ets, other.ets)]),
         )
-    elif is_single:
-        return glob[0]
 
-    return [str(x) for x in glob]
-
-
-def get_any(el_path):
-    """ Return all files in the element """
-    return {"all": globit(el_path, "*.*", etype="Any")}
+    def extract(self, path):
+        out = {}
+        for x in self.ets:
+            out = {**out, **x.extract(path)}
+        return out
 
 
-def get_image(el_path):
-    return {"image": globit(el_path, "*.[bB][mM][pP]", is_single=True, etype="Image")}
+def create_etypes():
+    """ Etypes are basic and composite Ets wrapped into a nice namespace """
+    etypes = SimpleNamespace(
+        Any=Et("any", "*"),
+        Image=Et("image", ["*.bmp", "*.jpg", "*.jpeg"]),
+        Video=Et("video", "*.mp4"),
+        Audio=Et("audio", ["*.mp3", "*.wav"]),
+        Json=Et("json", "*.json"),
+    )
+
+    etypes.Union = lambda *args: UnionEt(*args)
+    etypes.Array = lambda x: x.as_array()
+
+    return etypes
 
 
-def get_video(el_path):
-    return {"video": globit(el_path, "*.[mM][pP][4]", is_single=True, etype="Video")}
-
-
-def get_audio(el_path):
-    return {
-        "audio": globit(
-            el_path, "*.([mM][pP][3])|([wW][aA][vV])", is_single=True, etype="Audio"
-        )
-    }
-
-
-def get_json(el_path):
-    return {"json": globit(el_path, "*.[jJ][sS][oO][nN]", is_single=True, etype="Json")}
-
-
-def get_imagearray(el_path):
-    return {"images": globit(el_path, "*.[bB][mM][pP]", etype="ImageArray")}
-
-
-def get_jsonarray(el_path):
-    return {"jsons": globit(el_path, "*.[jJ][sS][oO][nN]", etype="JsonArray")}
-
-
-def get_annotatedvideo(el_path):
-    return {
-        "video": globit(
-            el_path, "*.[mM][pP][4]", is_single=True, etype="AnnotatedVideo"
-        ),
-        "json": globit(
-            el_path, "*.[jJ][sS][oO][nN]", is_single=True, etype="AnnotatedVideo"
-        ),
-    }
-
-
-def get_annotatedimagearray(el_path):
-    return {
-        "images": globit(el_path, "*.[bB][mM][pP]", etype="AnnotatedImageArray"),
-        "json": globit(
-            el_path, "*.[jJ][sS][oO][nN]", is_single=True, etype="AnnotatedImageArray"
-        ),
-    }
+Etype = create_etypes()
 
 
 def cast_to_etype(el_path, etype):
-    """ An etype return object consists of all the paths to media in that element.
-    For example:
-        {
-            "base": "path/to/element/dir",
-            "etype": Etype.Image,
-            "media": {
-                /* values in 'media' depend on the etype */
-            }
-        }
-    """
-    switcher = {
-        Etype.Any: get_any,
-        Etype.Image: get_image,
-        Etype.Video: get_video,
-        Etype.Audio: get_audio,
-        Etype.Json: get_json,
-        Etype.ImageArray: get_imagearray,
-        Etype.JsonArray: get_jsonarray,
-        Etype.AnnotatedVideo: get_annotatedvideo,
-        Etype.AnnotatedImageArray: get_annotatedimagearray,
+    return {
+        "base": el_path,
+        "etype": etype,
+        "media": etype.extract(el_path),
     }
-
-    media = switcher.get(etype)(el_path)
-
-    return {"base": el_path, "etype": etype, "media": media}

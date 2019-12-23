@@ -18,10 +18,10 @@ def ffmpeg_frames(out_folder, fp, rate):
 
 class FramesAnalyser(Analyser):
     def get_in_etype(self):
-        return Etype.AnnotatedVideo
+        return Etype.Union(Etype.Json, Etype.Video)
 
     def get_out_etype(self):
-        return Etype.AnnotatedImageArray
+        return Etype.Union(Etype.Image.array(), Etype.Json)
 
     def analyse_element(self, element, config):
         FPS_NUMBER = int(config["fps"])

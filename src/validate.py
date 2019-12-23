@@ -22,7 +22,7 @@ def validate_module(phase: str, module: str, cfg: dict):
             cfg["config"] = {}
         if option["required"] is True and option["name"] not in cfg["config"].keys():
             raise InvalidYamlError(
-                f"The config you specified does not contain all the required arguments for the '{module}' {phase}."
+                f"The config you specified does not contain all the required arguments for the '{module}' {phase}er."
             )
 
 
@@ -69,13 +69,11 @@ def validate_yaml(cfg: dict) -> bool:
         if "config" not in keys or not isinstance(cfg["config"], dict):
             raise InvalidYamlError("The 'config' attribute must exist.")
 
-        config = cfg["config"]
-
         if cfg["phase"] not in ["select", "analyse"]:
             raise InvalidYamlError(
                 "The phase attribute must be either select or analyse"
             )
-        validate_module(cfg["phase"], cfg["module"], config)
+        validate_module(cfg["phase"], cfg["module"], cfg)
         return True
     else:
         if "elements_in" not in keys and "select" not in keys:
