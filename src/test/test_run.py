@@ -115,7 +115,8 @@ def test_validate_phase():
     if os.path.exists("/mtriage/credentials/google.json"):
         write(good_select_module)
         with pytest.raises(
-            InvalidYamlError, match="config you specified does not contain all the required arguments"
+            InvalidYamlError,
+            match="config you specified does not contain all the required arguments",
         ):
             validate()
 
