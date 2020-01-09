@@ -26,7 +26,7 @@ GOOGLE_CREDS = service_account.Credentials.from_service_account_file(
 
 class YoutubeSelector(Selector):
     def get_out_etype(self):
-        return Etype.AnnotatedVideo
+        return Etype.Union(Etype.Video, Etype.Json)
 
     def index(self, config):
         results = self._run(config)
