@@ -1,0 +1,17 @@
+metayolo=1
+metain_type=2
+data=voc
+tuning = 1
+neg = 0
+rand = 0
+novel = data/voc_novels.txt
+novelid = 0
+max_epoch = 1000
+repeat = 50
+dynamic = 0
+scale=1
+train = /home/chris/Fewshot_Detection/safari/voc_train.txt
+meta = /home/chris/Fewshot_Detection/data/voc_traindict_bbox_10shot.txt
+valid = /home/chris/safariland-element/val_can.txt
+backup = backup/metatunetest21
+gpus  = 0
