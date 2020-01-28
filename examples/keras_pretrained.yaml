@@ -1,11 +1,11 @@
 folder: media/demo
-phase: "analyse"
-module: "keras_pretrained"
-config:
+phase: analyse
+module: keras_pretrained
+config:k
   elements_in:
-    - "youtube/frames"
-  model: "ResNet50"
+    - youtube/frames
+  model: ResNet50
   labels:
-    - "tank"
-    - "rifle"
-    - "military uniform"
+    - tank
+    - rifle
+    - military uniform
