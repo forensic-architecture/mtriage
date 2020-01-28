@@ -7,6 +7,9 @@ The easiest way to get involved in the Forensic Architecture OSS community is to
 ### Releases
 We are developing mtriage on an approximate 2-week-long release cycle. Issues being tackled in the current release usually have a 'release' tag, and are normally listed in the [Release project board](https://github.com/forensic-architecture/mtriage/projects/1).
 
+You can learn about what we are currently working on by looking at the latest
+update. [Updates can be found here](docs/updates).
+
 ### Help Wanted
 The best issues to get started on are those with a 'help wanted' tag. Unless they are already assigned, these are generally issues that are sufficiently removed from our core development cycle, and are typically good for community contributors. Issues with an additional 'good first issue' tag don't require a much knowledge of mtriage's internals specifically, and so are ideal for new contributors.
 
