@@ -95,7 +95,6 @@ def __configure_data(dataopt):
             __C.save_interval = 10
         if __C.data == 'coco':
             __C.save_interval = 2
-        __C.shot = int(dataopt['meta'].split('.')[0].split('_')[-1].replace('shot', ''))
 
     print('save_interval', __C.save_interval)
 
@@ -126,24 +125,11 @@ def __configure_data(dataopt):
         if __C.neg_ratio.is_integer():
             __C.neg_ratio = int(__C.neg_ratio)
 
-    # Set up backup dir
-    __C.backup = dataopt['backup']
-    if not __C.multiscale:
-        __C.backup += 'fix'
-    if __C.metain_type != 2:
-        __C.backup = add_backup(__C.backup, 'in{}'.format(__C.metain_type))
-    __C.backup += '_novel{}'.format(novelid)
-    if cfg.metayolo:
-        __C.backup = __C.backup + '_neg{}'.format(cfg.neg_ratio)
-    if cfg.randmeta:
-        __C.backup += '_rand'
-
     # Get few-shot image ids
     cfg.yolo_joint = int(dataopt['joint']) if 'joint' in dataopt else False
     if cfg.yolo_joint:
         cfg.metaids = get_ids(dataopt['meta'])
         shot = int(dataopt['meta'].split('.')[0].split('_')[-1].replace('shot', ''))
-        __C.backup += '_joint{}'.format(shot)
 
 def __configure_net(netopt):
     __C.height = int(netopt['height'])
