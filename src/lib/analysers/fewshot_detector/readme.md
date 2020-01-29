@@ -1,20 +1,32 @@
-Code for running inference for predicting bounding boxes for canisters in images.
+# Code for running inference for predicting bounding boxes for canisters in images.
 
-Setup
+### Description
+This code allows to run inference on a list of images using the fewshot detector, trained to detect canisters. The fewshot detector is based on the paper [Few-shot Object Detection via Feature Reweighting](https://arxiv.org/abs/1812.01866), and was trained using the code base in <https://github.com/christegho/Fewshot_Detection> which is a modification of the original repo for the paper <https://github.com/bingykang/Fewshot_Detection>.
 
-This code works with Python2.7 and was run using a GeForce GTX 1080.
-The Driver Version is 430.50 and the CUDA Version is 10.1.
+### Setup
+This code works with Python2.7.
+The requiremnents can be downloaded via `pip install -r requirements.txt`.
+Training and testing was done on GeForce GTX 1080, with a Driver Version 430.50 and a CUDA Version 10.1.
 
 You need to download the weightfile for the weights of the few shot detector, in addition to the dynamics weights.
-wget 
+```
+# copy the weights folder for the fewshot detector within mtriage/src/lib/analysers/fewshot_detector/
+gsutil cp -r gs://safariland-element/models/fewshot-detector/weights .
+```
 
+### Running Inference
+Usage:
+```
+python2 predict_images.py \
+            --weightfile weights/000020.weights \
+            --img_dest predictions \
+            --valid_images val_can.txt \
+            --dynamic_weight_file weights/dynamic_weights.pkl
+```
 
-```python2 predict_images.py --weightfile weights/000020.weights --img_dest predictions --valid_images val_can.txt```
-The main arguments you need to pass for the script `predict_image.py` are 
---valid_images: path for the text file with the list of images to run inference on
+Use script `predict_images.py` to get predicted bounding boxes for the canisters in the list of images which paths are specified in `val_can.txt`. The script draws the predicted bounding boxes with a confidence scores and saves the new images in the file path `predictions`.
 
-                       
-For help about the rest of the arguments for predict_image.py:
+Make sure to change the paths accordingly to math the paths on your machine.
+                     
+There are other arguments you can pass, for explanations:
 ```python2 predict_images.py -h```
-
-The training code used for obtaining the weights is in https://github.com/christegho/Fewshot_Detection which is a modified version of the original code for the paper 
