@@ -134,7 +134,7 @@ class Selector(MTModule):
         self.__retrieve(elements, in_parallel)
         self.__post_retrieve()
 
-    def __attempt_retrieve(self, attempts, element):
+    def __attempt_retrieve(self, attempts: int, element: dict) -> bool:
         if not os.path.exists(element["base"]):
             os.makedirs(element["base"])
 
