@@ -178,7 +178,7 @@ class MTModule(ABC):
         save_logs(self.__LOGS, self.__LOGS_FILE)
         self.__LOGS = []
 
-    def logger(self, msg, element=None):
+    def logger(self, msg:str, element=None):
         context = self.__get_context(element)
         msg = f"{context}{msg}"
         self.__LOGS.append(msg)
@@ -199,12 +199,12 @@ class MTModule(ABC):
         err_msg = f"\033[91m{err_msg}\033[0m"
         print(err_msg)
 
-    def __get_context(self, element):
+    def __get_context(self, element) -> str:
         context = f"{self.NAME}: {self.PHASE_KEY}: "
         if element != None:
             el_id = element["id"]
             context = context + f"{el_id}: "
         return context
 
-    def is_dev(self):
+    def is_dev(self) -> bool:
         return "dev" in self.CONFIG and self.CONFIG["dev"]
