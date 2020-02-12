@@ -3,22 +3,25 @@ from enum import Enum
 from pathlib import Path
 from lib.common.exceptions import EtypeCastError
 from types import SimpleNamespace
-from typing import List
+from typing import List, Callable, Union
 
 
 class Et:
     """ Defines the primary operations that make up a basic Etype. Array functionality is built in
         as a toggle on the simple type."""
 
-    def __init__(self, _id, regex, is_array=False):
+    def __init__(self, _id, regex: Union[str, List[str]], is_array:bool=False):
+        """
+        
+        """
         self.id = _id
         self.regex = regex
         self.is_array = is_array
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"EType({self.id.capitalize()}{'Array' if self.is_array else ''})"
 
-    def __str__(self):
+    def __str__(self): # TODO: return callback?
         return self.__repr__()
 
     def __eq__(self, other):
@@ -31,18 +34,18 @@ class Et:
             ]
         )
 
-    def as_array(self):
+    def as_array(self) -> Et:
         return Et(self.id, self.regex, is_array=True)
 
-    def array(self):
+    def array(self) -> Et :
         return self.as_array()
 
-    def extract(self, path):
+    def extract(self, path: str) -> dict:
         ext = "s" if self.is_array else ""
         return {f"{self.id}{ext}": self.globit(path)}
 
-    def globit(self, path):
-        glob = []
+    def globit(self, path: str):
+        glob: list = []
         pth = Path(path)
         if isinstance(self.regex, list):
             for ext in self.regex:
@@ -59,7 +62,7 @@ class Et:
             raise EtypeCastError(self)
 
         elif is_single and self.id != "any":
-            return glob[0]
+            return glob[0] # TODO: setting return to list complains because it expects a Path
 
         return [str(x) for x in glob]
 
@@ -70,7 +73,7 @@ class UnionEt:
     def __init__(self, *ets):
         self.ets = ets
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         inner = ""
         for et in self.ets:
             inner += f"{et}, "
@@ -84,14 +87,14 @@ class UnionEt:
             all([x == y for x, y in zip(self.ets, other.ets)]),
         )
 
-    def extract(self, path):
-        out = {}
+    def extract(self, path: str) -> dict:
+        out: dict = {}
         for x in self.ets:
             out = {**out, **x.extract(path)}
         return out
 
 
-def create_etypes():
+def create_etypes() -> SimpleNamespace:
     """ Etypes are basic and composite Ets wrapped into a nice namespace """
     etypes = SimpleNamespace(
         Any=Et("any", "*"),
@@ -110,7 +113,7 @@ def create_etypes():
 Etype = create_etypes()
 
 
-def cast_to_etype(el_path, etype):
+def cast_to_etype(el_path: str, etype: Et) -> dict:
     return {
         "base": el_path,
         "etype": etype,
