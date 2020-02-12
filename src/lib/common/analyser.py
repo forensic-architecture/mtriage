@@ -17,21 +17,22 @@ from lib.common.exceptions import (
 )
 from lib.common.mtmodule import MTModule
 from lib.common.etypes import Etype, cast_to_etype
+from typing import List
 
 
-def get_json_paths(path):
+def get_json_paths(path: str):
     return list(Path(path).rglob("*.[jJ][sS][oO][nN]"))
 
 
-def get_video_paths(path):
+def get_video_paths(path: str):
     return list(Path(path).rglob("*.[mM][pP][4]"))
 
 
-def get_img_paths(path):
+def get_img_paths(path: str):
     return list(Path(path).rglob("*.[bB][mM][pP]"))
 
 
-def check_valid_element_folder(comp, element_dir):
+def check_valid_element_folder(comp: tuple, element_dir: str):
     try:
         _, dirs, files = next(os.walk(element_dir))
         if len(dirs) == 0 or len(files) > 0:
@@ -108,7 +109,7 @@ class Analyser(MTModule):
     def post_analyse(self, config, derived_dirs):
         """option to perform any clear up"""
 
-    def __get_in_cmps(self):
+    def __get_in_cmps(self) -> list:
         """ Take a list of input paths--of the form '{selector_name}/{?analyser_name}'-- and produces a list of components.
             Components are tuples whose first value is the name of a selector, and whose second value is either the name of
             an analyser, or None.
@@ -171,7 +172,7 @@ class Analyser(MTModule):
     def __post_analyse(self):
         self.post_analyse(self.CONFIG, self.__get_out_dirs())
 
-    def __cast_elements(self, element_dict, outdir):
+    def __cast_elements(self, element_dict, outdir) -> list:
         def attempt_cast_el(key):
             el_path = element_dict[key]
             etyped_attrs = cast_to_etype(el_path, self.get_in_etype())
@@ -192,7 +193,7 @@ class Analyser(MTModule):
 
         return els
 
-    def __get_out_dirs(self):
+    def __get_out_dirs(self) -> list:
         whitelist = self.CONFIG["elements_in"]
         dirs = set([])
         for _cmp in self.__get_in_cmps():
@@ -202,9 +203,9 @@ class Analyser(MTModule):
             dirs.add(outdir)
         return list(dirs)
 
-    def __get_in_elements(self, media):
+    def __get_in_elements(self, media) -> list:
         whitelist = self.CONFIG["elements_in"]
-        etyped_elements = []
+        etyped_elements: List[str] = [] # TODO: check if this is a list of strings
         in_cmps = self.__get_in_cmps()
 
         for _cmp in in_cmps:
@@ -298,13 +299,13 @@ class Analyser(MTModule):
 
         return all_media
 
-    def __get_out_dir(self, selector):
+    def __get_out_dir(self, selector: str) -> str:
         """Returns the path to a derived dir from a string selector"""
         derived_dir = f"{self.BASE_DIR}/{selector}/{Analyser.DERIVED_EXT}/{self.NAME}"
 
         return derived_dir
 
-    def __attempt_analyse(self, attempts, element, config):
+    def __attempt_analyse(self, attempts: int, element: dict, config) -> bool:
         dest = element["dest"]
         if not os.path.exists(dest):
             os.makedirs(dest)
@@ -334,13 +335,13 @@ class Analyser(MTModule):
 
     # STATIC METHODS
     @staticmethod
-    def find_video_paths(element_path):
+    def find_video_paths(element_path: str) -> list:
         return get_video_paths(element_path)
 
     @staticmethod
-    def find_img_paths(element_path):
+    def find_img_paths(element_path: str) -> list:
         return get_img_paths(element_path)
 
     @staticmethod
-    def find_json_paths(element_path):
+    def find_json_paths(element_path: str) -> list:
         return get_json_paths(element_path)
