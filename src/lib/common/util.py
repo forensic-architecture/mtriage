@@ -37,7 +37,8 @@ def hashdict(_dict):
     return m.hexdigest()
 
 
-def save_logs(logs, filepath):
+def save_logs(logs: list, filepath: str):
+    # TODO: is logs a list or another iterable
     if len(logs) <= 0:
         return
     with open(filepath, "a") as f:
@@ -49,8 +50,9 @@ def save_logs(logs, filepath):
 
 # NOTE: these vuevis functions should go to a viewer's util
 def vuevis_prepare_el(element):
+    # TODO: figure out how to get around TextIO not being indexable
     el_meta = element["media"]["json"]
-    out = {}
+    out: dict = {}
     with open(el_meta, "r") as f:
         f = json.load(f)
         out["title"] = f["title"]
@@ -90,7 +92,7 @@ def vuevis_from_preds(
         logger(f"Wrote predictions JSON for {element['id']}.")
 
 
-def deduce_frame_no(path):
+def deduce_frame_no(path: str) -> int:
     # TODO: error handling
     head, tail = ntpath.split(path)
     f = tail or nt.basename(head)
