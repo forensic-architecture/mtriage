@@ -20,15 +20,15 @@ from lib.common.etypes import Etype, cast_to_etype
 from typing import List
 
 
-def get_json_paths(path: str):
+def get_json_paths(path: str) -> list:
     return list(Path(path).rglob("*.[jJ][sS][oO][nN]"))
 
 
-def get_video_paths(path: str):
+def get_video_paths(path: str) -> list:
     return list(Path(path).rglob("*.[mM][pP][4]"))
 
 
-def get_img_paths(path: str):
+def get_img_paths(path: str) -> list:
     return list(Path(path).rglob("*.[bB][mM][pP]"))
 
 
