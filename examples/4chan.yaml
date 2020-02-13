@@ -1,0 +1,7 @@
+folder: media/4chanscrape
+phase: select
+module: 4chan
+config:
+  search_term: "g"
+  minimum_replies: 1
+  structured: false
