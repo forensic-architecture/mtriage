@@ -1,0 +1,6 @@
+folder: media/fcs
+phase: select
+module: fourchan
+config:
+  board: "g"
+  max_posts: 1
