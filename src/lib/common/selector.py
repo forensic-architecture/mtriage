@@ -1,6 +1,7 @@
 import os
 import csv
 from abc import abstractmethod
+from typing import Union, List, Generator
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
 from lib.common.exceptions import (
@@ -88,17 +89,9 @@ class Selector(MTModule):
             for el in csv.reader(f):
                 yield el
 
-    @MTModule.phase("retrieve", in_parallel=False)
-    def __retrieve(self, elements):
-        headers = next(elements)
 
-        def to_dict(el):
-            out = {}
-            for idx, item in enumerate(el):
-                attr = headers[idx]
-                out[attr] = item
-            return out
-
+    @MTModule.phase("retrieve", in_parallel=True)
+    def retrieve(self, elements: Union[List, Generator], to_dict):
         for row in elements:
             element = to_dict(row)
             id = element["id"]
@@ -116,15 +109,32 @@ class Selector(MTModule):
             else:
                 shutil.rmtree(element["base"])
 
+
+
+    def __retrieve(self, elements):
+        headers = next(elements)
+
+        def to_dict(el):
+            out = {}
+            for idx, item in enumerate(el):
+                attr = headers[idx]
+                out[attr] = item
+            return out
+
+        self.retrieve(elements, to_dict)
+
     @MTModule.phase("post-retrieve")
     def __post_retrieve(self):
         self.post_retrieve(self.CONFIG, self.ELEMENT_DIR)
 
     # entrypoint
-    def start_retrieving(self):
+    def start_retrieving(self, in_parallel=True):
         self.__pre_retrieve()
         elements = self.__get_elements()
-        self.__retrieve(elements)
+        if in_parallel:
+            self.__retrieve((e for e in elements))
+        else:
+            self.__retrieve(elements)
         self.__post_retrieve()
 
     def __attempt_retrieve(self, attempts, element):

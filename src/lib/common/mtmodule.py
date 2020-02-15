@@ -175,7 +175,6 @@ class MTModule(ABC):
         return decorator
 
     def save_and_clear_logs(self):
-        print(self.__LOGS)
         save_logs(self.__LOGS, self.__LOGS_FILE)
         self.__LOGS = []
 
