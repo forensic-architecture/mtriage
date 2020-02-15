@@ -1,7 +1,6 @@
-folder: media/4chanscrape
+folder: media/fcs
 phase: select
-module: 4chan
+module: fourchan
 config:
-  search_term: "g"
-  minimum_replies: 1
-  structured: false
+  board: "g"
+  max_posts: 1
