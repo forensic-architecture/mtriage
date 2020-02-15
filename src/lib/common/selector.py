@@ -68,7 +68,7 @@ class Selector(MTModule):
         pass
 
     # logged phases that this class manages
-    @MTModule.logged_phase("index")
+    @MTModule.phase("index")
     def start_indexing(self):
         element_map = self.index(self.CONFIG)
         # TODO: validate id column exists on csv for all rows
@@ -78,7 +78,7 @@ class Selector(MTModule):
                 for line in element_map:
                     writer.writerow(line)
 
-    @MTModule.logged_phase("pre-retrieve")
+    @MTModule.phase("pre-retrieve")
     def __pre_retrieve(self):
         # open element_map in preparation for reading line-by-line
         self.pre_retrieve(self.CONFIG, self.ELEMENT_DIR)
@@ -88,7 +88,7 @@ class Selector(MTModule):
             for el in csv.reader(f):
                 yield el
 
-    @MTModule.logged_phase("retrieve")
+    @MTModule.phase("retrieve")
     def __retrieve(self, elements):
         headers = next(elements)
 
@@ -116,7 +116,7 @@ class Selector(MTModule):
             else:
                 shutil.rmtree(element["base"])
 
-    @MTModule.logged_phase("post-retrieve")
+    @MTModule.phase("post-retrieve")
     def __post_retrieve(self):
         self.post_retrieve(self.CONFIG, self.ELEMENT_DIR)
 

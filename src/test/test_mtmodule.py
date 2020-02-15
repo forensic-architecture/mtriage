@@ -29,14 +29,14 @@ def test_class_variables(additionals):
     assert os.path.exists(f"{additionals.BASE_DIR}/logs")
 
 
-def test_logged_phase_decorator(additionals):
+def test_phase_decorator(additionals):
     class BadClass:
-        @MTModule.logged_phase("somekey")
+        @MTModule.phase("somekey")
         def improper_func(self):
             pass
 
     class GoodClass(MTModule):
-        @MTModule.logged_phase("somekey")
+        @MTModule.phase("somekey")
         def proper_func(self):
             self.logger("we did something.")
             return "no error"

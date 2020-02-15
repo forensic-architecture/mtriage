@@ -139,11 +139,11 @@ class Analyser(MTModule):
         return all_parts
 
     # INTERNAL METHODS\
-    @MTModule.logged_phase("pre-analyse")
+    @MTModule.phase("pre-analyse")
     def __pre_analyse(self):
         self.pre_analyse(self.CONFIG)
 
-    @MTModule.logged_phase("analyse")
+    @MTModule.phase("analyse")
     def __analyse(self, media):
         elements = self.__get_in_elements(media)
 
@@ -152,7 +152,7 @@ class Analyser(MTModule):
             if not success:
                 shutil.rmtree(element["dest"])
 
-    @MTModule.logged_phase("post-analyse")
+    @MTModule.phase("post-analyse")
     def __post_analyse(self):
         self.post_analyse(self.CONFIG, self.__get_out_dirs())
 

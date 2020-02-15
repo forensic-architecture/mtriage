@@ -56,7 +56,7 @@ class MTModule(ABC):
         return Etype.Any
 
     @staticmethod
-    def logged_phase(phase_key):
+    def phase(phase_key):
         def decorator(function):
             @wraps(function)
             def wrapper(self, *args):
