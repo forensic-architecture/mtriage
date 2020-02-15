@@ -1,3 +1,4 @@
+dev: true
 desc: Allows you to scrape text and media from 4chan
 args:
   - name: board
