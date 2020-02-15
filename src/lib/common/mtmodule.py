@@ -35,6 +35,7 @@ class MTModule(ABC):
     def __init__(self, CONFIG, NAME, BASE_DIR):
         self.NAME = NAME
         self.BASE_DIR = BASE_DIR
+        self.CONFIG = CONFIG
 
         self.UNIQUE_ID = hashdict(CONFIG)
 
