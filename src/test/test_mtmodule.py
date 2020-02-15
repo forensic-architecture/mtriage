@@ -109,4 +109,3 @@ def test_parallel_phase_decorator(additionals):
     # test function with argument
     eg_gen = (a for a in range(0, 100))
     assert gc.func_w_arg(eg_gen, 10) == "no error"
-

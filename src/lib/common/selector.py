@@ -89,7 +89,6 @@ class Selector(MTModule):
             for el in csv.reader(f):
                 yield el
 
-
     @MTModule.phase("retrieve", in_parallel=True)
     def retrieve(self, elements: Union[List, Generator], to_dict):
         for row in elements:
@@ -108,8 +107,6 @@ class Selector(MTModule):
                     shutil.rmtree(element["base"])
             else:
                 shutil.rmtree(element["base"])
-
-
 
     def __retrieve(self, elements):
         headers = next(elements)
