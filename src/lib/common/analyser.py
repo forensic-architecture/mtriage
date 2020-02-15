@@ -143,7 +143,7 @@ class Analyser(MTModule):
     def __pre_analyse(self):
         self.pre_analyse(self.CONFIG)
 
-    @MTModule.phase("analyse")
+    @MTModule.phase("analyse", in_parallel=False)
     def __analyse(self, media):
         elements = self.__get_in_elements(media)
 

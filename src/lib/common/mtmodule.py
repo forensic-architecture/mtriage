@@ -4,10 +4,11 @@ import struct
 import multiprocessing
 from functools import partial, wraps
 from types import GeneratorType
+from typing import Generator
 from itertools import islice, chain
 
 from lib.common.util import save_logs, hashdict, get_batch_size, batch
-from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotGenerator
+from lib.common.exceptions import ImproperLoggedPhaseError
 from lib.common.etypes import Etype
 
 TWO_INTS = "II"
@@ -55,22 +56,6 @@ class MTModule(ABC):
     def get_out_etype(self):
         return Etype.Any
 
-    @staticmethod
-    def phase(phase_key):
-        def decorator(function):
-            @wraps(function)
-            def wrapper(self, *args):
-                if not isinstance(self, MTModule):
-                    raise ImproperLoggedPhaseError(function.__name__)
-                self.PHASE_KEY = phase_key
-                ret_val = function(self, *args)
-                self.save_and_clear_logs()
-                return ret_val
-
-            return wrapper
-
-        return decorator
-
     def process_batch(self, innards, done_dict, done_queue, batch_num, c, other_args):
         for idx, i in enumerate(c):
             if idx not in done_dict:
@@ -79,79 +64,111 @@ class MTModule(ABC):
             else:
                 print("Batch %d item %d already done, skipping job." % (batch_num, idx))
 
+    def process_in_batches(self, args, process_element, remove_db=True):
+        """
+        Process elements in parallel using multiprocessing. Automatically applied to a phase that takes a single
+        Generator argument, `all_elements`.
+
+        `all_elements` is split into a number of batches, depending on the available CPU power of the machine on which
+        mtriage is running. `process_element` is then run on each element in each batch, in parallel by number of
+        batches. The results are collected together and return as a single list of results.
+        """
+
+        all_elements = list(args[0])
+        batch_size = get_batch_size(len(all_elements))
+        other_args = args[1:]
+        # each chunk is a generator
+        cs = batch(all_elements, n=batch_size)
+
+        manager = multiprocessing.Manager()
+
+        # switch logs to multiprocess access list
+        self.__LOGS = manager.list()
+        done_queue = manager.Queue()
+        batches_running = manager.Value("i", 1)
+
+        dbfile = f"{self.BASE_DIR}/{self.UNIQUE_ID}.db"
+
+        done_dict = {}
+        try:
+            with open(dbfile, "rb") as f:
+                _bytes = f.read(8)  # 8 bytes = two unsiged ints
+                while _bytes:
+                    fst, snd = struct.unpack(TWO_INTS, _bytes)
+                    if fst not in done_dict:
+                        done_dict[fst] = {}
+                    done_dict[fst][snd] = 1
+                    _bytes = f.read(8)
+                f.close()
+        except:
+            pass
+
+        db_process = multiprocessing.Process(
+            target=db_run, args=(dbfile, done_queue, batches_running)
+        )
+        db_process.start()
+
+        processes = []
+        for idx, c in enumerate(cs):
+            _done_dict = {}
+            if idx in done_dict:
+                _done_dict = done_dict[idx]
+            p = multiprocessing.Process(
+                target=self.process_batch,
+                args=(process_element, _done_dict, done_queue, idx, c, other_args),
+            )
+            p.start()
+            processes.append(p)
+
+        for p in processes:
+            p.join()
+
+        batches_running.value = 0
+        db_process.join()
+
+        if remove_db:
+            os.remove(dbfile)
+
+        self.save_and_clear_logs()
+        return RET_VAL_TESTS_ONLY
+
     @staticmethod
-    def batched_phase(phase_key, remove_db=True):
+    def phase(phase_key: str, **kwargs):
         """
-        Run a phase in parallel using multiprocessing. Can only be applied to a class function that takes a single argument that is of GeneratorType.
+        Provides phased logging for class methods on classes that inherit from MTModule.
+
+        Before the function is called, the PHASE_KEY is set, and afterwards logs are saved to disk and the buffer
+        cleared.
+
+        If the first argument to the decorator function is a generator, then the application of the function is
+        deferred to `process_in_batches`. This can be disabled by explicitly setting 'is_parallel' to False in the
+        `options` argument.
         """
 
-        def decorator(innards):
-            @wraps(innards)
+        def decorator(function):
+            @wraps(function)
             def wrapper(self, *args):
-                if not isinstance(self, MTModule):
-                    raise ImproperLoggedPhaseError(innards.__name__)
-                if len(args) < 1 or not isinstance(args[0], GeneratorType):
-                    raise BatchedPhaseArgNotGenerator(innards.__name__)
-
                 self.PHASE_KEY = phase_key
+                ret_val = None
 
-                all_elements = list(args[0])
-                batch_size = get_batch_size(len(all_elements))
-                other_args = args[1:]
-                # each chunk is a generator
-                cs = batch(all_elements, n=batch_size)
+                if not isinstance(self, MTModule):
+                    raise ImproperLoggedPhaseError(function.__name__)
 
-                manager = multiprocessing.Manager()
-
-                # switch logs to multiprocess access list
-                self.__LOGS = manager.list()
-                done_queue = manager.Queue()
-                batches_running = manager.Value("i", 1)
-
-                dbfile = f"{self.BASE_DIR}/{self.UNIQUE_ID}.db"
-
-                done_dict = {}
-                try:
-                    with open(dbfile, "rb") as f:
-                        _bytes = f.read(8)  # 8 bytes = two unsiged ints
-                        while _bytes:
-                            fst, snd = struct.unpack(TWO_INTS, _bytes)
-                            if fst not in done_dict:
-                                done_dict[fst] = {}
-                            done_dict[fst][snd] = 1
-                            _bytes = f.read(8)
-                        f.close()
-                except:
-                    pass
-
-                db_process = multiprocessing.Process(
-                    target=db_run, args=(dbfile, done_queue, batches_running)
-                )
-                db_process.start()
-
-                processes = []
-                for idx, c in enumerate(cs):
-                    _done_dict = {}
-                    if idx in done_dict:
-                        _done_dict = done_dict[idx]
-                    p = multiprocessing.Process(
-                        target=self.process_batch,
-                        args=(innards, _done_dict, done_queue, idx, c, other_args),
+                if (
+                    kwargs.get("in_parallel", True)
+                    and (len(args) >= 1)
+                    and isinstance(args[0], GeneratorType)
+                ):
+                    _remove_db = kwargs.get("remove_db", True)
+                    ret_val = self.process_in_batches(
+                        args, function, remove_db=_remove_db
                     )
-                    p.start()
-                    processes.append(p)
 
-                for p in processes:
-                    p.join()
-
-                batches_running.value = 0
-                db_process.join()
-
-                if remove_db:
-                    os.remove(dbfile)
+                else:
+                    ret_val = function(self, *args)
 
                 self.save_and_clear_logs()
-                return RET_VAL_TESTS_ONLY
+                return ret_val
 
             return wrapper
 

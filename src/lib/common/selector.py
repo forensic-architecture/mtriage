@@ -88,7 +88,7 @@ class Selector(MTModule):
             for el in csv.reader(f):
                 yield el
 
-    @MTModule.phase("retrieve")
+    @MTModule.phase("retrieve", in_parallel=False)
     def __retrieve(self, elements):
         headers = next(elements)
 

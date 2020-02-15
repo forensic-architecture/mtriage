@@ -1,6 +1,6 @@
 import pytest
 import os
-from lib.common.exceptions import ImproperLoggedPhaseError, BatchedPhaseArgNotGenerator
+from lib.common.exceptions import ImproperLoggedPhaseError
 from lib.common.mtmodule import MTModule
 from test.utils import scaffold_empty
 
@@ -57,27 +57,24 @@ def test_phase_decorator(additionals):
     assert gc._MTModule__LOGS == []
 
 
-def test_batched_phase_decorator(additionals):
+def test_parallel_phase_decorator(additionals):
     class GoodClass(MTModule):
-        @MTModule.batched_phase("somekey")
+        @MTModule.phase("somekey")
         def func(self, gen):
             self.logger("This function only takes a generator of elements.")
             return "no error"
 
-        @MTModule.batched_phase("somekey", False)
+        @MTModule.phase("somekey", remove_db=False)
         def func_no_remove(self, gen):
             return "no error"
 
-        @MTModule.batched_phase("secondkey")
+        @MTModule.phase("secondkey")
         def func_w_arg(self, gen, extra):
             self.logger(f"Running func with {list(gen)}, with extra arg {extra}.")
             return "no error"
 
     # test that a decorated method carries through its return value
     gc = GoodClass({}, "my_good_mod", additionals.BASE_DIR)
-
-    with pytest.raises(BatchedPhaseArgNotGenerator):
-        gc.func(1)
 
     # test parallel logs
     eg_gen = (a for a in range(0, 100))
@@ -112,3 +109,4 @@ def test_batched_phase_decorator(additionals):
     # test function with argument
     eg_gen = (a for a in range(0, 100))
     assert gc.func_w_arg(eg_gen, 10) == "no error"
+
