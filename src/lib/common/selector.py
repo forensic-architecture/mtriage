@@ -21,7 +21,7 @@ class Selector(MTModule):
     """
 
     def __init__(self, config, module, folder):
-        super().__init__(module, folder, config)
+        super().__init__(config, module, folder)
         self.DIR = f"{self.BASE_DIR}/{self.NAME}"
         self.ELEMENT_DIR = f"{self.DIR}/data"
         self.ELEMENT_MAP = f"{self.DIR}/element_map.csv"
@@ -89,8 +89,7 @@ class Selector(MTModule):
                 yield el
 
     @MTModule.logged_phase("retrieve")
-    def __retrieve(self):
-        elements = self.__get_elements()
+    def __retrieve(self, elements):
         headers = next(elements)
 
         def to_dict(el):
@@ -124,7 +123,8 @@ class Selector(MTModule):
     # entrypoint
     def start_retrieving(self):
         self.__pre_retrieve()
-        self.__retrieve()
+        elements = self.__get_elements()
+        self.__retrieve(elements)
         self.__post_retrieve()
 
     def __attempt_retrieve(self, attempts, element):
