@@ -3,6 +3,7 @@ import os
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Generator, List, Union
 from lib.common.util import save_logs
 from lib.common.etypes import cast_to_etype
 from lib.common.exceptions import (
@@ -86,12 +87,18 @@ class Analyser(MTModule):
         """
         return NotImplemented
 
-    def start_analysing(self):
-        # NOTE: generic error handling protocol may get undescriptive in development
-        # should probably toggle off during development
+    def start_analysing(self, in_parallel=True):
+        """ Primary entrypoint in the mtriage lifecycle.
+
+            1. Call user-defined `pre_analyse` if it exists.
+            2. Read all media from disk.
+            3. Call user-defined `analyse_element` in parallel (done through @phase decorator in MTModule). The option
+                to bypass parallelisation is for testing.
+            4. Call user-defined `post_analyse` if it exists.
+            5. Save logs, and clear the buffer. """
         self.__pre_analyse()
         all_media = self.__get_all_media()
-        self.__analyse(all_media)
+        self.__analyse(all_media, in_parallel)
         self.__post_analyse()
         self.save_and_clear_logs()
 
@@ -143,10 +150,18 @@ class Analyser(MTModule):
     def __pre_analyse(self):
         self.pre_analyse(self.CONFIG)
 
-    @MTModule.phase("analyse", in_parallel=False)
-    def __analyse(self, media):
+    def __analyse(self, media, in_parallel):
         elements = self.__get_in_elements(media)
+        if in_parallel:
+            self.analyse((e for e in elements))
+        else:
+            # analysing elements as a list will bypass parallelisation
+            self.analyse(elements)
 
+    @MTModule.phase("analyse")
+    def analyse(self, elements: Union[Generator, List]):
+        """ If `elements` is a Generator, the phase decorator will run in parallel.
+            If `elements` is a List, then it will run serially (which is useful for testing). """
         for element in elements:
             success = self.__attempt_analyse(5, element, self.CONFIG)
             if not success:

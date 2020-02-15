@@ -89,7 +89,7 @@ def test_bad_init_error(utils):
 
 def test_integration(utils, additionals):
     assert additionals.an.retryCount == 0
-    additionals.an.start_analysing()
+    additionals.an.start_analysing(in_parallel=False)
 
     skip_path = utils.get_element_path(
         additionals.selname, "skip", analyser=additionals.an.NAME
