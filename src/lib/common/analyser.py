@@ -54,8 +54,9 @@ class Analyser(MTModule):
     DATA_EXT = "data"
     DERIVED_EXT = "derived"
 
-    def __init__(self, config, module, directory):
+    def __init__(self, config: dict, module: dict, directory: str):
         try:
+            super().__init__(config, module, directory)
         except PermissionError:
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
