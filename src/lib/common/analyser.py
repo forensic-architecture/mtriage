@@ -56,7 +56,6 @@ class Analyser(MTModule):
 
     def __init__(self, config, module, directory):
         try:
-            super().__init__(config, module, directory)
         except PermissionError:
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
@@ -78,7 +77,7 @@ class Analyser(MTModule):
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
     @abstractmethod
-    def analyse_element(self, element, config):
+    def analyse_element(self, element: dict, config: dict):
         """ Method defined on each analyser that implements analysis element-wise.
 
             An element is currently simply a path to the relevant media. TODO: elements should be a more structured
@@ -103,10 +102,9 @@ class Analyser(MTModule):
         self.__post_analyse()
         self.save_and_clear_logs()
 
-    def pre_analyse(self, config):
         """option to set up class variables"""
 
-    def post_analyse(self, config, derived_dirs):
+    def post_analyse(self, config: dict, derived_dirs):
         """option to perform any clear up"""
 
     def __get_in_cmps(self) -> list:
@@ -172,7 +170,7 @@ class Analyser(MTModule):
     def __post_analyse(self):
         self.post_analyse(self.CONFIG, self.__get_out_dirs())
 
-    def __cast_elements(self, element_dict, outdir) -> list:
+    def __cast_elements(self, element_dict: dict, outdir: str) -> list:
         def attempt_cast_el(key):
             el_path = element_dict[key]
             etyped_attrs = cast_to_etype(el_path, self.get_in_etype())
@@ -203,7 +201,7 @@ class Analyser(MTModule):
             dirs.add(outdir)
         return list(dirs)
 
-    def __get_in_elements(self, media) -> list:
+    def __get_in_elements(self, media: list) -> list:
         whitelist = self.CONFIG["elements_in"]
         etyped_elements: List[str] = [] # TODO: check if this is a list of strings
         in_cmps = self.__get_in_cmps()
@@ -224,14 +222,14 @@ class Analyser(MTModule):
 
         return etyped_elements
 
-    def __get_all_media(self):
+    def __get_all_media(self) -> dict:
         """Get all available media by indexing the dir system from self.BASE_DIR.
         The 'all_media' is currently an object (TODO: note its structure). It should only be used internally, here in
         the analyser base class implementation.
         Note that this function needs to be run dynamically (each time an analyser is run), as new elements may have
         been added since it was last run.
         """
-        all_media = {}
+        all_media: dict = {}
 
         # the results from each selector sits in a dir of its name
         selectors = [
@@ -305,7 +303,7 @@ class Analyser(MTModule):
 
         return derived_dir
 
-    def __attempt_analyse(self, attempts: int, element: dict, config) -> bool:
+    def __attempt_analyse(self, attempts: int, element: dict, config: dict) -> bool:
         dest = element["dest"]
         if not os.path.exists(dest):
             os.makedirs(dest)
