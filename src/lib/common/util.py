@@ -38,7 +38,6 @@ def hashdict(_dict):
 
 
 def save_logs(logs: list, filepath: str):
-    # TODO: is logs a list or another iterable
     if len(logs) <= 0:
         return
     with open(filepath, "a") as f:
@@ -49,8 +48,7 @@ def save_logs(logs: list, filepath: str):
 
 
 # NOTE: these vuevis functions should go to a viewer's util
-def vuevis_prepare_el(element):
-    # TODO: figure out how to get around TextIO not being indexable
+def vuevis_prepare_el(element: dict) -> dict:
     el_meta = element["media"]["json"]
     out: dict = {}
     with open(el_meta, "r") as f:
@@ -64,11 +62,11 @@ def vuevis_prepare_el(element):
 
 
 def vuevis_from_preds(
-    element, get_preds=lambda img_path: None, logger=lambda msg: None
+    element: dict, get_preds=lambda img_path: None, logger=lambda msg: None
 ):
     """ Where get_preds returns a list of tuples (label, loss) for each predicted label."""
     imgs = element["media"]["images"]
-    labels = {}
+    labels: dict = {}
 
     logger(f"Running inference on frames in {element['id']}...")
     labels = {}
