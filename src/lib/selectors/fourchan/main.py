@@ -5,7 +5,7 @@ from lib.common.selector import Selector
 from lib.common.etypes import Etype
 
 
-class fourchan(Selector):
+class FourChanSelector(Selector):
     """ A selector that leverages the native 4chan API.
 
     https://github.com/4chan/4chan-API
