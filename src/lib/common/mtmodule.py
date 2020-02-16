@@ -178,7 +178,7 @@ class MTModule(ABC):
         save_logs(self.__LOGS, self.__LOGS_FILE)
         self.__LOGS = []
 
-    def logger(self, msg:str, element=None):
+    def logger(self, msg: str, element=None):
         context = self.__get_context(element)
         msg = f"{context}{msg}"
         self.__LOGS.append(msg)

@@ -10,7 +10,7 @@ class Et:
     """ Defines the primary operations that make up a basic Etype. Array functionality is built in
         as a toggle on the simple type."""
 
-    def __init__(self, _id, regex: Union[str, List[str]], is_array:bool=False):
+    def __init__(self, _id, regex: Union[str, List[str]], is_array: bool = False):
         """
         
         """
@@ -62,7 +62,9 @@ class Et:
             raise EtypeCastError(self)
 
         elif is_single and self.id != "any":
-            return glob[0] # TODO: setting return to list complains because it expects a Path
+            return glob[
+                0
+            ]  # TODO: setting return to list complains because it expects a Path
 
         return [str(x) for x in glob]
 

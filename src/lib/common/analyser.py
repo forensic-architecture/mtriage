@@ -203,7 +203,7 @@ class Analyser(MTModule):
 
     def __get_in_elements(self, media: list) -> list:
         whitelist = self.CONFIG["elements_in"]
-        etyped_elements: List[str] = [] # TODO: check if this is a list of strings
+        etyped_elements: List[str] = []  # TODO: check if this is a list of strings
         in_cmps = self.__get_in_cmps()
 
         for _cmp in in_cmps:
