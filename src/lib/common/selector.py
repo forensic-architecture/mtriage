@@ -89,7 +89,7 @@ class Selector(MTModule):
             for el in csv.reader(f):
                 yield el
 
-    @MTModule.phase("retrieve", in_parallel=True)
+    @MTModule.phase("retrieve")
     def retrieve(self, elements: Union[List, Generator], to_dict):
         for row in elements:
             element = to_dict(row)
@@ -108,7 +108,7 @@ class Selector(MTModule):
             else:
                 shutil.rmtree(element["base"])
 
-    def __retrieve(self, elements):
+    def __retrieve(self, elements, in_parallel):
         headers = next(elements)
 
         def to_dict(el):
@@ -117,6 +117,9 @@ class Selector(MTModule):
                 attr = headers[idx]
                 out[attr] = item
             return out
+
+        if not in_parallel:
+            elements = [e for e in elements]
 
         self.retrieve(elements, to_dict)
 
@@ -128,10 +131,7 @@ class Selector(MTModule):
     def start_retrieving(self, in_parallel=True):
         self.__pre_retrieve()
         elements = self.__get_elements()
-        if in_parallel:
-            self.__retrieve((e for e in elements))
-        else:
-            self.__retrieve(elements)
+        self.__retrieve(elements, in_parallel)
         self.__post_retrieve()
 
     def __attempt_retrieve(self, attempts, element):
