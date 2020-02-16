@@ -1,0 +1,19 @@
+dev: true
+desc: Allows you to scrape text and media from 4chan
+args:
+  - name: board
+    desc: Numeric identifier for a specific board to scrape. If not specified all boards are scraped.
+    required: true
+    input: string
+  - name: max_posts
+    desc: Number of total posts to scrape. Without a cap it would go forever.
+    required: true
+    input: integer
+  # - name: minimum_replies
+  #   desc: Only scrapes posts that greater than or equal to the number of minimum_replies.
+  #   required: false
+  #   input: int
+  # - name: structured
+  #   desc: Boolean for whether the scraping procedure should produce a structured hierarchy for each post and associated media.
+  #   required: false
+  #   input: bool
