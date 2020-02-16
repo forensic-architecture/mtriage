@@ -38,6 +38,7 @@ class fourchan(Selector):
                         self.logger(f"Extracting media and comments from post number: {post_index+1}")
                         post_row = []
                         post_row.append(post['no'])
+                        post_row.append(thread_id)
                         post_row.append(post['time'])
                         
                         try: comment = post['com']
@@ -45,7 +46,6 @@ class fourchan(Selector):
                         else:
                             comment = h.handle(comment)
                         post_row.append(comment)
-
 
                         # Filename
                         try: filename = post['filename']
@@ -66,7 +66,7 @@ class fourchan(Selector):
                         
                         results.append(post_row)
         self.logger('Scraping metadata complete')
-        results.insert(0, ["id", "datetime", "comment", "filename", "ext", "url"])
+        results.insert(0, ["id", "thread_id", "datetime", "comment", "filename", "ext", "url"])
         return results
 
     def retrieve_element(self, element, config):
