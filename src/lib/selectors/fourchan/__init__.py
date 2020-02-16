@@ -1,4 +1,4 @@
-"""The 4CHAN module is a selector that leverage's 4chans native API."""
-from .main import fourchan as main
+"""The 4chan module is a selector that leverage's 4chans native API."""
+from .main import FourChanSelector as main
 
 __all__ = ["main"]

@@ -5,15 +5,45 @@ from lib.common.selector import Selector
 from lib.common.etypes import Etype
 
 
-class fourchan(Selector):
+class FourChanSelector(Selector):
     """ A selector that leverages the native 4chan API.
 
     https://github.com/4chan/4chan-API
     """
 
-    def index(self, config):   
+    def index(self, config):
+        viable_boards = [
+            "a","aco","adv","an","asp",
+            "b","bant","biz",
+            "c","cgl","ck","cm","co",
+            "d","diy",
+            "e",
+            "f","fa","fit",
+            "g","gd","gif",
+            "h","hc","his","hm","hr",
+            "i","ic","int",
+            "jp",
+            "k",
+            "lgbt","lit",
+            "m","mlp","mu",
+            "n","news",
+            "o","out",
+            "p","po","pol",
+            "qa","qst",
+            "r","r9k",
+            "s","s4s","sci","soc","sp",
+            "t","tg","toy","trash","trv","tv",
+            "u",
+            "v","vg","vip","vp","vr",
+            "w","wg","wsg","wsr",
+            "x",
+            "y"
+        ]   
         results = []
         board = config["board"]
+        if board not in viable_boards:
+            self.error_logger('Your chosen board does not exist on 4chan!')
+            quit()
         max_posts = config["max_posts"]
         # Create a HTML parser for parsing comments
         h = html2text.HTML2Text()
