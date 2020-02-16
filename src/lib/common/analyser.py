@@ -88,7 +88,7 @@ class Analyser(MTModule):
         """
         return NotImplemented
 
-    def start_analysing(self, in_parallel=True):
+    def start_analysing(self, in_parallel: bool=True):
         """ Primary entrypoint in the mtriage lifecycle.
 
             1. Call user-defined `pre_analyse` if it exists.
