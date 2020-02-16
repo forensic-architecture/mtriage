@@ -28,7 +28,6 @@ class fourchan(Selector):
         for page_index, page in enumerate(content):
             if page_index < max_posts:
                 self.logger(f"Scraping page number: {page_index+1}")
-                # post_count += 1
                 for thread_index, threads in enumerate(page["threads"]):
                     self.logger(f"Extracting posts from thread number: {thread_index+1}")
                     thread_id = threads["no"]
