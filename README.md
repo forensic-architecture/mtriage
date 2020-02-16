@@ -83,6 +83,7 @@ You can also pass the following flags to the run command:
 | `--gpu` | Run using the mtriage GPU image. This will speed up certain analysers that depend on it |
 | `--tag` | Allows you to run mtriage with a custom build by passing the name of the Docker image tag you used during the custom build (see below) |
 | `--dry` | Primarily for testing. Will not run any command, but instead return the command that will be run. |
+| `--dev` | Run using local code, to see changes in development. |
 
 ### `./mtriage dev build`
 
