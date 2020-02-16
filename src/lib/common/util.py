@@ -6,7 +6,7 @@ import multiprocessing
 MAX_CPUS = multiprocessing.cpu_count() - 1
 
 
-def get_batch_size(ls_len):
+def get_batch_size(ls_len: int):
     """ Determine the batch size for multiprocessing. """
     if ls_len >= MAX_CPUS:
         return ls_len // MAX_CPUS + 1
@@ -14,13 +14,13 @@ def get_batch_size(ls_len):
     return ls_len
 
 
-def batch(iterable, n=1):
+def batch(iterable, n: int = 1):
     l = len(iterable)
     for ndx in range(0, l, n):
         yield iterable[ndx : min(ndx + n, l)]
 
 
-def serialize_dict(_dict):
+def serialize_dict(_dict: dict) -> str:
     ret = ""
     for key in _dict:
         val = _dict[key]
@@ -31,7 +31,7 @@ def serialize_dict(_dict):
     return ret
 
 
-def hashdict(_dict):
+def hashdict(_dict: dict):
     m = hashlib.md5()
     m.update(serialize_dict(_dict).encode("utf-8"))
     return m.hexdigest()
