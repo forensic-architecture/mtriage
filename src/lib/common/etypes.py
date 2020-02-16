@@ -21,7 +21,7 @@ class Et:
     def __repr__(self) -> str:
         return f"EType({self.id.capitalize()}{'Array' if self.is_array else ''})"
 
-    def __str__(self): # TODO: return callback?
+    def __str__(self):
         return self.__repr__()
 
     def __eq__(self, other):
@@ -34,17 +34,17 @@ class Et:
             ]
         )
 
-    def as_array(self) -> Et:
+    def as_array(self):
         return Et(self.id, self.regex, is_array=True)
 
-    def array(self) -> Et :
+    def array(self):
         return self.as_array()
 
     def extract(self, path: str) -> dict:
         ext = "s" if self.is_array else ""
         return {f"{self.id}{ext}": self.globit(path)}
 
-    def globit(self, path: str):
+    def globit(self, path: str) -> list:
         glob: list = []
         pth = Path(path)
         if isinstance(self.regex, list):
