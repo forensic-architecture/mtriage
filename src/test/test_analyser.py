@@ -1,7 +1,9 @@
 import pytest
 import os
+import json
+from pathlib import Path
 from lib.common.analyser import Analyser
-from lib.common.exceptions import InvalidAnalyserElements
+from lib.common.exceptions import InvalidAnalyserElements, InvalidCarry
 from lib.common.etypes import Etype
 from lib.common.mtmodule import MTModule
 
@@ -11,6 +13,22 @@ class EmptyAnalyser(Analyser):
         pass
 
 
+class TxtCopyAnalyser(Analyser):
+    def analyse_element(self, element, config):
+        """ just copy over all media in 'any' """
+        for med in element["media"]["any"]:
+            f = Path(med)
+            # only copy over txt files
+            if f.suffix != ".txt":
+                return
+            fname = f.name
+            with open(med, "r") as reader:
+                contents = reader.readlines()
+            dest = f"{element['dest']}/{fname}"
+            with open(dest, "a") as writer:
+                writer.writelines(contents)
+
+
 # TODO: test casting errors via an analyser with explicit etype
 @pytest.fixture
 def additionals(utils):
@@ -18,9 +36,13 @@ def additionals(utils):
     obj.maxDiff = None
     obj.emptyAnalyserName = "empty"
     obj.WHITELIST = ["sel1/an1", "sel1/an2", "sel2"]
-    utils.scaffold_empty("sel1", elements=["el1", "el2"], analysers=["an1", "an2"])
-    os.rmdir(utils.get_element_path("sel1", "el1", analyser="an2"))
-    utils.scaffold_empty("sel2", elements=["el4", "el5", "el6"])
+    obj.sel1 = "sel1"
+    obj.sel2 = "sel2"
+    obj.sel1_elements = ["el1", "el2"]
+    obj.sel2_elements = ["el4", "el5", "el6"]
+    utils.scaffold_empty(obj.sel1, elements=obj.sel1_elements, analysers=["an1", "an2"])
+    os.rmdir(utils.get_element_path(obj.sel1, "el1", analyser="an2"))
+    utils.scaffold_empty(obj.sel2, elements=obj.sel2_elements)
 
     obj.CONFIG = {"elements_in": obj.WHITELIST}
     obj.emptyAnalyser = EmptyAnalyser(
@@ -285,3 +307,104 @@ def test_cast_elements(utils, additionals):
 
     elements = additionals.emptyAnalyser._Analyser__get_in_elements(media)
     assert utils.listOfDictsEqual(elements, expected)
+
+
+def test_analyse(utils, additionals):
+    config = {"elements_in": ["sel1"]}
+    dummyName = "dummyAnalyser"
+    dummyAnalyser = TxtCopyAnalyser(config, dummyName, utils.TEMP_ELEMENT_DIR)
+    # confirm empty folder throws error
+    with pytest.raises(InvalidAnalyserElements):
+        dummyAnalyser.start_analysing()
+    # try again with a text el mocking selection completed
+    txtfile_name = "anitem.txt"
+    for el in additionals.sel1_elements:
+        with open(
+            f"{dummyAnalyser.BASE_DIR}/sel1/{Analyser.DATA_EXT}/{el}/{txtfile_name}",
+            "w+",
+        ) as f:
+            f.write("Hello")
+    dummyAnalyser.start_analysing()
+    # confirm txt has carried
+    for el in additionals.sel1_elements:
+        with open(
+            f"{dummyAnalyser.BASE_DIR}/sel1/{Analyser.DERIVED_EXT}/{dummyName}/{el}/{txtfile_name}",
+            "r",
+        ) as f:
+            lines = f.readlines()
+            assert len(lines) == 1
+            assert lines[0] == "Hello"
+
+
+def write_dummies(base, els, name):
+    txtfile_name = f"{name}.txt"
+    json_name = f"{name}.json"
+    rtf_name = f"{name}.rtf"
+    for el in els:
+        el_dir = f"{base}/{el}"
+        with open(f"{el_dir}/{txtfile_name}", "w+",) as f:
+            f.write("Hello")
+        with open(f"{el_dir}/{json_name}", "w+") as f:
+            json.dump({"empty": "json"}, f)
+        with open(f"{el_dir}/{rtf_name}", "w+") as f:
+            f.write("This is an RTF.")
+
+
+def test_carry_elements(utils, additionals):
+    """ If a "carry" List or str attribute is provided in an analyser config, then analysis should carry elements that
+    match each of the glob strings provided over to the analysed element. """
+
+    carry_invalid_config = {"elements_in": ["sel1"], "carry": 123}
+    invalidCarryingAnalyser = TxtCopyAnalyser(
+        carry_invalid_config, "CarryingAnalyserInvalid", utils.TEMP_ELEMENT_DIR
+    )
+    # write txt files
+    dummy_name = "anitem"
+    write_dummies(
+        f"{invalidCarryingAnalyser.BASE_DIR}/sel1/{Analyser.DATA_EXT}",
+        additionals.sel1_elements,
+        dummy_name,
+    )
+
+    with pytest.raises(InvalidCarry):
+        invalidCarryingAnalyser.start_analysing(in_parallel=False)
+
+    carry_txt_config = {**carry_invalid_config, "carry": "*.json"}
+    txtCarryingAnalyserSingle = TxtCopyAnalyser(
+        carry_txt_config, "txtCarryingAnalyserSingle", utils.TEMP_ELEMENT_DIR
+    )
+    txtCarryingAnalyserSingle.start_analysing(in_parallel=False)
+    # test that JSONs carried
+    for el in additionals.sel1_elements:
+        el_dir = f"{txtCarryingAnalyserSingle.BASE_DIR}/sel1/{Analyser.DERIVED_EXT}/txtCarryingAnalyserSingle/{el}"
+        with open(f"{el_dir}/{dummy_name}.json", "r") as f:
+            data = json.load(f)
+            assert data["empty"] == "json"
+
+
+def test_carry_elements_list(utils, additionals):
+    listCarryingAnalyser = TxtCopyAnalyser(
+        {"elements_in": ["sel1"], "carry": ["*.json", "*.rtf"]},
+        "listCarryingAnalyser",
+        utils.TEMP_ELEMENT_DIR,
+    )
+
+    dummy_name = "anitem"
+    write_dummies(
+        f"{listCarryingAnalyser.BASE_DIR}/sel1/{Analyser.DATA_EXT}",
+        additionals.sel1_elements,
+        dummy_name,
+    )
+
+    listCarryingAnalyser.start_analysing(in_parallel=False)
+
+    # test that JSONs and RTFs carried
+    for el in additionals.sel1_elements:
+        el_dir = f"{listCarryingAnalyser.BASE_DIR}/sel1/{Analyser.DERIVED_EXT}/listCarryingAnalyser/{el}"
+        with open(f"{el_dir}/{dummy_name}.json", "r") as f:
+            data = json.load(f)
+            assert data["empty"] == "json"
+        with open(f"{el_dir}/{dummy_name}.rtf", "r") as f:
+            lines = f.readlines()
+            assert len(lines) == 1
+            assert lines[0] == "This is an RTF."

@@ -90,3 +90,8 @@ class InvalidElementsIn(Exception):
 
 class InvalidAnalyserElements(Exception):
     pass
+
+
+class InvalidCarry(Exception):
+    def __init__(self, msg):
+        super().__init__(f"The 'carry' attribute you provided is invalid: {msg}")
