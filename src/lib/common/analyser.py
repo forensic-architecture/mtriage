@@ -14,6 +14,7 @@ from lib.common.exceptions import (
     InvalidElementsIn,
     InvalidAnalyserElements,
     EtypeCastError,
+    InvalidCarry,
 )
 from lib.common.mtmodule import MTModule
 from lib.common.etypes import Etype, cast_to_etype
@@ -163,9 +164,12 @@ class Analyser(MTModule):
         """ If `elements` is a Generator, the phase decorator will run in parallel.
             If `elements` is a List, then it will run serially (which is useful for testing). """
         for element in elements:
-            success = self.__attempt_analyse(5, element, self.CONFIG)
+            success = self.__attempt_analyse(5, element)
+
             if not success:
                 shutil.rmtree(element["dest"])
+
+            self.__carry_from_element(element)
 
     @MTModule.phase("post-analyse")
     def __post_analyse(self):
@@ -191,6 +195,24 @@ class Analyser(MTModule):
             )
 
         return els
+
+    def __carry_from_element(self, element):
+        if "carry" not in self.CONFIG:
+            return
+
+        to_carry = self.CONFIG["carry"]
+        if not (isinstance(to_carry, str) or isinstance(to_carry, List)):
+            raise InvalidCarry("you must pass a single string or a list of strings.")
+
+        def carry_matches(glob):
+            for path in Path(element["base"]).rglob(glob):
+                shutil.copyfile(path, f"{element['dest']}/{path.name}")
+
+        if isinstance(to_carry, str):
+            carry_matches(to_carry)
+        else:  # must be a list
+            for matcher in to_carry:
+                carry_matches(matcher)
 
     def __get_out_dirs(self):
         whitelist = self.CONFIG["elements_in"]
@@ -304,12 +326,12 @@ class Analyser(MTModule):
 
         return derived_dir
 
-    def __attempt_analyse(self, attempts, element, config):
+    def __attempt_analyse(self, attempts, element):
         dest = element["dest"]
         if not os.path.exists(dest):
             os.makedirs(dest)
         try:
-            self.analyse_element(element, config)
+            self.analyse_element(element, self.CONFIG)
             return True
         except ElementShouldSkipError as e:
             self.error_logger(str(e), element)
@@ -317,7 +339,7 @@ class Analyser(MTModule):
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
-                return self.__attempt_analyse(attempts - 1, element, config)
+                return self.__attempt_analyse(attempts - 1, element)
             else:
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
