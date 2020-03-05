@@ -17,16 +17,25 @@ gsutil cp -r gs://safariland-element/models/fewshot-detector/weights .
 ### Running Inference
 Usage:
 ```
-python2 predict_images.py \
+python3 predict_images.py \
             --weightfile weights/000020.weights \
             --img_dest predictions \
             --valid_images val_can.txt \
             --dynamic_weight_file weights/dynamic_weights.pkl
 ```
 
-Use script `predict_images.py` to get predicted bounding boxes for the canisters in the list of images which paths are specified in `val_can.txt`. The script draws the predicted bounding boxes with a confidence scores and saves the new images in the file path `predictions`.
+Use script `predict_images.py` to get predicted bounding boxes for the canisters for a list of images which paths are specified in `val_can.txt`. The script draws the predicted bounding boxes with a confidence scores and saves the new images in the file path `predictions`.
 
 Make sure to change the paths accordingly to math the paths on your machine.
-                     
+
 There are other arguments you can pass, for explanations:
 ```python2 predict_images.py -h```
+
+To run inference on a single image, use `prediction_utils.py` as below:
+```
+python3 prediction_utils.py \
+            --weightfile weights/000020.weights \
+            --valid_images path_to_image \
+            --dynamic_weight_file weights/dynamic_weights.pkl
+```
+Note the image and the bounding boxes are saved in `test.jpg` when you run `prediction_utils.py`.

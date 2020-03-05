@@ -16,6 +16,9 @@ def valid(valid_images, darknetcfg, learnetcfg, weightfile, dynamic_weight_file,
     with open(valid_images) as fp:
         tmp_files = fp.readlines()
         valid_files = [item.rstrip() for item in tmp_files]
+        
+#     m = load_model(darknetcfg, learnetcfg, weightfile)
+#     dynamic_weights = load_dynamic_weights(dynamic_weight_file)
     
     m = Darknet(darknetcfg, learnetcfg)
     m.print_network()
@@ -25,7 +28,7 @@ def valid(valid_images, darknetcfg, learnetcfg, weightfile, dynamic_weight_file,
     
     print('===> Loading dynamic weights from {}...'.format(dynamic_weight_file))
     with open(dynamic_weight_file, 'rb') as f:
-        rws = pickle.load(f)
+        rws = pickle.load(f, encoding='latin1')
         dynamic_weights = [Variable(torch.from_numpy(rw)).cuda() for rw in rws]
         
     valid_dataset = dataset.listDataset(valid_images, shape=(m.width, m.height),
@@ -78,7 +81,7 @@ def valid(valid_images, darknetcfg, learnetcfg, weightfile, dynamic_weight_file,
                 y2 = (box[1] + box[3]/2.0) * height
 
                 det_conf = box[4]
-                for j in range((len(box)-5)/2):
+                for j in range((len(box)-5)//2):
                     cls_conf = box[5+2*j]
                     cls_id = box[6+2*j]
                     prob =det_conf * cls_conf
