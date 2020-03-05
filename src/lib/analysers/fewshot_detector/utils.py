@@ -522,17 +522,6 @@ def all_file_lines(file_dict):
             lines.extend(f.readlines())
     return len(set(lines))
 
-
-# def all_file_lines(file_dict):
-#     # Backup labeled image paths (for meta-model)
-#     count = 0
-#     with open(file_dict, 'r') as f:
-#         files = [line.rstrip().split()[-1] for line in f.readlines()]
-#         for file in files:
-#             count += _file_lines(file)
-#     return count
-
-
 def get_image_size(fname):
     '''Determine the image type of fhandle and return its size.
     from draco'''
