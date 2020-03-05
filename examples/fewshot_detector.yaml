@@ -1,0 +1,8 @@
+folder: media/demo_official
+phase: analyse
+module: fewshot_detector
+config:
+  elements_in:
+    - youtube/frames
+  weigths: src/lib/analysers/fewshot_detector/weights/000020.weights
+  dynamic_weights: src/lib/analysers/fewshot_detector/weights/dynamic_weights.pkl
