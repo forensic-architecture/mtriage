@@ -12,6 +12,7 @@ HOME_PATH = os.path.expanduser("~")
 
 def __run(cmd, cli_args, *args):
     if cli_args.dry:
+        print(" ".join(cmd))
         return cmd
     try:
         returncode = sp.call(cmd)
