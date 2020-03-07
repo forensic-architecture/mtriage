@@ -10,10 +10,9 @@ from lib.common.exceptions import (
     SelectorIndexError,
     EtypeCastError,
 )
-from lib.common.etypes import cast, Etype
+from lib.common.etypes import cast, Etype, LocalElementsIndex
 from test.utils import scaffold_elementmap, STUB_PATHS, list_files
 
-import pdb
 
 class EmptySelector(Selector):
     def __init__(self, config, name, dr):
@@ -24,12 +23,12 @@ class EmptySelector(Selector):
         if not os.path.exists(self.disk.ELEMENT_MAP):
             df = scaffold_elementmap(["el1", "el2", "el3"])
             df = [x+[STUB_PATHS.imagejpg] if idx > 0 else (x+['path']) for idx, x in enumerate(df)]
-            return df
+            return LocalElementsIndex(rows=df)
         else:
             return None
 
-    def retrieve_element(self, element, config):
-        return cast(element.path, element.id, to=Etype.Image)
+    def retrieve_element(self, row, config):
+        return cast(row.path, row.id, to=Etype.Image)
 
 
 @pytest.fixture

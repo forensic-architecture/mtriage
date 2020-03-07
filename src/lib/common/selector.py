@@ -2,6 +2,7 @@ import os
 import csv
 from abc import abstractmethod
 from typing import Dict, Generator, Union, List
+from types import SimpleNamespace
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
 from lib.common.exceptions import (
@@ -10,7 +11,7 @@ from lib.common.exceptions import (
     ElementShouldSkipError,
     EtypeCastError,
 )
-from lib.common.etypes import cast_to_etype
+from lib.common.etypes import cast_to_etype, LocalElement, LocalElementsIndex
 from lib.common.storage import LocalStorage
 import shutil
 
@@ -31,7 +32,7 @@ class Selector(MTModule):
 
     # must be implemented by child
     @abstractmethod
-    def index(self, config):
+    def index(self, config) -> LocalElementsIndex:
         """TODO: indicate the exact format this should output.
         Should populate a dataframe with the results, keep logs, and then call:
             self.index_complete(df, logs)
@@ -45,12 +46,10 @@ class Selector(MTModule):
         raise NotImplementedError
 
     @abstractmethod
-    def retrieve_element(self, element, config) -> Dict[str, bytes]:
-        """ Retrieve takes a single element as an argument, which is a row in the dataframe that was produced from the
-        'index' method. Data that has already been retrieved will not be retrieved again.
-
-        The method should return an object with filenames and bytestreams, which mtriage will then store appropriately.
-        """
+    def retrieve_element(self, row: SimpleNamespace, config) -> LocalElement:
+        """ Retrieve takes a single row from LocalElementsIndex as an argument, which was produced by the 'index'
+        method. Data that has already been retrieved will not be retrieved again. The method should return
+        a LocalElement, which mtriage will then persist to an instance of `Storage`."""
         raise NotImplementedError
 
     # optionally implemented by child
@@ -69,7 +68,7 @@ class Selector(MTModule):
 
     def start_retrieving(self, in_parallel=True):
         self.__pre_retrieve()
-        elements = self.disk.read_elements_index()
+        elements = self.disk.read_elements_index().rows
         if not in_parallel:
             try:
                 elements = [e for e in elements]
@@ -83,11 +82,11 @@ class Selector(MTModule):
         self.pre_retrieve(self.CONFIG)
 
     @MTModule.phase("retrieve")
-    def __retrieve(self, elements: Union[List, Generator]):
-        for element in elements:
-            success = self.__attempt_retrieve(5, element)
+    def __retrieve(self, element_indices: Union[List, Generator]):
+        for element_index in element_indices:
+            success = self.__attempt_retrieve(5, element_index)
             if not success:
-                shutil.rmtree(element.base)
+                self.disk.remove_element(element_index.id)
 
     @MTModule.phase("post-retrieve")
     def __post_retrieve(self):
@@ -99,15 +98,15 @@ class Selector(MTModule):
             self.disk.write_element(local_element)
             return True
         except ElementShouldSkipError as e:
-            self.error_logger(str(e), element)
+            self.error_logger(str(e), element_index)
             return False
         except ElementShouldRetryError as e:
-            self.error_logger(str(e), element)
+            self.error_logger(str(e), element_index)
             if attempts > 1:
-                return self.__attempt_retrieve(attempts - 1, element)
+                return self.__attempt_retrieve(attempts - 1, element_index)
             else:
                 self.error_logger(
-                    "failed after maximum retries - skipping element", element
+                    "failed after maximum retries - skipping element", element_index
                 )
                 return False
         # TODO: flag to turn this off during development should be passed during run
@@ -116,6 +115,6 @@ class Selector(MTModule):
                 raise e
             else:
                 self.error_logger(
-                    "unknown exception raised - skipping element", element
+                    "unknown exception raised - skipping element", element_index
                 )
                 return False

@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 from types import GeneratorType, SimpleNamespace as Ns
 from typing import Union, List, Iterable, Dict
-from lib.common.etypes import Etype, LocalElement
+from lib.common.etypes import Etype, LocalElement, LocalElementsIndex
 from abc import ABC, abstractmethod
 import pdb
 
@@ -53,24 +53,27 @@ class LocalStorage(Storage):
         if not os.path.exists(self.ELEMENT_DIR):
             os.makedirs(self.ELEMENT_DIR)
 
-    def read_elements_index(self):
-        with open(self.ELEMENT_MAP, "r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            for idx, row in enumerate(reader):
-                if idx == 0:
-                    self.headers = row
-                    continue
-                obj = Ns()
-                allvls = dict(zip(self.headers, row))
-                obj = Ns(**allvls)
+    def read_elements_index(self) -> LocalElementsIndex:
+        def get_rows():
+            with open(self.ELEMENT_MAP, "r", encoding="utf-8") as f:
+                reader = csv.reader(f)
+                for idx, row in enumerate(reader):
+                    if idx == 0:
+                        self.headers = row
+                        continue
+                    obj = Ns()
+                    allvls = dict(zip(self.headers, row))
+                    obj = Ns(**allvls)
 
-                yield obj
+                    yield obj
 
-    def write_elements_index(self, rows: Iterable):
+        return LocalElementsIndex(rows=get_rows())
+
+    def write_elements_index(self, eidx: LocalElementsIndex):
         # TODO: validate id column exists on csv for all rows
         with open(self.ELEMENT_MAP, "w") as f:
             writer = csv.writer(f, delimiter=",")
-            for line in rows:
+            for line in eidx.rows:
                 writer.writerow(line)
 
     def read_element(self, element: Dict):
@@ -79,7 +82,7 @@ class LocalStorage(Storage):
     def write_element(self, element: LocalElement) -> bool:
         """ Write a LocalElement to persistent storage, deleting the LocalElement afterwards.
             Returns True if successful, false if otherwise. """
-        base = self.ELEMENT_DIR/Path(element.id)
+        base = self.ELEMENT_DIR/element.id
         if not os.path.exists(base):
             os.makedirs(base)
 
@@ -95,6 +98,10 @@ class LocalStorage(Storage):
                 for idx, e in enumerate(element.source):
                     shutil.move(e.path, base/f"{idx}{e.path.suffix}")
 
+    def remove_element(self, id: str):
+        d = self.ELEMENT_DIR/id
+        if os.path.exists(d):
+            shutil.rmtree(d)
 
 
 

@@ -1,7 +1,7 @@
 import pytest
 import os
 from lib.common.selector import Selector
-from lib.common.etypes import cast_to_etype, Etype
+from lib.common.etypes import cast_to_etype, Etype, LocalElement, LocalElementsIndex
 from lib.common.exceptions import (
     ElementShouldRetryError,
     ElementShouldSkipError,
@@ -9,31 +9,31 @@ from lib.common.exceptions import (
     EtypeCastError,
 )
 from test.utils import scaffold_elementmap
-
+import pdb
 
 class BasicErrorSelector(Selector):
     def __init__(self, *args):
         super().__init__(*args)
         self.retryCount = 0
 
-    def index(self, config):
+    def index(self, config) -> LocalElementsIndex:
         error = config["error"] if "error" in config else ""
         if error == "index":
             raise SelectorIndexError("test")
         else:
             elements = ["skip", "retry3", "retryN", "pass"]
-            return scaffold_elementmap(elements)
+            return LocalElementsIndex(rows=scaffold_elementmap(elements))
 
-    def retrieve_element(self, element, config):
-        if element["id"] == "skip":
+    def retrieve_element(self, element, config) -> LocalElement:
+        if element.id == "skip":
             raise ElementShouldSkipError("test")
-        elif element["id"] == "retry3" and self.retryCount < 3:
+        elif element.id == "retry3" and self.retryCount < 3:
             self.retryCount += 1
             raise ElementShouldRetryError("test")
-        elif element["id"] == "retryN":
+        elif element.id == "retryN":
             raise ElementShouldRetryError("test")
         else:
-            pass
+            return None
 
 
 class RetrieveErrorSelector(BasicErrorSelector):
@@ -83,12 +83,12 @@ def test_index_error(additionals):
 
 def test_retrieve_skip_error(additionals):
     with pytest.raises(ElementShouldSkipError, match="test - skipping element"):
-        additionals.castErrorSelector.retrieve_element({"id": "skip"}, {})
+        additionals.castErrorSelector.retrieve_element(LocalElement(id="skip"), {})
 
 
 def test_retrieve_retry_error(additionals):
     with pytest.raises(ElementShouldRetryError, match="test - attempt retry"):
-        additionals.castErrorSelector.retrieve_element({"id": "retryN"}, {})
+        additionals.castErrorSelector.retrieve_element(LocalElement(id="retryN"), {})
 
 
 def test_integration_1(utils, additionals):
@@ -110,7 +110,7 @@ def test_integration_1(utils, additionals):
     assert not os.path.exists(pass_path)
 
 
-def test_integration_2(utils, additionals):
+def integration_2(utils, additionals):
     additionals.retrieveErrorSelector.start_indexing()
     additionals.retrieveErrorSelector.start_retrieving(in_parallel=False)
 

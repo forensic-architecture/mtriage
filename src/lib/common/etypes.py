@@ -28,12 +28,19 @@ def filter_files(folder, regex, allow_multiple=False):
     return [str(x) for x in glob]
 
 class LocalElement:
-    """ Local as in not from storage, but on the same comp where mtriage is running. """
+    """ Local as in not from storage, but on the same comp where mtriage is running.
+        Returned from Selector.retrieve_element, and also Analyser.analyse_element. """
     def __init__(self, id=None, is_file_ref=True, et=None, source=None):
         self.id = id
         self.is_file_ref = is_file_ref
         self.et = et
         self.source = source
+
+class LocalElementsIndex:
+    """ Similar to LocalElement, on the same comp as mtriage is running.
+        Initialised with an array of arrays, where each inner array represents one element to be retrieved. """
+    def __init__(self, rows=[]):
+        self.rows = rows
 
 class Et:
     """ Defines the primary operations that make up a basic Etype. Array functionality is built in
