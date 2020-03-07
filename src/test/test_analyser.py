@@ -309,7 +309,7 @@ def test_cast_elements(utils, additionals):
     assert utils.listOfDictsEqual(elements, expected)
 
 
-def test_analyse(utils, additionals):
+def analyse(utils, additionals):
     config = {"elements_in": ["sel1"]}
     dummyName = "dummyAnalyser"
     dummyAnalyser = TxtCopyAnalyser(config, dummyName, utils.TEMP_ELEMENT_DIR)
@@ -350,7 +350,7 @@ def write_dummies(base, els, name):
             f.write("This is an RTF.")
 
 
-def test_carry_elements(utils, additionals):
+def carry_elements(utils, additionals):
     """ If a "carry" List or str attribute is provided in an analyser config, then analysis should carry elements that
     match each of the glob strings provided over to the analysed element. """
 
@@ -382,7 +382,7 @@ def test_carry_elements(utils, additionals):
             assert data["empty"] == "json"
 
 
-def test_carry_elements_list(utils, additionals):
+def carry_elements_list(utils, additionals):
     listCarryingAnalyser = TxtCopyAnalyser(
         {"elements_in": ["sel1"], "carry": ["*.json", "*.rtf"]},
         "listCarryingAnalyser",

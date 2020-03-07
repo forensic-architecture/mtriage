@@ -11,6 +11,7 @@ from lib.common.exceptions import (
     EtypeCastError,
 )
 from lib.common.etypes import cast, Etype, LocalElementsIndex
+from lib.common.storage import LocalStorage
 from test.utils import scaffold_elementmap, STUB_PATHS, list_files
 
 
@@ -34,7 +35,7 @@ class EmptySelector(Selector):
 @pytest.fixture
 def additionals(utils):
     obj = lambda: None
-    obj.emptySelector = EmptySelector({}, "empty", utils.TEMP_ELEMENT_DIR)
+    obj.emptySelector = EmptySelector({}, "empty", storage=LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
     yield obj
     utils.cleanup()
 

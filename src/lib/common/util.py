@@ -37,15 +37,6 @@ def hashdict(_dict):
     return m.hexdigest()
 
 
-def save_logs(logs, filepath):
-    if len(logs) <= 0:
-        return
-    with open(filepath, "a") as f:
-        for l in logs:
-            if l is not None:
-                f.write(l)
-                f.write("\n")
-
 
 # NOTE: these vuevis functions should go to a viewer's util
 def vuevis_prepare_el(element):

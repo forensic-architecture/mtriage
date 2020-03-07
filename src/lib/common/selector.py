@@ -12,11 +12,10 @@ from lib.common.exceptions import (
     EtypeCastError,
 )
 from lib.common.etypes import cast_to_etype, LocalElement, LocalElementsIndex
-from lib.common.storage import LocalStorage
+from lib.common.storage import Storage, LocalStorage
 import shutil
 
 
-import pdb
 class Selector(MTModule):
     """A Selector implements the indexing and retrieving of media for a platform or otherwise distinct space.
 
@@ -25,10 +24,12 @@ class Selector(MTModule):
     the arguments of exposed methods.
     """
 
-    def __init__(self, config, module, folder, storage=LocalStorage):
+    def __init__(self, config, module, storage: Storage=None):
         super().__init__(config, module, folder)
         self.DIR = f"{self.BASE_DIR}/{self.NAME}"
-        self.disk = storage(self.DIR)
+        if storage is None:
+            raise Exception("You must provide a storage. LocalStorage(folder=\"path/to/folder\") is the most common.")
+        self.disk = storage
 
     # must be implemented by child
     @abstractmethod

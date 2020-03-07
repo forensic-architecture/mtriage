@@ -4,7 +4,6 @@ import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Generator, List, Union
-from lib.common.util import save_logs
 from lib.common.etypes import cast_to_etype
 from lib.common.exceptions import (
     ElementShouldSkipError,

@@ -7,7 +7,7 @@ from types import GeneratorType
 from typing import Generator
 from itertools import islice, chain
 
-from lib.common.util import save_logs, hashdict, get_batch_size, batch
+from lib.common.util import hashdict, get_batch_size, batch
 from lib.common.exceptions import ImproperLoggedPhaseError
 from lib.common.etypes import Etype
 
@@ -33,21 +33,16 @@ def db_run(dbfile, q, batches_running):
 
 
 class MTModule(ABC):
-    def __init__(self, CONFIG, NAME, BASE_DIR):
-        self.NAME = NAME
-        self.BASE_DIR = BASE_DIR
-        self.CONFIG = CONFIG
+    """ Handles parallelisation and component-specific logging.  Invoked primarily through the @MTModule.phase decorator
+    on a method, which parallelises based on the function signature."""
+    def __init__(self, config, name, storage=None):
+        self.CONFIG = config
+        self.NAME = name
+        self.DISK = storage
 
-        self.UNIQUE_ID = hashdict(CONFIG)
-
-        # logging setup
+        self.UNIQUE_ID = hashdict(config)
         self.PHASE_KEY = None
         self.__LOGS = []
-        self.__LOGS_DIR = f"{self.BASE_DIR}/logs"
-        self.__LOGS_FILE = f"{self.__LOGS_DIR}/{self.NAME}.txt"
-
-        if not os.path.exists(self.__LOGS_DIR):
-            os.makedirs(self.__LOGS_DIR)
 
     def get_in_etype(self):
         """ Note that only analysers implement this method, as selectors do not need to know their input type"""
@@ -87,7 +82,7 @@ class MTModule(ABC):
         done_queue = manager.Queue()
         batches_running = manager.Value("i", 1)
 
-        dbfile = f"{self.BASE_DIR}/{self.UNIQUE_ID}.db"
+        dbfile = f"{self.DISK.base_dir}/{self.UNIQUE_ID}.db"
 
         done_dict = {}
         try:
@@ -175,7 +170,7 @@ class MTModule(ABC):
         return decorator
 
     def save_and_clear_logs(self):
-        save_logs(self.__LOGS, self.__LOGS_FILE)
+        self.DISK.write_logs(self.__LOGS)
         self.__LOGS = []
 
     def logger(self, msg, element=None):

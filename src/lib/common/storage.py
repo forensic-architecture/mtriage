@@ -14,9 +14,7 @@ class Storage(ABC):
     locally or remotely.
     """
 
-    def __init__(self, name):
-        self.ELEMENT_DIR = f"{name}/data"
-        # build folder
+    def __init__(self):
         pass
 
     @abstractmethod
@@ -38,20 +36,30 @@ class Storage(ABC):
     #     pass
 
 
-
 class LocalStorage(Storage):
     """
     Stores elements in an element_map.csv.
     """
 
-    def __init__(self, name):
-        self.ELEMENT_DIR = Path(f"{name}/data")
-        self.ELEMENT_MAP = Path(f"{name}/element_map.csv")
+    def __init__(self, folder=None):
+        self.base_dir = folder
+
+        # selecting
+        self.ELEMENT_DIR = Path(f"{folder}/data")
+        self.ELEMENT_MAP = Path(f"{folder}/element_map.csv")
         self.headers = []
         self.delete_local_on_write = True #mainly exists for testing, manually set to False
 
         if not os.path.exists(self.ELEMENT_DIR):
             os.makedirs(self.ELEMENT_DIR)
+
+        # logging
+        self.__LOGS_DIR = f"{self.base_dir}/logs"
+        self.__LOGS_FILE = f"{self.__LOGS_DIR}/logs.txt"
+
+        if not os.path.exists(self.__LOGS_DIR):
+            os.makedirs(self.__LOGS_DIR)
+
 
     def read_elements_index(self) -> LocalElementsIndex:
         def get_rows():
@@ -102,6 +110,17 @@ class LocalStorage(Storage):
         d = self.ELEMENT_DIR/id
         if os.path.exists(d):
             shutil.rmtree(d)
+
+    def write_logs(self, logs: List[str]):
+        if len(logs) <= 0:
+            return
+        with open(self.__LOGS_FILE, "a") as f:
+            for l in logs:
+                if l is not None:
+                    f.write(l)
+                    f.write("\n")
+
+
 
 
 
