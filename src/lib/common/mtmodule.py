@@ -35,10 +35,10 @@ def db_run(dbfile, q, batches_running):
 class MTModule(ABC):
     """ Handles parallelisation and component-specific logging.  Invoked primarily through the @MTModule.phase decorator
     on a method, which parallelises based on the function signature."""
-    def __init__(self, config, name, storage=None):
+    def __init__(self, config, name, storage):
         self.CONFIG = config
         self.NAME = name
-        self.DISK = storage
+        self.disk = storage
 
         self.UNIQUE_ID = hashdict(config)
         self.PHASE_KEY = None
@@ -82,7 +82,7 @@ class MTModule(ABC):
         done_queue = manager.Queue()
         batches_running = manager.Value("i", 1)
 
-        dbfile = f"{self.DISK.base_dir}/{self.UNIQUE_ID}.db"
+        dbfile = f"{self.disk.base_dir}/{self.UNIQUE_ID}.db"
 
         done_dict = {}
         try:
@@ -124,7 +124,7 @@ class MTModule(ABC):
         if remove_db:
             os.remove(dbfile)
 
-        self.save_and_clear_logs()
+        self.flush_logs()
         return RET_VAL_TESTS_ONLY
 
     @staticmethod
@@ -162,15 +162,15 @@ class MTModule(ABC):
                 else:
                     ret_val = function(self, *args)
 
-                self.save_and_clear_logs()
+                self.flush_logs()
                 return ret_val
 
             return wrapper
 
         return decorator
 
-    def save_and_clear_logs(self):
-        self.DISK.write_logs(self.__LOGS)
+    def flush_logs(self):
+        self.disk.write_logs(self.__LOGS)
         self.__LOGS = []
 
     def logger(self, msg, element=None):

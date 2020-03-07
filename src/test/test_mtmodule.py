@@ -1,5 +1,6 @@
 import pytest
 import os
+from pathlib import Path
 from lib.common.exceptions import ImproperLoggedPhaseError
 from lib.common.mtmodule import MTModule
 from lib.common.storage import LocalStorage
@@ -14,18 +15,18 @@ class EmptyMTModule(MTModule):
 def additionals(utils):
     obj = lambda: None
     obj.BASE_DIR = utils.TEMP_ELEMENT_DIR
-    obj.mod = EmptyMTModule({}, "empty", storage=LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
+    obj.mod = EmptyMTModule({}, "empty", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
     yield obj
     utils.cleanup()
 
 
 def test_class_variables(additionals):
     assert additionals.mod.NAME == "empty"
-    assert additionals.mod.DISK.base_dir == additionals.BASE_DIR
+    assert additionals.mod.disk.base_dir == Path(additionals.BASE_DIR)
     assert additionals.mod._MTModule__LOGS == []
-    assert additionals.mod.DISK._LocalStorage__LOGS_DIR == f"{additionals.BASE_DIR}/logs"
+    assert additionals.mod.disk._LocalStorage__LOGS_DIR == f"{additionals.BASE_DIR}/logs"
     assert (
-        additionals.mod.DISK._LocalStorage__LOGS_FILE == f"{additionals.BASE_DIR}/logs/logs.txt"
+        additionals.mod.disk._LocalStorage__LOGS_FILE == f"{additionals.BASE_DIR}/logs/logs.txt"
     )
     assert os.path.exists(f"{additionals.BASE_DIR}/logs")
 
@@ -89,7 +90,7 @@ def test_parallel_phase_decorator(additionals):
     eg_gen = (a for a in range(0, 100))
     assert gc.func_no_remove(eg_gen) == "no error"
 
-    dbfile = f"{gc.DISK.base_dir}/{gc.UNIQUE_ID}.db"
+    dbfile = f"{gc.disk.base_dir}/{gc.UNIQUE_ID}.db"
     with open(dbfile, "rb") as f:
         _bytes = f.read()
         assert len(_bytes) == 800  # 2 4-byte entries per item for 100 items

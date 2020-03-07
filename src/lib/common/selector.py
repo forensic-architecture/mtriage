@@ -4,7 +4,6 @@ from abc import abstractmethod
 from typing import Dict, Generator, Union, List
 from types import SimpleNamespace
 from lib.common.mtmodule import MTModule
-from lib.common.util import save_logs
 from lib.common.exceptions import (
     InvalidElementIndex,
     ElementShouldRetryError,
@@ -24,14 +23,10 @@ class Selector(MTModule):
     the arguments of exposed methods.
     """
 
-    def __init__(self, config, module, storage: Storage=None):
-        super().__init__(config, module, folder)
-        self.DIR = f"{self.BASE_DIR}/{self.NAME}"
-        if storage is None:
-            raise Exception("You must provide a storage. LocalStorage(folder=\"path/to/folder\") is the most common.")
-        self.disk = storage
+    def __init__(self, config, module, storage):
+        super().__init__(config, module, storage=storage)
+        self.DIR = f"{self.disk.base_dir}/{self.NAME}"
 
-    # must be implemented by child
     @abstractmethod
     def index(self, config) -> LocalElementsIndex:
         """TODO: indicate the exact format this should output.

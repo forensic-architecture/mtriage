@@ -101,3 +101,8 @@ class InvalidElementIndex(Exception):
         super().__init__(f"""The element index read from disk is an invalid generator. Check that your index method is
                          correct, and that your disk has not been corrupted.""")
 
+class InvalidComponentQuery(Exception):
+    def __init__(self, query, msg):
+        super().__init__(f"The query '{query}' is invalid: {msg}")
+
+

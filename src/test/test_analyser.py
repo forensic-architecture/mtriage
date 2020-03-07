@@ -6,6 +6,7 @@ from lib.common.analyser import Analyser
 from lib.common.exceptions import InvalidAnalyserElements, InvalidCarry
 from lib.common.etypes import Etype
 from lib.common.mtmodule import MTModule
+from lib.common.storage import LocalStorage
 
 
 class EmptyAnalyser(Analyser):
@@ -46,7 +47,7 @@ def additionals(utils):
 
     obj.CONFIG = {"elements_in": obj.WHITELIST}
     obj.emptyAnalyser = EmptyAnalyser(
-        obj.CONFIG, obj.emptyAnalyserName, utils.TEMP_ELEMENT_DIR
+        obj.CONFIG, obj.emptyAnalyserName, storage=LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
     )
     yield obj
     utils.cleanup()
@@ -65,54 +66,17 @@ def test_init(additionals):
     assert additionals.CONFIG == additionals.emptyAnalyser.CONFIG
 
 
-def test_get_in_cmps(additionals):
-    paths = additionals.emptyAnalyser._Analyser__get_in_cmps()
-    assert paths[0][0] == "sel1"
-    assert paths[0][1] == "an1"
-    assert paths[1][0] == "sel1"
-    assert paths[1][1] == "an2"
-    assert paths[2][0] == "sel2"
+def test_query(additionals):
+    query = additionals.emptyAnalyser.construct_query()
+    print(query)
+    assert query[0][0] == "sel1"
+    assert query[0][1] == "an1"
+    assert query[1][0] == "sel1"
+    assert query[1][1] == "an2"
+    assert query[2][0] == "sel2"
 
 
-def test_get_all_media(utils, additionals):
-    cmpDict = {
-        "sel1": {
-            f"{Analyser.DATA_EXT}": {
-                "el1": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DATA_EXT}/el1",
-                "el2": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DATA_EXT}/el2",
-            },
-            f"{Analyser.DERIVED_EXT}": {
-                "an1": {
-                    "el1": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
-                    "el2": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
-                },
-                "an2": {
-                    "el2": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el2"
-                },
-            },
-        },
-        "sel2": {
-            f"{Analyser.DATA_EXT}": {
-                "el4": f"{utils.TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el4",
-                "el5": f"{utils.TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el5",
-                "el6": f"{utils.TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el6",
-            },
-            f"{Analyser.DERIVED_EXT}": {},
-        },
-    }
-    mediaDict = additionals.emptyAnalyser._Analyser__get_all_media()
-    assert utils.dictsEqual(cmpDict, mediaDict)
-
-
-def test_get_out_dir(utils, additionals):
-    out_dir = additionals.emptyAnalyser._Analyser__get_out_dir("sel1")
-    assert (
-        out_dir
-        == f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/{additionals.emptyAnalyserName}"
-    )
-
-
-def test_cast_elements(utils, additionals):
+def cast_elements(utils, additionals):
     # setup
     sel1an1_element_dict = {
         "el1": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
@@ -309,10 +273,10 @@ def test_cast_elements(utils, additionals):
     assert utils.listOfDictsEqual(elements, expected)
 
 
-def analyse(utils, additionals):
+def test_analyse(utils, additionals):
     config = {"elements_in": ["sel1"]}
     dummyName = "dummyAnalyser"
-    dummyAnalyser = TxtCopyAnalyser(config, dummyName, utils.TEMP_ELEMENT_DIR)
+    dummyAnalyser = TxtCopyAnalyser(config, dummyName, LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
     # confirm empty folder throws error
     with pytest.raises(InvalidAnalyserElements):
         dummyAnalyser.start_analysing()
@@ -320,7 +284,7 @@ def analyse(utils, additionals):
     txtfile_name = "anitem.txt"
     for el in additionals.sel1_elements:
         with open(
-            f"{dummyAnalyser.BASE_DIR}/sel1/{Analyser.DATA_EXT}/{el}/{txtfile_name}",
+            f"{dummyAnalyser.disk.base_dir}/sel1/{Analyser.DATA_EXT}/{el}/{txtfile_name}",
             "w+",
         ) as f:
             f.write("Hello")

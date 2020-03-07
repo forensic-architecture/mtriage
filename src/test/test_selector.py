@@ -35,7 +35,7 @@ class EmptySelector(Selector):
 @pytest.fixture
 def additionals(utils):
     obj = lambda: None
-    obj.emptySelector = EmptySelector({}, "empty", storage=LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
+    obj.emptySelector = EmptySelector({}, "empty", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
     yield obj
     utils.cleanup()
 
@@ -50,7 +50,7 @@ def test_cannot_instantiate(utils):
 
 
 def test_init(utils, additionals):
-    assert utils.TEMP_ELEMENT_DIR == additionals.emptySelector.BASE_DIR
+    assert Path(utils.TEMP_ELEMENT_DIR) == additionals.emptySelector.disk.base_dir
     assert "empty" == additionals.emptySelector.NAME
     assert f"{utils.TEMP_ELEMENT_DIR}/empty" == additionals.emptySelector.DIR
     assert (
