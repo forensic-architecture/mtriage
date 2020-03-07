@@ -95,3 +95,9 @@ class InvalidAnalyserElements(Exception):
 class InvalidCarry(Exception):
     def __init__(self, msg):
         super().__init__(f"The 'carry' attribute you provided is invalid: {msg}")
+
+class InvalidElementIndex(Exception):
+    def __init__(self):
+        super().__init__(f"""The element index read from disk is an invalid generator. Check that your index method is
+                         correct, and that your disk has not been corrupted.""")
+

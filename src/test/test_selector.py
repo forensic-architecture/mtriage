@@ -2,6 +2,7 @@ import pytest
 import os
 import csv
 from abc import ABC
+from pathlib import Path
 from lib.common.selector import Selector
 from lib.common.exceptions import (
     ElementShouldRetryError,
@@ -9,19 +10,26 @@ from lib.common.exceptions import (
     SelectorIndexError,
     EtypeCastError,
 )
-from test.utils import scaffold_elementmap
+from lib.common.etypes import cast, Etype
+from test.utils import scaffold_elementmap, STUB_PATHS, list_files
 
+import pdb
 
 class EmptySelector(Selector):
+    def __init__(self, config, name, dr):
+        super().__init__(config, name, dr)
+        self.disk.delete_local_on_write = False
+
     def index(self, config):
-        if not os.path.exists(self.ELEMENT_MAP):
+        if not os.path.exists(self.disk.ELEMENT_MAP):
             df = scaffold_elementmap(["el1", "el2", "el3"])
+            df = [x+[STUB_PATHS.imagejpg] if idx > 0 else (x+['path']) for idx, x in enumerate(df)]
             return df
         else:
             return None
 
     def retrieve_element(self, element, config):
-        pass
+        return cast(element.path, element.id, to=Etype.Image)
 
 
 @pytest.fixture
@@ -46,31 +54,44 @@ def test_init(utils, additionals):
     assert "empty" == additionals.emptySelector.NAME
     assert f"{utils.TEMP_ELEMENT_DIR}/empty" == additionals.emptySelector.DIR
     assert (
-        f"{utils.TEMP_ELEMENT_DIR}/empty/data" == additionals.emptySelector.ELEMENT_DIR
+        Path(f"{utils.TEMP_ELEMENT_DIR}/empty/data") == additionals.emptySelector.disk.ELEMENT_DIR
     )
     assert (
-        f"{utils.TEMP_ELEMENT_DIR}/empty/element_map.csv"
-        == additionals.emptySelector.ELEMENT_MAP
+        Path(f"{utils.TEMP_ELEMENT_DIR}/empty/element_map.csv")
+        == additionals.emptySelector.disk.ELEMENT_MAP
     )
-    assert os.path.exists(additionals.emptySelector.ELEMENT_DIR)
+    assert os.path.exists(additionals.emptySelector.disk.ELEMENT_DIR)
 
 
 def test_index(additionals):
     additionals.emptySelector.start_indexing()
-    assert os.path.exists(additionals.emptySelector.ELEMENT_MAP)
+    assert os.path.exists(additionals.emptySelector.disk.ELEMENT_MAP)
     # test element_map.csv is what it should be
-    with open(additionals.emptySelector.ELEMENT_MAP, "r") as f:
+    with open(additionals.emptySelector.disk.ELEMENT_MAP, "r") as f:
         emreader = csv.reader(f, delimiter=",")
         rows = [l for l in emreader]
-        assert rows == scaffold_elementmap(["el1", "el2", "el3"])
+        emap = scaffold_elementmap(["el1", "el2", "el3"])
+        for idx, row in enumerate(rows):
+            if idx == 0: continue
+            assert row[0] == emap[idx][0]
 
 
-# NOTE: not sure why this stopped working with refactor to pytest
-# def test_start_retrieving(utils, additionals):
-#     additionals.emptySelector.start_retrieving()
-#     path1 = utils.get_element_path(additionals.emptySelector.NAME, "el1")
-#     path2 = utils.get_element_path(additionals.emptySelector.NAME, "el2")
-#     path3 = utils.get_element_path(additionals.emptySelector.NAME, "el3")
-#     assert not os.path.exists(path1)
-#     assert not os.path.exists(path2)
-#     assert not os.path.exists(path3)
+
+def test_retrieve(additionals, utils):
+    additionals.emptySelector.start_indexing()
+    additionals.emptySelector.start_retrieving(in_parallel=False)
+    els = ["el1", "el2", "el3"]
+    images = [additionals.emptySelector.disk.ELEMENT_DIR/f"{x}/0.jpeg" for x in els]
+    for img in images:
+        assert(os.path.isfile(img))
+
+
+# the values that are returned from retrieve need to be managed in Python differently according to what kind of data
+# they represent.
+#
+# Video -> cv2.VideoCapture
+# Image -> cv2.Image
+# Audio -> simpleaudio.WaveObject
+# Json  -> dict
+
+# the relationship between files on disk and how they are loaded through Python should be managed in the etypes library.

@@ -5,6 +5,7 @@ from typing import Dict, Generator, Union, List
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
 from lib.common.exceptions import (
+    InvalidElementIndex,
     ElementShouldRetryError,
     ElementShouldSkipError,
     EtypeCastError,
@@ -14,6 +15,7 @@ from lib.common.storage import LocalStorage
 import shutil
 
 
+import pdb
 class Selector(MTModule):
     """A Selector implements the indexing and retrieving of media for a platform or otherwise distinct space.
 
@@ -22,10 +24,10 @@ class Selector(MTModule):
     the arguments of exposed methods.
     """
 
-    def __init__(self, config, module, folder):
+    def __init__(self, config, module, folder, storage=LocalStorage):
         super().__init__(config, module, folder)
         self.DIR = f"{self.BASE_DIR}/{self.NAME}"
-        self.disk = LocalStorage(self.DIR)
+        self.disk = storage(self.DIR)
 
     # must be implemented by child
     @abstractmethod
@@ -69,7 +71,10 @@ class Selector(MTModule):
         self.__pre_retrieve()
         elements = self.disk.read_elements_index()
         if not in_parallel:
-            elements = [e for e in elements]
+            try:
+                elements = [e for e in elements]
+            except:
+                raise InvalidElementIndex()
         self.__retrieve(elements)
         self.__post_retrieve()
 
@@ -80,29 +85,18 @@ class Selector(MTModule):
     @MTModule.phase("retrieve")
     def __retrieve(self, elements: Union[List, Generator]):
         for element in elements:
-            id = element["id"]
-            element["base"] = f"{self.ELEMENT_DIR}/{id}"
             success = self.__attempt_retrieve(5, element)
-            if success:
-                etype = self.get_out_etype()
-                try:
-                    cast_to_etype(element["base"], etype)
-                except EtypeCastError:
-                    self.error_logger(
-                        f"Failed to cast - retrieved element was not {etype}", element
-                    )
-                    shutil.rmtree(element["base"])
-            else:
-                shutil.rmtree(element["base"])
+            if not success:
+                shutil.rmtree(element.base)
 
     @MTModule.phase("post-retrieve")
     def __post_retrieve(self):
         self.post_retrieve(self.CONFIG)
 
-    def __attempt_retrieve(self, attempts, element):
+    def __attempt_retrieve(self, attempts, element_index):
         try:
-            elcontents = self.retrieve_element(element, self.CONFIG)
-            self.disk.write_element(element, elcontents)
+            local_element = self.retrieve_element(element_index, self.CONFIG)
+            self.disk.write_element(local_element)
             return True
         except ElementShouldSkipError as e:
             self.error_logger(str(e), element)

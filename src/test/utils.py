@@ -1,10 +1,14 @@
 import os
+import json
+import shutil
+from types import SimpleNamespace as Ns
 from lib.common.analyser import Analyser
 from lib.common.get_module import get_module
-import shutil
-import json
 
 TEMP_ELEMENT_DIR = "/mtriage/media/test_official"
+STUB_PATHS = Ns(
+    imagejpg="/mtriage/src/test/etype_stubs/image.jpeg",
+)
 
 
 def scaffold_empty(
