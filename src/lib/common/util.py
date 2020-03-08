@@ -2,6 +2,8 @@ import ntpath
 import json
 import hashlib
 import multiprocessing
+from pathlib import Path
+from typing import List
 
 MAX_CPUS = multiprocessing.cpu_count() - 1
 
@@ -87,3 +89,12 @@ def deduce_frame_no(path):
     f = tail or nt.basename(head)
     num = f.split(".")[0]
     return int(num)
+
+
+def subdirs(path: Path) -> List[Path]:
+    """ Return a list of Paths for subdirectories in a directory """
+    return [f for f in path.iterdir() if f.is_dir()]
+
+def files(path: Path) -> List[Path]:
+    """ Return a list of Paths for files in a directory """
+    return [x for x in path.iterdir() if x.is_file()]

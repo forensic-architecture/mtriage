@@ -25,7 +25,6 @@ class Selector(MTModule):
 
     def __init__(self, config, module, storage):
         super().__init__(config, module, storage=storage)
-        self.DIR = f"{self.disk.base_dir}/{self.NAME}"
 
     @abstractmethod
     def index(self, config) -> LocalElementsIndex:
@@ -49,7 +48,7 @@ class Selector(MTModule):
         raise NotImplementedError
 
     # optionally implemented by child
-    # both ELEMENT_DIR and CONFIG are implicitly available on self, but passed explicitily for convenience
+    # both ELEMENT_DIR and config are implicitly available on self, but passed explicitily for convenience
     def pre_retrieve(self, config: Dict):
         pass
 
@@ -58,13 +57,13 @@ class Selector(MTModule):
 
     @MTModule.phase("index")
     def start_indexing(self):
-        element_map = self.index(self.CONFIG)
+        element_map = self.index(self.config)
         if element_map is not None:
-            self.disk.write_elements_index(element_map)
+            self.disk.write_elements_index(self.name, element_map)
 
     def start_retrieving(self, in_parallel=True):
         self.__pre_retrieve()
-        elements = self.disk.read_elements_index().rows
+        elements = self.disk.read_elements_index(self.name).rows
         if not in_parallel:
             try:
                 elements = [e for e in elements]
@@ -75,23 +74,23 @@ class Selector(MTModule):
 
     @MTModule.phase("pre-retrieve")
     def __pre_retrieve(self):
-        self.pre_retrieve(self.CONFIG)
+        self.pre_retrieve(self.config)
 
     @MTModule.phase("retrieve")
     def __retrieve(self, element_indices: Union[List, Generator]):
         for element_index in element_indices:
             success = self.__attempt_retrieve(5, element_index)
             if not success:
-                self.disk.remove_element(element_index.id)
+                self.disk.remove_element(self.name, element_index.id)
 
     @MTModule.phase("post-retrieve")
     def __post_retrieve(self):
-        self.post_retrieve(self.CONFIG)
+        self.post_retrieve(self.config)
 
     def __attempt_retrieve(self, attempts, element_index):
         try:
-            local_element = self.retrieve_element(element_index, self.CONFIG)
-            self.disk.write_element(local_element)
+            local_element = self.retrieve_element(element_index, self.config)
+            self.disk.write_element(self.name, local_element)
             return True
         except ElementShouldSkipError as e:
             self.error_logger(str(e), element_index)

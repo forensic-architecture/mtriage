@@ -21,7 +21,7 @@ class EmptySelector(Selector):
         self.disk.delete_local_on_write = False
 
     def index(self, config):
-        if not os.path.exists(self.disk.ELEMENT_MAP):
+        if not os.path.exists(self.disk.read_query(self.name)):
             df = scaffold_elementmap(["el1", "el2", "el3"])
             df = [x+[STUB_PATHS.imagejpg] if idx > 0 else (x+['path']) for idx, x in enumerate(df)]
             return LocalElementsIndex(rows=df)
@@ -29,7 +29,7 @@ class EmptySelector(Selector):
             return None
 
     def retrieve_element(self, row, config):
-        return cast(row.path, row.id, to=Etype.Image)
+        return cast([row.path], row.id, to=Etype.Image)
 
 
 @pytest.fixture
@@ -51,37 +51,24 @@ def test_cannot_instantiate(utils):
 
 def test_init(utils, additionals):
     assert Path(utils.TEMP_ELEMENT_DIR) == additionals.emptySelector.disk.base_dir
-    assert "empty" == additionals.emptySelector.NAME
-    assert f"{utils.TEMP_ELEMENT_DIR}/empty" == additionals.emptySelector.DIR
-    assert (
-        Path(f"{utils.TEMP_ELEMENT_DIR}/empty/data") == additionals.emptySelector.disk.ELEMENT_DIR
-    )
-    assert (
-        Path(f"{utils.TEMP_ELEMENT_DIR}/empty/element_map.csv")
-        == additionals.emptySelector.disk.ELEMENT_MAP
-    )
-    assert os.path.exists(additionals.emptySelector.disk.ELEMENT_DIR)
+    assert "empty" == additionals.emptySelector.name
 
 
 def test_index(additionals):
     additionals.emptySelector.start_indexing()
-    assert os.path.exists(additionals.emptySelector.disk.ELEMENT_MAP)
     # test element_map.csv is what it should be
-    with open(additionals.emptySelector.disk.ELEMENT_MAP, "r") as f:
-        emreader = csv.reader(f, delimiter=",")
-        rows = [l for l in emreader]
-        emap = scaffold_elementmap(["el1", "el2", "el3"])
-        for idx, row in enumerate(rows):
-            if idx == 0: continue
-            assert row[0] == emap[idx][0]
+    eidx = additionals.emptySelector.disk.read_elements_index("empty")
+    emap = scaffold_elementmap(["el1", "el2", "el3"])
+    for idx, row in enumerate(eidx.rows):
+        assert row.id == emap[idx+1][0]
 
 
 
 def test_retrieve(additionals, utils):
     additionals.emptySelector.start_indexing()
     additionals.emptySelector.start_retrieving(in_parallel=False)
-    els = ["el1", "el2", "el3"]
-    images = [additionals.emptySelector.disk.ELEMENT_DIR/f"{x}/0.jpeg" for x in els]
+    pth = additionals.emptySelector.disk.read_query("empty")
+    images = [pth/f"{x}/image.jpeg" for x in ["el1", "el2", "el3"]]
     for img in images:
         assert(os.path.isfile(img))
 

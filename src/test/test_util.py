@@ -1,9 +1,12 @@
 import pytest
 import os
-from lib.common.util import save_logs
+from typing import List
 
 LOGPATH = "testlog.txt"
 
+def save_logs(logs: List[str], path: str):
+    with open(path, "w+") as f:
+        f.writelines(logs)
 
 @pytest.fixture
 def additionals(autouse=True):

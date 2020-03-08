@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 from types import SimpleNamespace as Ns
+from pathlib import Path
 from lib.common.storage import LocalStorage
 from lib.common.get_module import get_module
 
@@ -52,7 +53,8 @@ def scaffold_elementmap(elements=[]):
 
 
 def cleanup():
-    shutil.rmtree(TEMP_ELEMENT_DIR)
+    if Path(TEMP_ELEMENT_DIR).exists():
+        shutil.rmtree(TEMP_ELEMENT_DIR)
 
 
 def listOfDictsEqual(l1, l2):
@@ -89,3 +91,7 @@ def list_files(startpath):
         subindent = " " * 4 * (level + 1)
         for f in files:
             print("{}{}".format(subindent, f))
+
+def ltemp():
+    """ Primarily for pdb debugging """
+    list_files(TEMP_ELEMENT_DIR)

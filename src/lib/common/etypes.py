@@ -3,7 +3,7 @@ from enum import Enum
 from pathlib import Path
 from lib.common.exceptions import EtypeCastError
 from types import SimpleNamespace as Ns
-from typing import List, Union
+from typing import List, Union, TypeVar
 
 def filter_files(folder, regex, allow_multiple=False):
     glob = []
@@ -30,11 +30,11 @@ def filter_files(folder, regex, allow_multiple=False):
 class LocalElement:
     """ Local as in not from storage, but on the same comp where mtriage is running.
         Returned from Selector.retrieve_element, and also Analyser.analyse_element. """
-    def __init__(self, id=None, is_file_ref=True, et=None, source=None):
-        self.id = id
-        self.is_file_ref = is_file_ref
+    def __init__(self, id=None, query=None, paths=None, et=None):
+        self.id = id #the element id
+        self.query = query #the query string used to retrieve the element
+        self.paths = paths #the path/s where the element's media are accessible locally
         self.et = et
-        self.source = source
 
 class LocalElementsIndex:
     """ Similar to LocalElement, on the same comp as mtriage is running.
@@ -42,6 +42,7 @@ class LocalElementsIndex:
     def __init__(self, rows=[]):
         self.rows = rows
 
+Pth = TypeVar('Pth', str, Path)
 class Et:
     """ Defines the primary operations that make up a basic Etype. Array functionality is built in
         as a toggle on the simple type.
@@ -69,15 +70,15 @@ class Et:
         return None
 
     # def __call__(self, source: Union[List[Path], Path]):
-    def __call__(self, source: Union[str, Path], el_id: str) -> LocalElement:
-        if isinstance(source, str): source = Path(source)
+    def __call__(self, paths: List[Pth], el_id: str) -> LocalElement:
+        paths = [Path(x) if isinstance(x, str) else x for x in paths]
         # TODO: confirm all source files exist
+        # TODO: filter only to the values the Et allows
         # available_files = filter_files(source.parent, self.regex, allow_multiple=self.is_array)
         return LocalElement(
+            paths=paths,
             id=el_id,
-            is_file_ref=True, # optional; indicates that this element is a file stored on the device where mtriage is running
             et=self,
-            source=source
         )
 
 
@@ -137,9 +138,9 @@ def cast_to_etype(el_path, etype):
         "media": etype.extract(el_path),
     }
 
-def cast(folder, el_id, to:Et=None) -> LocalElement:
+def cast(paths, el_id, to:Et=None) -> LocalElement:
     if to is not None:
-        return to(folder, el_id)
+        return to(paths, el_id)
     raise NotImplementedError("TODO: cast etype implicitly based on the folder")
 
 

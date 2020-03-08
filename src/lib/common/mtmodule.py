@@ -36,8 +36,8 @@ class MTModule(ABC):
     """ Handles parallelisation and component-specific logging.  Invoked primarily through the @MTModule.phase decorator
     on a method, which parallelises based on the function signature."""
     def __init__(self, config, name, storage):
-        self.CONFIG = config
-        self.NAME = name
+        self.config = config
+        self.name = name
         self.disk = storage
 
         self.UNIQUE_ID = hashdict(config)
@@ -195,10 +195,10 @@ class MTModule(ABC):
         print(err_msg)
 
     def __get_context(self, element):
-        context = f"{self.NAME}: {self.PHASE_KEY}: "
+        context = f"{self.name}: {self.PHASE_KEY}: "
         if element != None:
             context = context + f"{element.id}: "
         return context
 
     def is_dev(self):
-        return "dev" in self.CONFIG and self.CONFIG["dev"]
+        return "dev" in self.config and self.config["dev"]

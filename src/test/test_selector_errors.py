@@ -1,6 +1,7 @@
 import pytest
 import os
 from lib.common.selector import Selector
+from lib.common.storage import LocalStorage
 from lib.common.etypes import cast_to_etype, Etype, LocalElement, LocalElementsIndex
 from lib.common.exceptions import (
     ElementShouldRetryError,
@@ -58,19 +59,19 @@ def additionals(utils):
     indexModule = "indexErrorSelector"
     indexConfig = {"error": "index"}
     obj.indexErrorSelector = BasicErrorSelector(
-        indexConfig, indexModule, utils.TEMP_ELEMENT_DIR
+        indexConfig, indexModule, LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
     )
 
     castModule = "castErrorSelector"
     castConfig = {}
     obj.castErrorSelector = BasicErrorSelector(
-        castConfig, castModule, utils.TEMP_ELEMENT_DIR
+        castConfig, castModule, LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
     )
 
     retrieveModule = "retrieveErrorSelector"
     retrieveConfig = {}
     obj.retrieveErrorSelector = RetrieveErrorSelector(
-        retrieveConfig, retrieveModule, utils.TEMP_ELEMENT_DIR
+        retrieveConfig, retrieveModule, LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
     )
     yield obj
     utils.cleanup()
