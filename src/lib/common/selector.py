@@ -1,6 +1,7 @@
 import os
 import csv
 from abc import abstractmethod
+from typing import Union, List, Generator
 from lib.common.mtmodule import MTModule
 from lib.common.util import save_logs
 from lib.common.exceptions import (
@@ -21,7 +22,7 @@ class Selector(MTModule):
     """
 
     def __init__(self, config, module, folder):
-        super().__init__(module, folder, config)
+        super().__init__(config, module, folder)
         self.DIR = f"{self.BASE_DIR}/{self.NAME}"
         self.ELEMENT_DIR = f"{self.DIR}/data"
         self.ELEMENT_MAP = f"{self.DIR}/element_map.csv"
@@ -68,7 +69,7 @@ class Selector(MTModule):
         pass
 
     # logged phases that this class manages
-    @MTModule.logged_phase("index")
+    @MTModule.phase("index")
     def start_indexing(self):
         element_map = self.index(self.CONFIG)
         # TODO: validate id column exists on csv for all rows
@@ -78,7 +79,7 @@ class Selector(MTModule):
                 for line in element_map:
                     writer.writerow(line)
 
-    @MTModule.logged_phase("pre-retrieve")
+    @MTModule.phase("pre-retrieve")
     def __pre_retrieve(self):
         # open element_map in preparation for reading line-by-line
         self.pre_retrieve(self.CONFIG, self.ELEMENT_DIR)
@@ -88,18 +89,8 @@ class Selector(MTModule):
             for el in csv.reader(f):
                 yield el
 
-    @MTModule.logged_phase("retrieve")
-    def __retrieve(self):
-        elements = self.__get_elements()
-        headers = next(elements)
-
-        def to_dict(el):
-            out = {}
-            for idx, item in enumerate(el):
-                attr = headers[idx]
-                out[attr] = item
-            return out
-
+    @MTModule.phase("retrieve")
+    def retrieve(self, elements: Union[List, Generator], to_dict):
         for row in elements:
             element = to_dict(row)
             id = element["id"]
@@ -117,14 +108,30 @@ class Selector(MTModule):
             else:
                 shutil.rmtree(element["base"])
 
-    @MTModule.logged_phase("post-retrieve")
+    def __retrieve(self, elements, in_parallel):
+        headers = next(elements)
+
+        def to_dict(el):
+            out = {}
+            for idx, item in enumerate(el):
+                attr = headers[idx]
+                out[attr] = item
+            return out
+
+        if not in_parallel:
+            elements = [e for e in elements]
+
+        self.retrieve(elements, to_dict)
+
+    @MTModule.phase("post-retrieve")
     def __post_retrieve(self):
         self.post_retrieve(self.CONFIG, self.ELEMENT_DIR)
 
     # entrypoint
-    def start_retrieving(self):
+    def start_retrieving(self, in_parallel=True):
         self.__pre_retrieve()
-        self.__retrieve()
+        elements = self.__get_elements()
+        self.__retrieve(elements, in_parallel)
         self.__post_retrieve()
 
     def __attempt_retrieve(self, attempts, element):

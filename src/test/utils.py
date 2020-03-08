@@ -7,7 +7,9 @@ import json
 TEMP_ELEMENT_DIR = "/mtriage/media/test_official"
 
 
-def scaffold_empty(selector: str, elements: list = [], analysers: list = []):
+def scaffold_empty(
+    selector: str, elements: list = [], analysers: list = [], selector_txt=None
+):
     """
     Scaffold an mtriage folder. One folder per element in the elements list will be created in the TEMP_ELEMENT_DIR.
     If an analysers list is passed, mocks of derived elements will be created in the appropriate folders.
@@ -22,6 +24,9 @@ def scaffold_empty(selector: str, elements: list = [], analysers: list = []):
         element_dir = f"{TEMP_ELEMENT_DIR}/{selector}/{Analyser.DATA_EXT}/{element}"
         if not os.path.exists(element_dir):
             os.makedirs(element_dir)
+        if selector_txt is not None:
+            with open(f"{element_dir}/item.txt", "a") as ftxt:
+                ftxt.write(selector_txt)
         if len(analysers) > 0:
             for analyser in analysers:
                 analyser_dir = f"{TEMP_ELEMENT_DIR}/{selector}/{Analyser.DERIVED_EXT}/{analyser}/{element}"
@@ -69,3 +74,14 @@ def dictsEqual(d1, d2):
 
 def get_info_path(kind, mod_name):
     return f"lib/{kind}s/{mod_name}/info.yaml"
+
+
+# https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
+def list_files(startpath):
+    for root, dirs, files in os.walk(startpath):
+        level = root.replace(startpath, "").count(os.sep)
+        indent = " " * 4 * (level)
+        print("{}{}/".format(indent, os.path.basename(root)))
+        subindent = " " * 4 * (level + 1)
+        for f in files:
+            print("{}{}".format(subindent, f))

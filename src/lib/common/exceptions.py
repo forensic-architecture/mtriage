@@ -60,7 +60,14 @@ class ImproperLoggedPhaseError(Exception):
     def __init__(self, fname):
         super().__init__(
             f"""The method '{fname}' does not belong to a class that inherits from MTModule. The
-                        logged_phase decorator can only be applied to methods on such a class."""
+                        phase decorator can only be applied to methods on such a class."""
+        )
+
+
+class BatchedPhaseArgNotGenerator(Exception):
+    def __init__(self, fname):
+        super().__init__(
+            f"""The method '{fname}' cannot be batched. The 'batched_phase' decorator can only be applied to a function that takes a generator as its first and only argument. """
         )
 
 
@@ -83,3 +90,8 @@ class InvalidElementsIn(Exception):
 
 class InvalidAnalyserElements(Exception):
     pass
+
+
+class InvalidCarry(Exception):
+    def __init__(self, msg):
+        super().__init__(f"The 'carry' attribute you provided is invalid: {msg}")

@@ -3,6 +3,7 @@ import os
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Generator, List, Union
 from lib.common.util import save_logs
 from lib.common.etypes import cast_to_etype
 from lib.common.exceptions import (
@@ -13,6 +14,7 @@ from lib.common.exceptions import (
     InvalidElementsIn,
     InvalidAnalyserElements,
     EtypeCastError,
+    InvalidCarry,
 )
 from lib.common.mtmodule import MTModule
 from lib.common.etypes import Etype, cast_to_etype
@@ -52,27 +54,27 @@ class Analyser(MTModule):
     DATA_EXT = "data"
     DERIVED_EXT = "derived"
 
-    def __init__(self, config, module, dir):
+    def __init__(self, config, module, directory):
         try:
-            super().__init__(module, dir, config)
-        except PermissionError as e:
+            super().__init__(config, module, directory)
+        except PermissionError:
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
         if not "elements_in" in config:
             raise InvalidAnalyserConfigError(
                 "The config must contain an 'elements_in' indicating the analyser's input."
             )
-        elif type(config["elements_in"]) is not list or len(config["elements_in"]) is 0:
+        if not isinstance(config["elements_in"], list) or not config["elements_in"]:
             raise InvalidAnalyserConfigError(
                 "The 'elements_in' must be a list containing at least one string"
             )
 
-        if type(module) is not str or module == "":
+        if not isinstance(module, str) or module == "":
             raise InvalidAnalyserConfigError(
                 "You must provide a name for your analyser"
             )
 
-        if type(dir) is not str:
+        if not isinstance(directory, str):
             raise InvalidAnalyserConfigError("You must provide a valid directory path")
 
     @abstractmethod
@@ -86,21 +88,26 @@ class Analyser(MTModule):
         """
         return NotImplemented
 
-    def start_analysing(self):
-        # NOTE: generic error handling protocol may get undescriptive in development
-        # should probably toggle off during development
+    def start_analysing(self, in_parallel=True):
+        """ Primary entrypoint in the mtriage lifecycle.
+
+            1. Call user-defined `pre_analyse` if it exists.
+            2. Read all media from disk.
+            3. Call user-defined `analyse_element` in parallel (done through @phase decorator in MTModule). The option
+                to bypass parallelisation is for testing.
+            4. Call user-defined `post_analyse` if it exists.
+            5. Save logs, and clear the buffer. """
         self.__pre_analyse()
-        self.__analyse()
+        all_media = self.__get_all_media()
+        self.__analyse(all_media, in_parallel)
         self.__post_analyse()
         self.save_and_clear_logs()
 
     def pre_analyse(self, config):
         """option to set up class variables"""
-        pass
 
     def post_analyse(self, config, derived_dirs):
         """option to perform any clear up"""
-        pass
 
     def __get_in_cmps(self):
         """ Take a list of input paths--of the form '{selector_name}/{?analyser_name}'-- and produces a list of components.
@@ -140,21 +147,31 @@ class Analyser(MTModule):
         return all_parts
 
     # INTERNAL METHODS\
-    @MTModule.logged_phase("pre-analyse")
+    @MTModule.phase("pre-analyse")
     def __pre_analyse(self):
         self.pre_analyse(self.CONFIG)
 
-    @MTModule.logged_phase("analyse")
-    def __analyse(self):
-        all_media = self.__get_all_media()
-        elements = self.__get_in_elements(all_media)
+    def __analyse(self, media, in_parallel):
+        elements = self.__get_in_elements(media)
+        if in_parallel:
+            self.analyse((e for e in elements))
+        else:
+            # analysing elements as a list will bypass parallelisation
+            self.analyse(elements)
 
+    @MTModule.phase("analyse")
+    def analyse(self, elements: Union[Generator, List]):
+        """ If `elements` is a Generator, the phase decorator will run in parallel.
+            If `elements` is a List, then it will run serially (which is useful for testing). """
         for element in elements:
-            success = self.__attempt_analyse(5, element, self.CONFIG)
+            success = self.__attempt_analyse(5, element)
+
             if not success:
                 shutil.rmtree(element["dest"])
 
-    @MTModule.logged_phase("post-analyse")
+            self.__carry_from_element(element)
+
+    @MTModule.phase("post-analyse")
     def __post_analyse(self):
         self.post_analyse(self.CONFIG, self.__get_out_dirs())
 
@@ -178,6 +195,24 @@ class Analyser(MTModule):
             )
 
         return els
+
+    def __carry_from_element(self, element):
+        if "carry" not in self.CONFIG:
+            return
+
+        to_carry = self.CONFIG["carry"]
+        if not (isinstance(to_carry, str) or isinstance(to_carry, List)):
+            raise InvalidCarry("you must pass a single string or a list of strings.")
+
+        def carry_matches(glob):
+            for path in Path(element["base"]).rglob(glob):
+                shutil.copyfile(path, f"{element['dest']}/{path.name}")
+
+        if isinstance(to_carry, str):
+            carry_matches(to_carry)
+        else:  # must be a list
+            for matcher in to_carry:
+                carry_matches(matcher)
 
     def __get_out_dirs(self):
         whitelist = self.CONFIG["elements_in"]
@@ -291,12 +326,12 @@ class Analyser(MTModule):
 
         return derived_dir
 
-    def __attempt_analyse(self, attempts, element, config):
+    def __attempt_analyse(self, attempts, element):
         dest = element["dest"]
         if not os.path.exists(dest):
             os.makedirs(dest)
         try:
-            self.analyse_element(element, config)
+            self.analyse_element(element, self.CONFIG)
             return True
         except ElementShouldSkipError as e:
             self.error_logger(str(e), element)
@@ -304,7 +339,7 @@ class Analyser(MTModule):
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
-                return self.__attempt_analyse(attempts - 1, element, config)
+                return self.__attempt_analyse(attempts - 1, element)
             else:
                 self.error_logger(
                     "failed after maximum retries - skipping element", element

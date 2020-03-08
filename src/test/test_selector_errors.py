@@ -94,7 +94,7 @@ def test_retrieve_retry_error(additionals):
 def test_integration_1(utils, additionals):
     assert additionals.castErrorSelector.retryCount == 0
     additionals.castErrorSelector.start_indexing()
-    additionals.castErrorSelector.start_retrieving()
+    additionals.castErrorSelector.start_retrieving(in_parallel=False)
 
     skip_path = utils.get_element_path("castErrorSelector", "skip")
     assert not os.path.exists(skip_path)
@@ -112,7 +112,7 @@ def test_integration_1(utils, additionals):
 
 def test_integration_2(utils, additionals):
     additionals.retrieveErrorSelector.start_indexing()
-    additionals.retrieveErrorSelector.start_retrieving()
+    additionals.retrieveErrorSelector.start_retrieving(in_parallel=False)
 
     skip_path = utils.get_element_path("retrieveErrorSelector", "skip")
     assert not os.path.exists(skip_path)

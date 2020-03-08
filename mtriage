@@ -6,9 +6,9 @@ from commands import parse_args, build, develop, clean, run_tests, run
 DEV_COMMANDS = {"develop": develop, "build": build, "test": run_tests, "clean": clean}
 
 if __name__ == "__main__":
-    args = parse_args(sys.argv[1:])
+    ARGS = parse_args(sys.argv[1:])
 
-    if args.__base == "dev":
-        DEV_COMMANDS[args.command](args)
+    if ARGS.base == "dev":
+        DEV_COMMANDS[ARGS.command](ARGS)
     else:
-        run(args)
+        run(ARGS)
