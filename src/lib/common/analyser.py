@@ -20,18 +20,6 @@ from lib.common.storage import Storage
 from lib.common.etypes import Etype, LocalElement, cast_to_etype
 
 
-def get_json_paths(path):
-    return list(Path(path).rglob("*.[jJ][sS][oO][nN]"))
-
-
-def get_video_paths(path):
-    return list(Path(path).rglob("*.[mM][pP][4]"))
-
-
-def get_img_paths(path):
-    return list(Path(path).rglob("*.[bB][mM][pP]"))
-
-
 class Analyser(MTModule):
     """ A Analyser is a pass that creates derived workables from retrieved data.
 
@@ -109,19 +97,19 @@ class Analyser(MTModule):
         """ If `elements` is a Generator, the phase decorator will run in parallel.
             If `elements` is a List, then it will run serially (which is useful for testing). """
         for element in elements:
-            success = self.__attempt_analyse(5, element)
+            # NB: `super` infra is necessary in case a storage class overwrites the `read_query` method
+            # as LocalStorage does.
+            og_query = super(type(self.disk), self.disk).read_query(element.query)
+            dest_q = f"{og_query[0]}/{self.name}"
 
-            if not success:
-                pass
-                # TODO: remove element from storage
-
-            self.__carry_from_element(element)
+            self.__attempt_analyse(5, element, dest_q)
 
     @MTModule.phase("post-analyse")
     def __post_analyse(self):
         self.post_analyse(self.config)
 
     def __cast_elements(self, element_dict, outdir):
+        # TODO: move to etypes in `cast`
         def attempt_cast_el(key):
             el_path = element_dict[key]
             etyped_attrs = cast_to_etype(el_path, self.get_in_etype())
@@ -142,34 +130,12 @@ class Analyser(MTModule):
 
         return els
 
-    def __carry_from_element(self, element: LocalElement):
-        # TODO: route this through LocalStorage
-        if "carry" not in self.config:
-            return
-
-        to_carry = self.config["carry"]
-        if not (isinstance(to_carry, str) or isinstance(to_carry, List)):
-            raise InvalidCarry("you must pass a single string or a list of strings.")
-
-        def carry_matches(glob):
-            for path in Path(element["base"]).rglob(glob):
-                shutil.copyfile(path, f"{element['dest']}/{path.name}")
-
-        if isinstance(to_carry, str):
-            carry_matches(to_carry)
-        else:  # must be a list
-            for matcher in to_carry:
-                carry_matches(matcher)
-
-    def __attempt_analyse(self, attempts, element):
-        # TODO: remove the logic that relies on 'dest', as this can now be much more cleanly handled with Storage.
-        #       then see out the `start_analysing` cycle with updates.
+    def __attempt_analyse(self, attempts, element, dest_q):
         try:
             new_element = self.analyse_element(element, self.config)
-            # NB: `super` infra is necessary in case a storage class overwrites the `read_query` method
-            # as LocalStorage does.
-            original_query = super(type(self.disk), self.disk).read_query(element.query)
-            return self.disk.write_element(f"{original_query[0]}/{self.name}", new_element)
+            success = self.disk.write_element(dest_q, new_element)
+            if not success:
+                raise ElementShouldRetryError("Unsuccessful storage")
 
         except ElementShouldSkipError as e:
             self.error_logger(str(e), element)
@@ -177,7 +143,7 @@ class Analyser(MTModule):
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
-                return self.__attempt_analyse(attempts - 1, element)
+                return self.__attempt_analyse(attempts - 1, element, dest_q)
             else:
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
@@ -188,19 +154,6 @@ class Analyser(MTModule):
                 raise e
             else:
                 self.error_logger(
-                    f"Unknown exception raised, skipping element: {str(e)}", element
+                    f"{str(e)}: skipping element", element
                 )
                 return False
-
-    # STATIC METHODS
-    @staticmethod
-    def find_video_paths(element_path):
-        return get_video_paths(element_path)
-
-    @staticmethod
-    def find_img_paths(element_path):
-        return get_img_paths(element_path)
-
-    @staticmethod
-    def find_json_paths(element_path):
-        return get_json_paths(element_path)

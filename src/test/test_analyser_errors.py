@@ -2,12 +2,14 @@ import pytest
 import os
 from lib.common.analyser import Analyser
 from test.test_analyser import EmptyAnalyser
+from lib.common.storage import LocalStorage
+from lib.common.etypes import LocalElement
 from lib.common.exceptions import (
     ElementShouldRetryError,
     ElementShouldSkipError,
     InvalidAnalyserConfigError,
     MTriageStorageCorruptedError,
-    InvalidElementsIn,
+    InvalidAnalyserElements,
 )
 
 
@@ -17,12 +19,12 @@ class ErrorThrowingAnalyser(Analyser):
         self.retryCount = 0
 
     def analyse_element(self, element, config):
-        if element["id"] == "skip":
+        if element.id == "skip":
             raise ElementShouldSkipError("test")
-        elif element["id"] == "retry3" and self.retryCount < 3:
+        elif element.id == "retry3" and self.retryCount < 3:
             self.retryCount += 1
             raise ElementShouldRetryError("test")
-        elif element["id"] == "retryN":
+        elif element.id == "retryN":
             raise ElementShouldRetryError("test")
         else:
             pass
@@ -41,7 +43,7 @@ def additionals(utils):
     goodConfig = {"elements_in": [obj.selname]}
 
     obj.an = ErrorThrowingAnalyser(
-        goodConfig, "analyserErrorSelector", utils.TEMP_ELEMENT_DIR
+        goodConfig, "analyserErrorSelector", LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
     )
     yield obj
     utils.cleanup()
@@ -49,12 +51,12 @@ def additionals(utils):
 
 def test_analyse_skip_error(additionals):
     with pytest.raises(ElementShouldSkipError, match="test - skipping element"):
-        additionals.an.analyse_element({"id": "skip"}, {})
+        additionals.an.analyse_element(LocalElement(id="skip"), {})
 
 
 def test_analyse_retry_error(additionals):
     with pytest.raises(ElementShouldRetryError, match="test - attempt retry"):
-        additionals.an.analyse_element({"id": "retryN"}, {})
+        additionals.an.analyse_element(LocalElement(id="retryN"), {})
 
 
 def test_bad_init_error(utils):
@@ -67,24 +69,24 @@ def test_bad_init_error(utils):
         InvalidAnalyserConfigError,
         match="must contain an 'elements_in' indicating the analyser's input",
     ):
-        no_elements_in = ErrorThrowingAnalyser(bad0, "stub", utils.TEMP_ELEMENT_DIR)
+        no_elements_in = ErrorThrowingAnalyser(bad0, "stub", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
 
     with pytest.raises(
         InvalidAnalyserConfigError,
         match="The 'elements_in' must be a list containing at least one string",
     ):
-        empty_elements_in = ErrorThrowingAnalyser(bad1, "stub", utils.TEMP_ELEMENT_DIR)
+        empty_elements_in = ErrorThrowingAnalyser(bad1, "stub", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
 
     with pytest.raises(
         InvalidAnalyserConfigError,
         match="The 'elements_in' must be a list containing at least one string",
     ):
-        empty_elements_in = ErrorThrowingAnalyser(bad2, "stub", utils.TEMP_ELEMENT_DIR)
+        empty_elements_in = ErrorThrowingAnalyser(bad2, "stub", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
 
     with pytest.raises(
         InvalidAnalyserConfigError, match="You must provide a name for your analyser"
     ):
-        badan2 = ErrorThrowingAnalyser(good, "", utils.TEMP_ELEMENT_DIR)
+        badan2 = ErrorThrowingAnalyser(good, "", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
 
 
 def test_integration(utils, additionals):
@@ -92,31 +94,25 @@ def test_integration(utils, additionals):
     additionals.an.start_analysing(in_parallel=False)
 
     skip_path = utils.get_element_path(
-        additionals.selname, "skip", analyser=additionals.an.NAME
+        additionals.selname, "skip", analyser=additionals.an.name
     )
     assert not os.path.exists(skip_path)
 
     retryn_path = utils.get_element_path(
-        additionals.selname, "retryN", analyser=additionals.an.NAME
+        additionals.selname, "retryN", analyser=additionals.an.name
     )
     assert not os.path.exists(retryn_path)
 
     retry3_path = utils.get_element_path(
-        additionals.selname, "retry3", analyser=additionals.an.NAME
+        additionals.selname, "retry3", analyser=additionals.an.name
     )
     assert additionals.an.retryCount == 3
-    assert os.path.exists(retry3_path)
-
-    pass_path = utils.get_element_path(
-        additionals.selname, "pass", analyser=additionals.an.NAME
-    )
-    assert os.path.exists(pass_path)
 
 
 def test_bad_whitelist(utils):
     badConfig = {"elements_in": ["sel1/an1/el1"]}
-    badAn = EmptyAnalyser(badConfig, "whitelistErrorAnalyser", utils.TEMP_ELEMENT_DIR)
+    badAn = EmptyAnalyser(badConfig, "whitelistErrorAnalyser", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
     with pytest.raises(
-        InvalidElementsIn, match="elements_in 'sel1/an1/el1' is not valid"
+        InvalidAnalyserElements, match="'elements_in' you specified does not exist"
     ):
         badAn.start_analysing()
