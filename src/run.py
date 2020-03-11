@@ -35,6 +35,16 @@ def make_storage(cfg: dict) -> LocalStorage:
     # TODO: generalise `folder` here to a `storage` var that is passed from YAML
     return LocalStorage(folder=cfg["folder"])
 
+def _run_analyser(ana: dict, base_cfg:dict, cfg: dict):
+    # run a single analyser
+    Analyser = get_module("analyse", ana["name"])
+    analyser = Analyser(
+        {**ana["config"], **base_cfg} if "config" in ana.keys() else base_cfg,
+        ana["name"],
+        make_storage(cfg),
+    )
+    analyser.start_analysing()
+
 def _run_yaml():
     with open(CONFIG_PATH, "r") as c:
         cfg = yaml.safe_load(c)
@@ -61,23 +71,15 @@ def _run_yaml():
     if "analyse" not in cfg:
         return
 
-    ana = cfg["analyse"]
-    if isinstance(ana, dict):
-        # run a single analyser
-        Analyser = get_module("analyse", ana["name"])
-        analyser = Analyser(
-            {**ana["config"], **base_cfg} if "config" in ana.keys() else base_cfg,
-            ana["name"],
-            make_storage(cfg),
-        )
-        analyser.start_analysing()
+    analyse_phase = cfg["analyse"]
+
+    if isinstance(analyse_phase, dict):
+        _run_analyser(analyse_phase, base_cfg, cfg)
 
     else:
-        # run the meta analyser to chain them all together
-        # Analyser = get_module("analyse", "meta")
-        # meta_cfg = {"children": }
-        # analyser = Analyser()
-        raise NotImplemented("Chaining analysers is not yet implemented.")
+        for ana in analyse_phase:
+            _run_analyser(ana, base_cfg, cfg)
+            base_cfg['elements_in'] = [f"{sel['name']}/{ana['name']}"]
 
 
 if __name__ == "__main__":

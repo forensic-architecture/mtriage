@@ -1,6 +1,6 @@
-folder: media/demo_official
+folder: media/demo_official/1
 select:
-  name: local
+  name: Local
   config:
     source: data/demo/1local
     # aggregate: true

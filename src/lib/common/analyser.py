@@ -44,7 +44,7 @@ class Analyser(MTModule):
             )
 
     @abstractmethod
-    def analyse_element(self, element: LocalElement, config):
+    def analyse_element(self, element: LocalElement, config) -> Union[LocalElement, None]:
         """ Method defined on each analyser that implements analysis element-wise.
 
             An element is currently simply a path to the relevant media. TODO: elements should be a more structured

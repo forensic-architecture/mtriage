@@ -1,10 +1,9 @@
-folder: media/demo_official
-elements_in:
-  - local
-analyse:
-  name: ExtractTypes
+folder: media/demo_official/2
+select:
+  name: Local
   config:
-    dev: true
-    exts:
-      - txt
-      - md
+    source: data/demo/2audio
+analyse:
+  name: ConvertAudio
+  config:
+    output_ext: mp4

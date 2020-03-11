@@ -2,21 +2,23 @@ from lib.common.analyser import Analyser
 from lib.common.exceptions import ElementShouldSkipError
 from lib.common.etypes import Etype
 from subprocess import call, STDOUT
+from pathlib import Path
 import os
 
 
-class ExtractAudioAnalyser(Analyser):
-    def analyse_element(self, element: Etype.Video, config) -> Etype.Audio:
+class ConvertAudio(Analyser):
+    def analyse_element(self, element: Etype.Audio, config) -> Etype.Audio:
         output_ext = config["output_ext"]
-        output = f"/tmp/{element.id}.{output_ext}"
+
         FNULL = open(os.devnull, "w")
-        # TODO: add error handling
+        output = f"/tmp/{element.id}.{output_ext}"
+        # TODO: error handling
         out = call(
             ["ffmpeg", "-y", "-i", element.paths[0], output],
             stdout=FNULL,
             stderr=STDOUT,
         )
+        self.logger(f"Converted '{element.id}' from {element.paths[0].suffix} to .{output_ext}")
+        return Etype.Audio(element.id, paths=[output])
 
-        element.paths[0] = output
-
-        return element
+module = ConvertAudio
