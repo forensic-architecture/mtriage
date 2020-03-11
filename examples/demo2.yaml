@@ -1,7 +1,0 @@
-folder: media/test_official
-select:
-  name: local
-  config:
-    dev: true
-    source: data/demo2
-    aggregate: true

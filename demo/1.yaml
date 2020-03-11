@@ -1,0 +1,13 @@
+"""
+The simplest possible use of mtriage, simply 'selects' files from a folder,
+preparing them to be processed by an mtriage analyser.
+
+Try commenting in the `aggregate` field, and note the difference in
+media/demo_official folder.
+"""
+folder: media/demo_official
+select:
+  name: local
+  config:
+    source: data/demo/1local
+    # aggregate: true
