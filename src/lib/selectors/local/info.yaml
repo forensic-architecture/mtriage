@@ -1,7 +1,7 @@
 desc: Selects media from a path that already exists on the local filesystem.
 args:
   - name: source
-    desc: The path to the source folder that represents the media space. Ensure that the path exists not only on the local filesystem, but also in the subsection that is mounted to Docker. The easiest way to ensure this is the case is to ensure that the 'source_folder' is a subdirectory of 'media'.
+    desc: The path to the source folder that represents the media space. Ensure that the path exists not only on the local filesystem, but also in the subsection that is mounted to Docker. The easiest way to ensure this is the case is to ensure that the 'source' is a subdirectory of 'media'.
     required: true
     input: folder
   - name: aggregate

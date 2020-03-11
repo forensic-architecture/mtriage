@@ -8,7 +8,7 @@ from lib.common.exceptions import SelectorIndexError
 
 BASE = Path("/mtriage")
 
-class LocalSelector(Selector):
+class Local(Selector):
     """ A simple selector for importing local files into mtriage.
 
     It recursively finds every file in a source_folder specified in the config
@@ -56,3 +56,5 @@ class LocalSelector(Selector):
             return Etype.Any(og_folder.name, paths=[x[1] for x in self.results])
         else:
             return Etype.Any(element.id, paths=[element.path])
+
+module = Local

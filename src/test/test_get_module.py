@@ -6,8 +6,8 @@ from lib.common.get_module import get_module
 
 
 def make_empty_main_export(pth):
-    INIT = 'main = True\n__all__ = ["main"]\n'
-    with open(f"{pth}/__init__.py", "w") as f:
+    INIT = 'module = 1'
+    with open(f"{pth}/core.py", "w") as f:
         f.write(INIT)
 
 

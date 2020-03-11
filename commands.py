@@ -260,7 +260,7 @@ def run(args):
     if args.dev:
         volumes += ["-v", "{}/src:/mtriage/src".format(DIR_PATH)]
 
-    return __run(
+    __run(
         [
             "docker",
             "run",
@@ -277,6 +277,9 @@ def run(args):
         args,
     )
 
+    if not args.persist:
+        clean(args)
+
 
 def parse_args(cli_args):
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
@@ -288,6 +291,7 @@ def parse_args(cli_args):
     run_p.add_argument("--gpu", action="store_true")
     run_p.add_argument("--dry", action="store_true")
     run_p.add_argument("--dev", action="store_true")
+    run_p.add_argument("--persist", action="store_true")
 
     dev_p = subparsers.add_parser("dev")
     dev_p.add_argument("--whitelist")

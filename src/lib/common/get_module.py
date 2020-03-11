@@ -13,6 +13,6 @@ def get_module(_from, key):
     else:
         raise ImportError("The phase argument must be either 'select' or 'analyse'")
 
-    pth = f"{module_folder}.{key}"
+    pth = f"{module_folder}.{key}.core"
     mod = import_module(pth)
-    return mod.main
+    return mod.module

@@ -101,13 +101,13 @@ class TestBuild(unittest.TestCase):
         )
 
         args = parse_args(
-            ["run", "examples/youtube.yaml", "--tag", "CUSTOM_TAG", "--dry"]
+            ["run", "demo/youtube.yaml", "--tag", "CUSTOM_TAG", "--dry"]
         )
         cmd = run(args)
         self.assertTrue(cmd[-1] == "forensicarchitecture/mtriage:CUSTOM_TAG")
 
     def test_dev_tag(self):
-        dev_args = parse_args(["run", "examples/frames.yaml", "--dev", "--dry"])
+        dev_args = parse_args(["run", "demo/frames.yaml", "--dev", "--dry"])
         cmd = run(dev_args)
         vs = get_volumes(cmd)
         media_re = r".*/mtriage/src:/mtriage/src$"
@@ -118,7 +118,7 @@ class TestBuild(unittest.TestCase):
                 break
         self.assertTrue(has_src)
 
-        no_dev_args = parse_args(["run", "examples/frames.yaml", "--dry"])
+        no_dev_args = parse_args(["run", "demo/frames.yaml", "--dry"])
         cmd = run(no_dev_args)
         vs = get_volumes(cmd)
         matched = False
