@@ -25,74 +25,59 @@ Attributes:
 """
 import os
 import yaml
-from lib.common.get_module import get_module
 from validate import validate_yaml
+from lib.common.get_module import get_module
+from lib.common.storage import LocalStorage
 
 CONFIG_PATH = "/run_args.yaml"
 
+def make_storage(cfg: dict) -> LocalStorage:
+    # TODO: generalise `folder` here to a `storage` var that is passed from YAML
+    return LocalStorage(folder=cfg["folder"])
 
 def _run_yaml():
     with open(CONFIG_PATH, "r") as c:
         cfg = yaml.safe_load(c)
 
-    is_single_phase = validate_yaml(cfg)
+    validate_yaml(cfg)
 
-    if is_single_phase:
-        print("-----------------------------------------------")
-        print("Note: you are using the deprecated YAML format.")
-        print("-----------------------------------------------")
-        # run single phase
-        # NB: this is actually only for backwards compatibility. could remove as the new config fmt is expressive
-        # enough to accommodate running a single phase of analyser or selector just as easily.
-        if not os.path.exists(cfg["folder"]):
-            os.makedirs(cfg["folder"])
+    base_cfg = {}
+    if "select" not in cfg and "elements_in" in cfg:
+        base_cfg["elements_in"] = cfg["elements_in"]
+    else:
+        # run select
+        sel = cfg["select"]
+        Selector = get_module("select", sel["name"])
+        selector = Selector(
+            sel["config"] if "config" in sel.keys() else {},
+            sel["name"],
+            make_storage(cfg),
+        )
+        selector.start_indexing()
+        selector.start_retrieving()
+        base_cfg["elements_in"] = [sel["name"]]
 
-        Mod = get_module(cfg["phase"], cfg["module"])
-        the_module = Mod(cfg["config"], cfg["module"], cfg["folder"])
-        if cfg["phase"] == "select":
-            the_module.start_indexing()
-            the_module.start_retrieving()
-        else:  # analyse
-            the_module.start_analysing()
+    # then analyse if specified
+    if "analyse" not in cfg:
+        return
+
+    ana = cfg["analyse"]
+    if isinstance(ana, dict):
+        # run a single analyser
+        Analyser = get_module("analyse", ana["name"])
+        analyser = Analyser(
+            {**ana["config"], **base_cfg} if "config" in ana.keys() else base_cfg,
+            ana["name"],
+            make_storage(cfg),
+        )
+        analyser.start_analysing()
 
     else:
-        base_cfg = {}
-        if "select" not in cfg and "elements_in" in cfg:
-            base_cfg["elements_in"] = cfg["elements_in"]
-        else:
-            # run select
-            sel = cfg["select"]
-            Selector = get_module("select", sel["name"])
-            selector = Selector(
-                sel["config"] if "config" in sel.keys() else {},
-                sel["name"],
-                cfg["folder"],
-            )
-            selector.start_indexing()
-            selector.start_retrieving()
-            base_cfg["elements_in"] = [sel["name"]]
-
-        # then analyse if specified
-        if "analyse" not in cfg:
-            return
-
-        ana = cfg["analyse"]
-        if isinstance(ana, dict):
-            # run a single analyser
-            Analyser = get_module("analyse", ana["name"])
-            analyser = Analyser(
-                {**ana["config"], **base_cfg} if "config" in ana.keys() else base_cfg,
-                ana["name"],
-                cfg["folder"],
-            )
-            analyser.start_analysing()
-
-        else:
-            # run the meta analyser to chain them all together
-            # Analyser = get_module("analyse", "meta")
-            # meta_cfg = {"children": }
-            # analyser = Analyser()
-            raise NotImplemented("Chaining analysers is not yet implemented.")
+        # run the meta analyser to chain them all together
+        # Analyser = get_module("analyse", "meta")
+        # meta_cfg = {"children": }
+        # analyser = Analyser()
+        raise NotImplemented("Chaining analysers is not yet implemented.")
 
 
 if __name__ == "__main__":

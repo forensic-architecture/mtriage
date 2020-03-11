@@ -1,0 +1,5 @@
+folder: media/test_official
+select:
+  name: local
+  config:
+    source: data/demo1

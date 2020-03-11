@@ -21,7 +21,6 @@ credentials/**
 .env
 
 # other data
-data/**
 tags*
 logfile.log
 

@@ -47,8 +47,7 @@ def validate_analyse(cfg: dict):
 
 def validate_yaml(cfg: dict) -> bool:
     """
-    Confirms all values on YAML.
-    Returns False if a full pass (select and analyse) is specified, or True if a single phase.
+    Confirms all values on YAML. Throws an appropriate exception if something's up.
     """
     keys = cfg.keys()
 
@@ -74,7 +73,6 @@ def validate_yaml(cfg: dict) -> bool:
                 "The phase attribute must be either select or analyse"
             )
         validate_module(cfg["phase"], cfg["module"], cfg)
-        return True
     else:
         if "elements_in" not in keys and "select" not in keys:
             raise InvalidYamlError("You must specify either 'elements_in' or 'select'.")
@@ -90,5 +88,6 @@ def validate_yaml(cfg: dict) -> bool:
             validate_name(cfg["select"])
             validate_module("select", cfg["select"]["name"], cfg["select"])
 
-        validate_analyse(cfg["analyse"])
-        return False
+        if "analyse" in cfg:
+            validate_analyse(cfg["analyse"])
+

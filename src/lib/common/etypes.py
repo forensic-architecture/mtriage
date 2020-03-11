@@ -71,7 +71,7 @@ class Et:
         return None
 
     # def __call__(self, source: Union[List[Path], Path]):
-    def __call__(self, paths: List[Pth], el_id: str) -> LocalElement:
+    def __call__(self, el_id: str, paths:List[Pth] = []) -> LocalElement:
         paths = [Path(x) if isinstance(x, str) else x for x in paths]
         # TODO: confirm all source files exist
         # TODO: filter only to the values the Et allows
@@ -135,7 +135,7 @@ class Etype():
 def cast(paths, el_id, to:Et=None) -> LocalElement:
     # NB: cast even at the expense of losing some paths if explicit ET is provided
     if to is not None:
-        return to(paths, el_id)
+        return to(el_id, paths=paths)
     # TODO: check extensions on all paths
     # fit it with the most restrictive etype possible
     # i.e. if all are .jpg, make it Et.Image rather than Et.Any
