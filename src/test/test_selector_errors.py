@@ -2,7 +2,7 @@ import pytest
 import os
 from lib.common.selector import Selector
 from lib.common.storage import LocalStorage
-from lib.common.etypes import cast_to_etype, Etype, LocalElement, LocalElementsIndex
+from lib.common.etypes import Etype, LocalElement, LocalElementsIndex
 from lib.common.exceptions import (
     ElementShouldRetryError,
     ElementShouldSkipError,
@@ -127,11 +127,3 @@ def integration_2(utils, additionals):
 
     pass_path = utils.get_element_path("retrieveErrorSelector", "pass")
     assert os.path.exists(pass_path)
-
-    etype = cast_to_etype(retry3_path, Etype.Any)
-    expected = {
-        "base": retry3_path,
-        "etype": Etype.Any,
-        "media": {"any": [f"{retry3_path}/out.txt"]},
-    }
-    assert utils.dictsEqual(etype, expected)

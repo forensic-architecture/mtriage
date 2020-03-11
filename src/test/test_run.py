@@ -10,7 +10,7 @@ BASELINE = {"folder": "media/test_official"}
 WITH_ELS = {**BASELINE, "elements_in": "sel1"}
 WITH_SELECT = {
     **BASELINE,
-    "select": {"name": "local", "config": {"source_folder": "/a-folder"}},
+    "select": {"name": "local", "config": {"source": "/a-folder"}},
 }
 GOOD_ANALYSE_DICT = {**WITH_ELS, "analyse": {"name": "frames"}}
 GOOD_SELECT_ANALYSE = {

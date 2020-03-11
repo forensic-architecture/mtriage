@@ -1,40 +1,32 @@
+import os
+from pathlib import Path
+from shutil import copyfile
 from lib.common.selector import Selector
 from lib.common.etypes import Etype
-import os
-from shutil import copyfile
 
+
+BASE = Path("/mtriage")
 
 class LocalSelector(Selector):
     """ A simple selector for importing local files into mtriage.
 
-    It recursively finds every file in a source_folder specified in the
-    config (see example script 4.select_local.sh) and imports each file
-    into its own element. The element ID is the file's name concatenated
-    with its extension.
+    It recursively finds every file in a source_folder specified in the config
+    (see example script 4.select_local.sh) and imports each file into its own
+    element. The element ID is the file's name concatenated with its extension.
 
     n.b. the directory being imported must be located within the mtriage
-    directory to be accessible inside the docker container (the media
-    folder is recommended).
+    directory on the mtriage host to be accessible inside the docker container
+    (the media folder is recommended).
     """
-
     def index(self, config):
-        if (
-            ("force" in config)
-            and (config["force"] is False)
-            and os.path.exists(self.ELEMENT_MAP)
-        ):
-            self.logger("File already exists for index--not running again.")
-            return None
-
-        self.abs_src = f"/mtriage/{config['source_folder']}"
-
+        src = Path(config['source_folder'])
+        abs_src = BASE/src
         if not os.path.exists(self.abs_src):
             raise Exception(
                 "The 'source_folder' you specified for the 'local' selector does not exist."
             )
-            return None
-
-        return self._run(config)
+        # single element with path
+        return [["id", "path"], [src.name, abs_src]]
 
     def __copyfile(self, base, src_path, name, extension, dest_path):
         if not os.path.exists(base):

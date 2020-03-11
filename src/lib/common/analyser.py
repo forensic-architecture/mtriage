@@ -4,7 +4,6 @@ import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Generator, List, Union, Tuple
-from lib.common.etypes import cast_to_etype, LocalElement
 from lib.common.exceptions import (
     ElementShouldSkipError,
     ElementShouldRetryError,
@@ -17,7 +16,7 @@ from lib.common.exceptions import (
 )
 from lib.common.mtmodule import MTModule
 from lib.common.storage import Storage
-from lib.common.etypes import Etype, LocalElement, cast_to_etype
+from lib.common.etypes import Etype, LocalElement
 
 
 class Analyser(MTModule):
@@ -107,28 +106,6 @@ class Analyser(MTModule):
     @MTModule.phase("post-analyse")
     def __post_analyse(self):
         self.post_analyse(self.config)
-
-    def __cast_elements(self, element_dict, outdir):
-        # TODO: move to etypes in `cast`
-        def attempt_cast_el(key):
-            el_path = element_dict[key]
-            etyped_attrs = cast_to_etype(el_path, self.get_in_etype())
-            return {"id": key, "dest": f"{outdir}/{key}", **etyped_attrs}
-
-        els = []
-        for key in element_dict.keys():
-            try:
-                element = attempt_cast_el(key)
-                els.append(element)
-            except EtypeCastError as e:
-                self.error_logger(str(e), element={"id": key})
-
-        if len(els) is 0:
-            raise InvalidAnalyserElements(
-                f"The elements_in you specified could not be cast to {self.get_in_etype()}, the input type for the {self.name} analyser."
-            )
-
-        return els
 
     def __attempt_analyse(self, attempts, element, dest_q):
         try:

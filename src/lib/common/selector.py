@@ -10,7 +10,7 @@ from lib.common.exceptions import (
     ElementShouldSkipError,
     EtypeCastError,
 )
-from lib.common.etypes import cast_to_etype, LocalElement, LocalElementsIndex
+from lib.common.etypes import LocalElement, LocalElementsIndex
 from lib.common.storage import Storage, LocalStorage
 import shutil
 

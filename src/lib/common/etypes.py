@@ -42,6 +42,7 @@ class LocalElementsIndex:
     def __init__(self, rows=[]):
         self.rows = rows
 
+
 Pth = TypeVar('Pth', str, Path)
 class Et:
     """ Defines the primary operations that make up a basic Etype. Array functionality is built in
@@ -126,21 +127,20 @@ class Etype():
     Video = Et("Video", "*.mp4")
     Audio = Et("Audio", ["*.mp3", "*.wav"])
     Json = Et("Json", "*.json")
-    Union = lambda *args: UnionEt(*args)
+    Union = UnionEt
     Array = lambda x: x.as_array()
+    Index = LocalElementsIndex
 
-
-def cast_to_etype(el_path, etype):
-    """ needs to do all the work of translating between a storage layer and loading representations in python """
-    return {
-        "base": el_path,
-        "etype": etype,
-        "media": etype.extract(el_path),
-    }
 
 def cast(paths, el_id, to:Et=None) -> LocalElement:
+    # NB: cast even at the expense of losing some paths if explicit ET is provided
     if to is not None:
         return to(paths, el_id)
+    # TODO: check extensions on all paths
+    # fit it with the most restrictive etype possible
+    # i.e. if all are .jpg, make it Et.Image rather than Et.Any
+    # or Et.Union(Et.Image, Et.Json) rather than Et.Any
+    # default to Et.Any
     raise NotImplementedError("TODO: cast etype implicitly based on the folder")
 
 

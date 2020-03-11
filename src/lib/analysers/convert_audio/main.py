@@ -7,22 +7,17 @@ import os
 
 
 class ConvertAudioAnalyser(Analyser):
-    def get_in_etype(self):
-        return Etype.Audio
-
-    def get_out_etype(self):
-        return Etype.Audio
-
-    def analyse_element(self, element, config):
-        dest = element["dest"]
-        key = element["id"]
+    def analyse_element(self, element: Etype.Audio, config) -> Etype.Audio:
         input_ext = config["input_ext"]
         output_ext = config["output_ext"]
-        audio = element["media"]["audio"]
 
         FNULL = open(os.devnull, "w")
+        output = f"/tmp/{element.id}.{output_ext}"
+        # TODO: error handling
         out = call(
-            ["ffmpeg", "-y", "-i", audio, f"{dest}/{key}.{output_ext}"],
+            ["ffmpeg", "-y", "-i", element.paths[0], output],
             stdout=FNULL,
             stderr=STDOUT,
         )
+        return Etype.Audio(output, element.id)
+

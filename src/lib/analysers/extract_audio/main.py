@@ -6,21 +6,17 @@ import os
 
 
 class ExtractAudioAnalyser(Analyser):
-    def get_in_etype(self):
-        return Etype.Video
-
-    def get_out_etype(self):
-        return Etype.Audio
-
-    def analyse_element(self, element, config):
-        dest = element["dest"]
-        video = element["media"]["video"]
-        key = element["id"]
+    def analyse_element(self, element: Etype.Video, config) -> Etype.Audio:
         output_ext = config["output_ext"]
-
+        output = f"/tmp/{element.id}.{output_ext}"
         FNULL = open(os.devnull, "w")
+        # TODO: add error handling
         out = call(
-            ["ffmpeg", "-y", "-i", video, f"{dest}/{key}.{output_ext}"],
+            ["ffmpeg", "-y", "-i", element.paths[0], output],
             stdout=FNULL,
             stderr=STDOUT,
         )
+
+        element.paths[0] = output
+
+        return element
