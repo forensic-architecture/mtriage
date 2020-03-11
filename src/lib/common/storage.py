@@ -57,11 +57,11 @@ class LocalStorage(Storage):
     ELEMENTS_INDEX_FILE = "element_map.csv"
 
     def __init__(self, folder=None):
-        self.base_dir = Path(folder)
+        self.base_dir = Path("/mtriage")/folder
 
         # selecting
-        self.ELEMENT_DIR = lambda name: Path(f"{folder}/{name}/data")
-        self.ELEMENT_MAP = lambda name: Path(f"{folder}/{name}/element_map.csv")
+        self.ELEMENT_DIR = lambda name: self.base_dir/name/self.RETRIEVED_EXT
+        self.ELEMENT_MAP = lambda name: self.base_dir/name/self.ELEMENTS_INDEX_FILE
         self.headers = []
         self.delete_local_on_write = True #mainly exists for testing, manually set to False
 
@@ -115,7 +115,6 @@ class LocalStorage(Storage):
     def write_element(self, q:str, element:LocalElement) -> bool:
         """ Write a LocalElement to persistent storage, deleting the LocalElement afterwards.
             Returns True if successful, false if otherwise. """
-
         dest = self.read_query(q)
         if not os.path.exists(dest):
             os.makedirs(dest)
@@ -132,6 +131,8 @@ class LocalStorage(Storage):
                 shutil.move(e, base/e.name)
             else:
                 shutil.copyfile(e, base/e.name)
+
+        return True
 
 
     def remove_element(self, q:str, id:str):

@@ -1,12 +1,10 @@
-"""
-Let's now use the elements we selected. To tell mtriage we want to use those elements, we simply give the name of the selector we used, in this case `local`.
-
-Instead of a `select` pass, we instead specify an `analyse` pass.
-"""
 folder: media/demo_official
-elements_in: local
+elements_in:
+  - local
 analyse:
-  name: local
+  name: ExtractTypes
   config:
-    source: data/demo/1local
-    # aggregate: true
+    dev: true
+    exts:
+      - txt
+      - md

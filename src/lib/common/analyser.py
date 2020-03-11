@@ -38,7 +38,7 @@ class Analyser(MTModule):
             raise InvalidAnalyserConfigError(
                 "The config must contain an 'elements_in' indicating the analyser's input."
             )
-        if not isinstance(config["elements_in"], list) or not config["elements_in"]:
+        if not config["elements_in"] or not isinstance(config["elements_in"], list):
             raise InvalidAnalyserConfigError(
                 "The 'elements_in' must be a list containing at least one string"
             )
@@ -69,6 +69,7 @@ class Analyser(MTModule):
                 to bypass parallelisation is for testing.
             4. Call user-defined `post_analyse` if it exists.
             5. Save logs, and clear the buffer. """
+        self.disk.delete_local_on_write = False
         self.__pre_analyse()
         # all_media = self.disk.read_all_media()
         self.__analyse(in_parallel)
@@ -110,6 +111,8 @@ class Analyser(MTModule):
     def __attempt_analyse(self, attempts, element, dest_q):
         try:
             new_element = self.analyse_element(element, self.config)
+            if new_element is None:
+                return
             success = self.disk.write_element(dest_q, new_element)
             if not success:
                 raise ElementShouldRetryError("Unsuccessful storage")
