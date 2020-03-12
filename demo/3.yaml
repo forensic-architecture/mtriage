@@ -2,11 +2,14 @@ folder: media/demo_official/3
 select:
   name: Local
   config:
-    source: data/demo/2audio
+    source: data/demo/3video
+    aggregate: true
 analyse:
-  - name: ConvertAudio
+  - name: Frames
     config:
-      output_ext: mp4
-  - name: ConvertAudio
+      dev: true
+  - name: ImageDedup
     config:
-      output_ext: aac
+      threshold: 3
+      method: dhash
+

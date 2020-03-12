@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from shutil import copyfile
 from lib.common.selector import Selector
-from lib.common.etypes import Etype
+from lib.common.etypes import Etype, Index
 from lib.common.exceptions import SelectorIndexError
 
 
@@ -47,8 +47,8 @@ class Local(Selector):
             # `self.results` used in `retrieve_element` for paths.
             self.results = results[1:]
             # NB: hacky way to just make `retrieve_element` run just once.
-            return Etype.Index([ ["id"], ["IS_AGGREGATE"]])
-        return Etype.Index(results)
+            return Index([ ["id"], ["IS_AGGREGATE"]])
+        return Index(results)
 
     def retrieve_element(self, element, config):
         if self.is_aggregate():

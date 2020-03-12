@@ -7,6 +7,7 @@ from lib.common.storage import LocalStorage
 from lib.common.get_module import get_module
 
 TEMP_ELEMENT_DIR = "/mtriage/media/test_official"
+TMP_DIR = Path("/tmp")
 STUB_PATHS = Ns(
     imagejpg="/mtriage/src/test/etype_stubs/image.jpeg",
 )
@@ -55,6 +56,9 @@ def scaffold_elementmap(elements=[]):
 def cleanup():
     if Path(TEMP_ELEMENT_DIR).exists():
         shutil.rmtree(TEMP_ELEMENT_DIR)
+    if TMP_DIR.exists():
+        shutil.rmtree(TMP_DIR)
+        TMP_DIR.mkdir()
 
 
 def listOfDictsEqual(l1, l2):

@@ -35,7 +35,7 @@ class EmptySelector(Selector):
 @pytest.fixture
 def additionals(utils):
     obj = lambda: None
-    obj.emptySelector = EmptySelector({}, "empty", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
+    obj.emptySelector = EmptySelector({"dev": True}, "empty", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
     yield obj
     utils.cleanup()
 

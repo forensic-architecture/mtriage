@@ -27,3 +27,7 @@ logfile.log
 blacklists/**
 whitelists/**
 config/**
+
+data/demo/3video/dancingonmyown.mov
+
+data/demo/3video/info.json

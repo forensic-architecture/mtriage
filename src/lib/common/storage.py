@@ -63,7 +63,7 @@ class LocalStorage(Storage):
         self.ELEMENT_DIR = lambda name: self.base_dir/name/self.RETRIEVED_EXT
         self.ELEMENT_MAP = lambda name: self.base_dir/name/self.ELEMENTS_INDEX_FILE
         self.headers = []
-        self.delete_local_on_write = True #mainly exists for testing, manually set to False
+        self.delete_local_on_write = False
 
         # logging
         self.__LOGS_DIR = f"{self.base_dir}/logs"
@@ -232,6 +232,7 @@ class LocalStorage(Storage):
         for q in qs:
             element_pth = self.read_query(q)
             el_paths = subdirs(element_pth)
+            # TODO: cast elements properly, to throw error if they don't conform
             els.extend([LocalElement(id=el.name, paths=files(el), query=q) for el in el_paths])
         return els
 

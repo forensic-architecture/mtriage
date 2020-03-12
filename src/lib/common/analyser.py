@@ -60,7 +60,7 @@ class Analyser(MTModule):
     def post_analyse(self, config):
         """option to perform any clear up"""
 
-    def start_analysing(self, in_parallel=True):
+    def start_analysing(self, in_parallel=False):
         """ Primary entrypoint in the mtriage lifecycle.
 
             1. Call user-defined `pre_analyse` if it exists.
@@ -69,7 +69,6 @@ class Analyser(MTModule):
                 to bypass parallelisation is for testing.
             4. Call user-defined `post_analyse` if it exists.
             5. Save logs, and clear the buffer. """
-        self.disk.delete_local_on_write = False
         self.__pre_analyse()
         # all_media = self.disk.read_all_media()
         self.__analyse(in_parallel)
@@ -84,6 +83,7 @@ class Analyser(MTModule):
     def __analyse(self, in_parallel):
         try:
             elements = self.disk.read_elements(self.config['elements_in'])
+            # TODO: check elements from disk match types for what analyser expects
         except:
             raise InvalidAnalyserElements(f"The 'elements_in' you specified does not exist on the storage specified.")
         if in_parallel:
@@ -103,6 +103,7 @@ class Analyser(MTModule):
             dest_q = f"{og_query[0]}/{self.name}"
 
             self.__attempt_analyse(5, element, dest_q)
+            self.disk.delete_local_on_write = False
 
     @MTModule.phase("post-analyse")
     def __post_analyse(self):

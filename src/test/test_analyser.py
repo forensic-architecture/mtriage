@@ -24,12 +24,11 @@ class TxtCopyAnalyser(Analyser):
             with open(f, "r") as reader:
                 contents = reader.readlines()
             txt = Path("/tmp/copy.txt")
-            with open(txt, "a") as writer:
+            with open(txt, "w+") as writer:
                 writer.writelines(contents)
 
             element.paths = [txt]
             return element
-
 
 
 # TODO: test casting errors via an analyser with explicit etype
@@ -50,7 +49,9 @@ def additionals(utils):
 
     obj.config = {"elements_in": obj.WHITELIST}
     obj.emptyAnalyser = EmptyAnalyser(
-        obj.config, obj.emptyAnalyserName, storage=LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
+        obj.config,
+        obj.emptyAnalyserName,
+        storage=LocalStorage(folder=utils.TEMP_ELEMENT_DIR),
     )
     yield obj
     utils.cleanup()
@@ -72,8 +73,12 @@ def test_init(additionals):
 def test_analyse(utils, additionals):
     config = {"elements_in": ["sel1"]}
     dummyName = "dummyAnalyser"
-    checkUserExceptionAnalyser = EmptyAnalyser({**config, "dev": True}, "empty", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
-    dummyAnalyser = TxtCopyAnalyser(config, dummyName, LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
+    checkUserExceptionAnalyser = EmptyAnalyser(
+        {**config, "dev": True}, "empty", LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
+    )
+    dummyAnalyser = TxtCopyAnalyser(
+        config, dummyName, LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
+    )
     # test it calls the user-defined `analyse_element`
     with pytest.raises(Exception, match="is the user-defined func!"):
         checkUserExceptionAnalyser.start_analysing(in_parallel=False)

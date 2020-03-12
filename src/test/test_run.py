@@ -10,12 +10,12 @@ BASELINE = {"folder": "media/test_official"}
 WITH_ELS = {**BASELINE, "elements_in": "sel1"}
 WITH_SELECT = {
     **BASELINE,
-    "select": {"name": "local", "config": {"source": "/a-folder"}},
+    "select": {"name": "Local", "config": {"source": "/a-folder"}},
 }
-GOOD_ANALYSE_DICT = {**WITH_ELS, "analyse": {"name": "frames"}}
+GOOD_ANALYSE_DICT = {**WITH_ELS, "analyse": {"name": "Frames"}}
 GOOD_SELECT_ANALYSE = {
     **WITH_SELECT,
-    "analyse": [{"name": "frames"}, {"name": "imagededup"}],
+    "analyse": [{"name": "Frames"}, {"name": "ImageDedup"}],
 }
 
 
@@ -82,7 +82,7 @@ def test_validate_phase():
 
     bad_select_module = {**good_phase_select, "module": "not a selector"}
     bad_analyse_module = {**good_phase_analyse, "module": "not an analyser"}
-    good_select_module = {**good_phase_select, "module": "local"}
+    good_select_module = {**good_phase_select, "module": "Local"}
     write(bad_select_module)
     with pytest.raises(
         InvalidYamlError, match="No select module named 'not a selector'"
@@ -123,7 +123,7 @@ def test_validate_phase():
         write(bad_local_config)
         with pytest.raises(
             InvalidYamlError,
-            match="The config you specified does not contain all the required arguments for the 'local' selecter.",
+            match="The config you specified does not contain all the required arguments for the 'Local' selecter.",
         ):
             validate()
 
@@ -161,8 +161,5 @@ def test_validate():
 
 
 def test_config_types():
-    res = validate_yaml(GOOD_ANALYSE_DICT)
-    assert res == False
-
-    res = validate_yaml(GOOD_SELECT_ANALYSE)
-    assert res == False
+    validate_yaml(GOOD_ANALYSE_DICT)
+    validate_yaml(GOOD_SELECT_ANALYSE)

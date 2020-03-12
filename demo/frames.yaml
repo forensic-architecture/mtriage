@@ -1,7 +1,0 @@
-folder: media/demo_official
-phase: analyse
-module: frames
-config:
-  elements_in:
-    - youtube
-  fps: 1
