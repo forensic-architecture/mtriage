@@ -1,6 +1,8 @@
 import os
 from enum import Enum
 from pathlib import Path
+from copy import deepcopy
+from functools import reduce
 from types import SimpleNamespace as Ns
 from typing import Union as _Union, List, TypeVar
 from abc import abstractmethod
@@ -33,15 +35,14 @@ Function = type(lambda _: None)
 
 
 class Et:
-    """ TODO: ... """
-
     def __init__(self, name, filter_func, is_array=False):
         self.id = name
         self.filter_func = filter_func
         self.is_array = is_array
 
     def __repr__(self):
-        return f"EType({self.id.capitalize()}{'Array' if self.is_array else ''})"
+        ia = self.is_array
+        return f"{'Array(' if ia else ''}EType.{self.id.capitalize()}{')' if ia else ''}"
 
     def __str__(self):
         return self.__repr__()
@@ -52,7 +53,7 @@ class Et:
                 return etype
         return None
 
-    def __call__(self, el_id: str, paths: _Union[Pth, List[Pth]]) -> LocalElement:
+    def __call__(self, el_id: str, paths: _Union[Pth, List[Pth]], is_array=False) -> LocalElement:
         if isinstance(paths, (str, Path)):
             paths = [paths]
         else:
@@ -60,12 +61,15 @@ class Et:
         paths = self.filter(paths)
         if (
             len(paths) == 0
-            or (self.id != "Any" and not self.is_array and (len(paths) != 1 or not paths[0].is_file()))
+            or (self.id != "Any" and not (is_array or self.is_array) and (len(paths) != 1 or not paths[0].is_file()))
         ):
             raise EtypeCastError(self.__class__.__name__)
 
         # TODO: confirm all source files exist
-        return LocalElement(paths=paths, id=el_id, et=self,)
+        this_cls = deepcopy(self)
+        if this_cls.is_array:
+            this_cls.is_array = True
+        return LocalElement(paths=paths, id=el_id, et=this_cls)
 
     def filter(self, ls):
         """ Exists to be overwritten, `filter_func` is just the fallback. """
@@ -79,6 +83,9 @@ class Et:
                 self.is_array == other.is_array,
             ]
         )
+
+    def __lt__(self, other):
+        return self.id < other.id
 
     def as_array(self):
         return Et(self.id, self.filter, is_array=True)
@@ -108,10 +115,7 @@ class UnionEt(Et):
         return f"Union({inner})"
 
     def __eq__(self, other):
-        return all(
-            isinstance(other, UnionEt),
-            all([x == y for x, y in zip(self.ets, other.ets)]),
-        )
+        return all([x == y for x, y in zip(sorted(self.ets), sorted(other.ets))])
 
     def __call__(self, el_id: str, paths: _Union[Pth, List[Pth]]) -> LocalElement:
 
@@ -161,13 +165,42 @@ def all_etypes():
         yield getattr(Etype, t)
 
 
-def cast(paths, el_id, to: Et = None) -> LocalElement:
+def cast(el_id, paths: _Union[List[Pth], Pth], to: Et = None) -> LocalElement:
+    if isinstance(paths, (Path, str)):
+        paths = [paths]
     # NB: cast even at the expense of losing some paths if explicit ET is provided
     if to is not None:
         return to(el_id, paths=paths)
-    # TODO: check extensions on all paths
-    # fit it with the most restrictive etype possible
-    # i.e. if all are .jpg, make it Et.Image rather than Et.Any
-    # or Et.Union(Et.Image, Et.Json) rather than Et.Any
-    # default to Et.Any
-    raise NotImplementedError("TODO: cast etype implicitly based on the folder")
+    # implicit cast to the most inclusive type
+    valid = []
+    if len(paths) == 0:
+        raise EtypeCastError("Paths cannot be empty.")
+
+    for et in all_etypes():
+        if et.id == 'Any':
+            continue
+        try:
+            # if both array and singular casts are valid, precedence given to singular
+            et(el_id, paths=paths, is_array=True)
+            v = Array(et)
+            try:
+                et(el_id, paths=paths)
+                v = et
+            except:
+                pass
+            valid.append(v)
+        except EtypeCastError:
+            pass
+
+    if len(valid) == 0:
+        return Etype.Any(el_id, paths)
+    elif len(valid) == 1:
+        return valid[0](el_id, paths)
+    else:
+        # multiple valid types, return a union
+        etyped_paths = reduce(lambda a,b: a+b(el_id, paths).paths ,valid, [])
+        if len(etyped_paths) != len(paths):
+            return Etype.Any(el_id, paths)
+        return Union(*valid)(el_id, paths)
+
+

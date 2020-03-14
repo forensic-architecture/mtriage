@@ -1,7 +1,7 @@
 import pytest
 from types import SimpleNamespace as Ns
 from pathlib import Path
-from lib.common.etypes import Etype, Union, Array, all_etypes
+from lib.common.etypes import Etype, Union, Array, all_etypes, cast
 from lib.common.exceptions import EtypeCastError
 from test import utils
 
@@ -104,3 +104,51 @@ def test_Union(base):
     assert len(f2.paths) == 2
     assert base.im3 in f2.paths
     assert base.aud1 in f2.paths
+
+def test_cast(base):
+    # explicit cast
+    with pytest.raises(EtypeCastError):
+        cast(base.id, [], Etype.Image)
+    with pytest.raises(EtypeCastError):
+        cast(base.id, [base.txt1], Etype.Image)
+
+    t1 = cast(base.id, [base.im1], to=Etype.Image)
+    assert len(t1.paths) == 1
+    assert t1.et == Etype.Image
+
+    # implicit cast
+    with pytest.raises(EtypeCastError):
+        cast(base.id, [])
+
+    i1 = cast(base.id, [base.im1])
+    assert len(i1.paths) == 1
+    assert i1.et == Etype.Image
+    i2 = cast(base.id, [base.im2])
+    assert len(i2.paths) == 1
+    assert i2.et == Etype.Image
+
+    ia1 = cast(base.id, [base.im1, base.im2])
+    assert len(ia1.paths) == 2
+    assert ia1.et == Array(Etype.Image)
+
+    a1 = cast(base.id, base.aud1)
+    assert len(a1.paths) == 1
+    assert a1.et == Etype.Audio
+
+    # unions
+
+    ai1 =  cast(base.id, [base.im3, base.aud1])
+    assert len(ai1.paths) == 2
+    assert ai1.et == Union(Etype.Image, Etype.Audio)
+
+    ai2 = cast(base.id, [base.aud1, base.im2])
+    assert len(ai1.paths) == 2
+    assert ai1.et == Union(Etype.Image, Etype.Audio)
+
+    iaa1 = cast(base.id, [base.im1, base.im2, base.aud1])
+    assert len(iaa1.paths) == 3
+    assert iaa1.et == Union(Array(Etype.Image), Etype.Audio)
+
+    any1 = cast(base.id, [base.im1, base.im2, base.aud1, base.txt1])
+    assert len(any1.paths) == 4
+    assert any1.et == Etype.Any
