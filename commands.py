@@ -189,7 +189,7 @@ def develop(args):
         "-v",
         "{}:/mtriage".format(DIR_PATH),
         "-v",
-        "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH)
+        "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
     ]
 
     if args.yaml is not None:
@@ -268,7 +268,7 @@ def run(args):
     if args.dev:
         volumes += ["-v", "{}/src:/mtriage/src".format(DIR_PATH)]
 
-    __run(
+    return __run(
         [
             "docker",
             "run",

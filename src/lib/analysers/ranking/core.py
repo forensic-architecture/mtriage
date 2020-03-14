@@ -9,6 +9,7 @@ from lib.common.exceptions import ElementShouldSkipError
 
 WK_DIR = Path("/tmp/ranking")
 
+
 class RankCvJson(Analyser):
     def pre_analyse(self, config):
         self.thresh = config["threshold"] if "threshold" in config else 0.5
@@ -35,7 +36,9 @@ class RankCvJson(Analyser):
             labels, frames, scores = data["labels"]
             for label, preds in labels.items():
                 frames, scores = preds["frames"], preds["scores"]
-                valid_frames = [idx for idx, _ in enumerate(frames) if scores[idx] > self.thresh]
+                valid_frames = [
+                    idx for idx, _ in enumerate(frames) if scores[idx] > self.thresh
+                ]
                 rank = len(valid_frames)
                 if rank > 4:
                     self.logger(f"label '{label}': rank {count}")
@@ -52,7 +55,7 @@ class RankCvJson(Analyser):
 
     def post_analyse(self, config, derived_dirs):
         ranking = self.data_to_ranking()
-        path = WK_DIR/"all"
+        path = WK_DIR / "all"
         if not os.path.exists(path):
             os.makedirs(path)
         file = path + "/rankings.json"
@@ -68,5 +71,6 @@ class RankCvJson(Analyser):
             s_els = [t[0] for t in s_vals]
             sortedData[label] = s_els
         return sortedData
+
 
 module = RankCvJson

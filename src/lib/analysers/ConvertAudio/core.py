@@ -18,7 +18,10 @@ class ConvertAudio(Analyser):
             stdout=FNULL,
             stderr=STDOUT,
         )
-        self.logger(f"Converted '{element.id}' from {element.paths[0].suffix} to .{output_ext}")
+        self.logger(
+            f"Converted '{element.id}' from {element.paths[0].suffix} to .{output_ext}"
+        )
         return Etype.Audio(element.id, paths=[output])
+
 
 module = ConvertAudio

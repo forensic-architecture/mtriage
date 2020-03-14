@@ -8,6 +8,7 @@ from lib.common.exceptions import SelectorIndexError
 
 BASE = Path("/mtriage")
 
+
 class Local(Selector):
     """ A simple selector for importing local files into mtriage.
 
@@ -19,6 +20,7 @@ class Local(Selector):
     directory on the mtriage host to be accessible inside the docker container
     (the media folder is recommended).
     """
+
     def __init__(self, *args):
         super().__init__(*args)
         self.disk.delete_local_on_write = False
@@ -27,8 +29,8 @@ class Local(Selector):
         return "aggregate" in self.config and self.config["aggregate"]
 
     def index(self, config):
-        src = Path(config['source'])
-        abs_src = BASE/src
+        src = Path(config["source"])
+        abs_src = BASE / src
         if not os.path.exists(abs_src):
             raise SelectorIndexError(
                 f"The 'source' folder {src} could not be found. Ensure it is in the same directory asmtriage."
@@ -40,14 +42,14 @@ class Local(Selector):
         results = [["id", "path"]]
         for root, _, files in os.walk(abs_src):
             for file in files:
-                fp = Path(root)/file
+                fp = Path(root) / file
                 results.append([fp.stem, fp])
                 self.logger(f"indexed file: {fp.name}")
         if self.is_aggregate():
             # `self.results` used in `retrieve_element` for paths.
             self.results = results[1:]
             # NB: hacky way to just make `retrieve_element` run just once.
-            return Index([ ["id"], ["IS_AGGREGATE"]])
+            return Index([["id"], ["IS_AGGREGATE"]])
         return Index(results)
 
     def retrieve_element(self, element, config):
@@ -56,5 +58,6 @@ class Local(Selector):
             return Etype.Any(og_folder.name, paths=[x[1] for x in self.results])
         else:
             return Etype.Any(element.id, paths=[element.path])
+
 
 module = Local

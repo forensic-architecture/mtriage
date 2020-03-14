@@ -21,4 +21,5 @@ class ExtractAudio(Analyser):
 
         return element
 
+
 module = ExtractAudio

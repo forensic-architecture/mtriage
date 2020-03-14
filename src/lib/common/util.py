@@ -39,7 +39,6 @@ def hashdict(_dict):
     return m.hexdigest()
 
 
-
 # NOTE: these vuevis functions should go to a viewer's util
 def vuevis_prepare_el(element):
     el_meta = element["media"]["json"]
@@ -94,6 +93,7 @@ def deduce_frame_no(path):
 def subdirs(path: Path) -> List[Path]:
     """ Return a list of Paths for subdirectories in a directory """
     return [f for f in path.iterdir() if f.is_dir()]
+
 
 def files(path: Path) -> List[Path]:
     """ Return a list of Paths for files in a directory """

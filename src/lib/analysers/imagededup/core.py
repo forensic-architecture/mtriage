@@ -38,8 +38,10 @@ class ImageDedup(Analyser):
     def is_dry(self):
         return "dry" in self.config and self.config["dry"]
 
-    def analyse_element(self, element: Etype.Image.array(), config) -> Etype.Image.array():
-        #NOTE: only works if all images are in same file, should probably copy for robustness.
+    def analyse_element(
+        self, element: Etype.Image.array(), config
+    ) -> Etype.Image.array():
+        # NOTE: only works if all images are in same file, should probably copy for robustness.
         basedir = element.paths[0].parent
         encodings = self.hasher.encode_images(image_dir=basedir)
 
@@ -62,5 +64,6 @@ class ImageDedup(Analyser):
         deduplicated_paths = [p for p in element.paths if p.name not in duplicates]
 
         return Etype.Image.array()(element.id, paths=deduplicated_paths)
+
 
 module = ImageDedup

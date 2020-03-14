@@ -4,13 +4,11 @@ import shutil
 from types import SimpleNamespace as Ns
 from pathlib import Path
 from lib.common.storage import LocalStorage
-from lib.common.get_module import get_module
+from lib.common.get import get_module
 
 TEMP_ELEMENT_DIR = "/mtriage/media/test_official"
 TMP_DIR = Path("/tmp")
-STUB_PATHS = Ns(
-    imagejpg="/mtriage/src/test/etype_stubs/image.jpeg",
-)
+STUB_PATHS = Ns(imagejpg="/mtriage/src/test/etype_stubs/image.jpeg",)
 
 
 def scaffold_empty(
@@ -27,7 +25,9 @@ def scaffold_empty(
         os.makedirs(derived_dir)
 
     for element in elements:
-        element_dir = f"{TEMP_ELEMENT_DIR}/{selector}/{LocalStorage.RETRIEVED_EXT}/{element}"
+        element_dir = (
+            f"{TEMP_ELEMENT_DIR}/{selector}/{LocalStorage.RETRIEVED_EXT}/{element}"
+        )
         if not os.path.exists(element_dir):
             os.makedirs(element_dir)
         if selector_txt is not None:
@@ -42,7 +42,9 @@ def scaffold_empty(
 
 def get_element_path(selname, elementId, analyser=None):
     middle_insert = (
-        LocalStorage.RETRIEVED_EXT if analyser is None else f"{LocalStorage.ANALYSED_EXT}/{analyser}"
+        LocalStorage.RETRIEVED_EXT
+        if analyser is None
+        else f"{LocalStorage.ANALYSED_EXT}/{analyser}"
     )
     return f"{TEMP_ELEMENT_DIR}/{selname}/{middle_insert}/{elementId}"
 
@@ -95,6 +97,7 @@ def list_files(startpath):
         subindent = " " * 4 * (level + 1)
         for f in files:
             print("{}{}".format(subindent, f))
+
 
 def ltemp():
     """ Primarily for pdb debugging """

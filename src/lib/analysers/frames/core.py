@@ -9,6 +9,7 @@ from lib.common.util import files
 VID_SUFFIXES = [".mp4", ".mov"]
 GLOSSED_FRAMES = Union(Etype.Image.array(), Etype.Json)
 
+
 def ffmpeg_frames(out_folder, fp, rate):
     # TODO: better logs for FFMPEG process
     FNULL = open(os.devnull, "w")
@@ -18,24 +19,26 @@ def ffmpeg_frames(out_folder, fp, rate):
         stderr=STDOUT,
     )
 
+
 class Frames(Analyser):
-    def analyse_element(self,
-                        element: Union(Etype.Json, Etype.Video),
-                        config) -> GLOSSED_FRAMES:
+    def analyse_element(
+        self, element: Union(Etype.Json, Etype.Video), config
+    ) -> GLOSSED_FRAMES:
         fps = int(config["fps"]) if "fps" in config else 1
         json = [x for x in element.paths if x.suffix in ".json"][0]
         video = [x for x in element.paths if x.suffix in VID_SUFFIXES][0]
 
-        dest = Path("/tmp")/element.id
+        dest = Path("/tmp") / element.id
         if dest.exists():
             rmtree(dest)
         dest.mkdir()
 
         ffmpeg_frames(dest, video, fps)
-        copyfile(json, dest/"meta.json")
+        copyfile(json, dest / "meta.json")
 
         self.logger(f"Frames successfully created for element {element.id}.")
         self.disk.delete_local_on_write = True
         return GLOSSED_FRAMES(element.id, paths=files(dest))
+
 
 module = Frames

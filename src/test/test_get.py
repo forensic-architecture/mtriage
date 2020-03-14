@@ -2,11 +2,11 @@ import pytest
 import shutil
 from os import listdir, makedirs
 from os.path import isdir
-from lib.common.get_module import get_module
+from lib.common.get import get_module
 
 
 def make_empty_main_export(pth):
-    INIT = 'module = 1'
+    INIT = "module = 1"
     with open(f"{pth}/core.py", "w") as f:
         f.write(INIT)
 

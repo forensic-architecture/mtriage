@@ -35,6 +35,7 @@ def db_run(dbfile, q, batches_running):
 class MTModule(ABC):
     """ Handles parallelisation and component-specific logging.  Invoked primarily through the @MTModule.phase decorator
     on a method, which parallelises based on the function signature."""
+
     def __init__(self, config, name, storage):
         self.config = config
         self.name = name

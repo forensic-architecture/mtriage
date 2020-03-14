@@ -3,7 +3,7 @@ import yaml
 import inspect
 from pathlib import Path
 from lib.common.exceptions import InvalidYamlError
-from lib.common.get_module import get_module
+from lib.common.get import get_module
 
 
 def validate_module(phase: str, module: str, cfg: dict):
@@ -90,4 +90,3 @@ def validate_yaml(cfg: dict) -> bool:
 
         if "analyse" in cfg:
             validate_analyse(cfg["analyse"])
-

@@ -26,16 +26,18 @@ Attributes:
 import os
 import yaml
 from validate import validate_yaml
-from lib.common.get_module import get_module
+from lib.common.get import get_module
 from lib.common.storage import LocalStorage
 
 CONFIG_PATH = "/run_args.yaml"
+
 
 def make_storage(cfg: dict) -> LocalStorage:
     # TODO: generalise `folder` here to a `storage` var that is passed from YAML
     return LocalStorage(folder=cfg["folder"])
 
-def _run_analyser(ana: dict, base_cfg:dict, cfg: dict):
+
+def _run_analyser(ana: dict, base_cfg: dict, cfg: dict):
     # run a single analyser
     Analyser = get_module("analyse", ana["name"])
     analyser = Analyser(
@@ -44,6 +46,7 @@ def _run_analyser(ana: dict, base_cfg:dict, cfg: dict):
         make_storage(cfg),
     )
     analyser.start_analysing()
+
 
 def _run_yaml():
     with open(CONFIG_PATH, "r") as c:
@@ -79,7 +82,7 @@ def _run_yaml():
     else:
         for ana in analyse_phase:
             _run_analyser(ana, base_cfg, cfg)
-            base_cfg['elements_in'] = [f"{sel['name']}/{ana['name']}"]
+            base_cfg["elements_in"] = [f"{sel['name']}/{ana['name']}"]
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import pytest
 from types import SimpleNamespace as Ns
 from pathlib import Path
 from lib.common.etypes import Etype, Union, Array, all_etypes, cast
+from lib.etypes.cvjson import etype as CvJson
 from lib.common.exceptions import EtypeCastError
 from test import utils
 
@@ -16,6 +17,8 @@ def base():
     obj = Ns()
     obj.id = "xasd123"
     obj.txt1 = Path("/tmp/1.txt")
+    obj.scoresjson1 = Path("/tmp/scores.json")
+    obj.json2 = Path("/tmp/not_scores.json")
     obj.md1 = Path("/tmp/1.md")
     obj.im1 = Path("/tmp/1.png")
     obj.im2 = Path("/tmp/2.jpg")
@@ -27,6 +30,8 @@ def base():
     write_stub(obj.im2)
     write_stub(obj.im3)
     write_stub(obj.aud1)
+    write_stub(obj.scoresjson1)
+    write_stub(obj.json2)
     yield obj
     utils.cleanup()
 
@@ -71,6 +76,7 @@ def test_Image(base):
     assert len(im1.paths) == 1
     assert im1.paths[0] == base.im1
 
+
 def test_Array(base):
     ImArr = Array(Etype.Image)
     with pytest.raises(EtypeCastError):
@@ -105,6 +111,7 @@ def test_Union(base):
     assert base.im3 in f2.paths
     assert base.aud1 in f2.paths
 
+
 def test_cast(base):
     # explicit cast
     with pytest.raises(EtypeCastError):
@@ -137,7 +144,7 @@ def test_cast(base):
 
     # unions
 
-    ai1 =  cast(base.id, [base.im3, base.aud1])
+    ai1 = cast(base.id, [base.im3, base.aud1])
     assert len(ai1.paths) == 2
     assert ai1.et == Union(Etype.Image, Etype.Audio)
 
@@ -152,3 +159,21 @@ def test_cast(base):
     any1 = cast(base.id, [base.im1, base.im2, base.aud1, base.txt1])
     assert len(any1.paths) == 4
     assert any1.et == Etype.Any
+
+
+def test_custom_etypes(base):
+    all_ets = all_etypes()
+    cvjson_et = CvJson(CvJson.__name__, CvJson.filter)
+    assert cvjson_et in all_ets
+
+    cvj1 = cvjson_et(base.id, [base.im1, base.im2, base.scoresjson1])
+
+    assert len(cvj1.paths) == 3
+    assert cvj1.et == cvjson_et
+
+    with pytest.raises(EtypeCastError):
+        cvjson_et(base.id, [base.im1, base.im2])
+    # throws error when json is not named 'scores.json' (specified in
+    # CvJson.filter).
+    with pytest.raises(EtypeCastError):
+        cvjson_et(base.id, [base.im1, base.json2])

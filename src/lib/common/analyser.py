@@ -25,6 +25,7 @@ class Analyser(MTModule):
         The working directory of the selector is passed during class instantiation, and can be referenced in the
         implementations of methods.
     """
+
     def __init__(self, config, module, storage=None):
         super().__init__(config, module, storage)
 
@@ -44,7 +45,9 @@ class Analyser(MTModule):
             )
 
     @abstractmethod
-    def analyse_element(self, element: LocalElement, config) -> Union[LocalElement, None]:
+    def analyse_element(
+        self, element: LocalElement, config
+    ) -> Union[LocalElement, None]:
         """ Method defined on each analyser that implements analysis element-wise.
 
             An element is currently simply a path to the relevant media. TODO: elements should be a more structured
@@ -82,10 +85,12 @@ class Analyser(MTModule):
 
     def __analyse(self, in_parallel):
         try:
-            elements = self.disk.read_elements(self.config['elements_in'])
+            elements = self.disk.read_elements(self.config["elements_in"])
             # TODO: check elements from disk match types for what analyser expects
         except:
-            raise InvalidAnalyserElements(f"The 'elements_in' you specified does not exist on the storage specified.")
+            raise InvalidAnalyserElements(
+                f"The 'elements_in' you specified does not exist on the storage specified."
+            )
         if in_parallel:
             self.analyse((e for e in elements))
         else:
@@ -93,7 +98,9 @@ class Analyser(MTModule):
             self.analyse(elements)
 
     @MTModule.phase("analyse")
-    def analyse(self, elements: Union[Generator[LocalElement, None, None], List[LocalElement]]):
+    def analyse(
+        self, elements: Union[Generator[LocalElement, None, None], List[LocalElement]]
+    ):
         """ If `elements` is a Generator, the phase decorator will run in parallel.
             If `elements` is a List, then it will run serially (which is useful for testing). """
         for element in elements:
@@ -134,7 +141,5 @@ class Analyser(MTModule):
             if self.is_dev():
                 raise e
             else:
-                self.error_logger(
-                    f"{str(e)}: skipping element", element
-                )
+                self.error_logger(f"{str(e)}: skipping element", element)
                 return False

@@ -26,5 +26,3 @@ def get_all_media(utils, additionals):
     }
     mediaDict = additionals.emptyAnalyser._Analyser__get_all_media()
     assert utils.dictsEqual(cmpDict, mediaDict)
-
-

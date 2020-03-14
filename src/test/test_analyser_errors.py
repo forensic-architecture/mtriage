@@ -69,24 +69,32 @@ def test_bad_init_error(utils):
         InvalidAnalyserConfigError,
         match="must contain an 'elements_in' indicating the analyser's input",
     ):
-        no_elements_in = ErrorThrowingAnalyser(bad0, "stub", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
+        no_elements_in = ErrorThrowingAnalyser(
+            bad0, "stub", LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
+        )
 
     with pytest.raises(
         InvalidAnalyserConfigError,
         match="The 'elements_in' must be a list containing at least one string",
     ):
-        empty_elements_in = ErrorThrowingAnalyser(bad1, "stub", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
+        empty_elements_in = ErrorThrowingAnalyser(
+            bad1, "stub", LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
+        )
 
     with pytest.raises(
         InvalidAnalyserConfigError,
         match="The 'elements_in' must be a list containing at least one string",
     ):
-        empty_elements_in = ErrorThrowingAnalyser(bad2, "stub", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
+        empty_elements_in = ErrorThrowingAnalyser(
+            bad2, "stub", LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
+        )
 
     with pytest.raises(
         InvalidAnalyserConfigError, match="You must provide a name for your analyser"
     ):
-        badan2 = ErrorThrowingAnalyser(good, "", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
+        badan2 = ErrorThrowingAnalyser(
+            good, "", LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
+        )
 
 
 def test_integration(utils, additionals):
@@ -111,7 +119,9 @@ def test_integration(utils, additionals):
 
 def test_bad_whitelist(utils):
     badConfig = {"elements_in": ["sel1/an1/el1"]}
-    badAn = EmptyAnalyser(badConfig, "whitelistErrorAnalyser", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
+    badAn = EmptyAnalyser(
+        badConfig, "whitelistErrorAnalyser", LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
+    )
     with pytest.raises(
         InvalidAnalyserElements, match="'elements_in' you specified does not exist"
     ):

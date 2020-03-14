@@ -7,6 +7,7 @@ from types import SimpleNamespace as Ns
 from typing import Union as _Union, List, TypeVar
 from abc import abstractmethod
 from lib.common.exceptions import EtypeCastError
+from lib.common.get import get_custom_etypes
 
 
 class LocalElement:
@@ -42,7 +43,9 @@ class Et:
 
     def __repr__(self):
         ia = self.is_array
-        return f"{'Array(' if ia else ''}EType.{self.id.capitalize()}{')' if ia else ''}"
+        return (
+            f"{'Array(' if ia else ''}EType.{self.id.capitalize()}{')' if ia else ''}"
+        )
 
     def __str__(self):
         return self.__repr__()
@@ -53,17 +56,26 @@ class Et:
                 return etype
         return None
 
-    def __call__(self, el_id: str, paths: _Union[Pth, List[Pth]], is_array=False) -> LocalElement:
+    def __call__(
+        self, el_id: str, paths: _Union[Pth, List[Pth]], is_array=False
+    ) -> LocalElement:
         if isinstance(paths, (str, Path)):
             paths = [paths]
         else:
             paths = [Path(x) if isinstance(x, str) else x for x in paths]
         paths = self.filter(paths)
-        if (
-            len(paths) == 0
-            or (self.id != "Any" and not (is_array or self.is_array) and (len(paths) != 1 or not paths[0].is_file()))
-        ):
-            raise EtypeCastError(self.__class__.__name__)
+
+        # NOTE: a bit convoluted. Only do an array check if etype is not custom,
+        # as custom etypes could have more sophisticated expressions than core
+        # types. TODO: make more elegant.
+        is_custom = self.id in [x.__name__ for x in get_custom_etypes()]
+        if not is_custom:
+            if len(paths) == 0 or (
+                self.id != "Any"
+                and not (is_array or self.is_array)
+                and (len(paths) != 1 or not paths[0].is_file())
+            ):
+                raise EtypeCastError(self)
 
         # TODO: confirm all source files exist
         this_cls = deepcopy(self)
@@ -96,7 +108,6 @@ class Et:
     @property
     def is_union(self):
         return False
-
 
 
 class UnionEt(Et):
@@ -133,8 +144,6 @@ class UnionEt(Et):
         return True
 
 
-
-
 def class_as_et(class_obj):
     return class_obj(class_obj.__name__, class_obj.filter)
     # TODO: get across all custom methods somehow...
@@ -144,25 +153,14 @@ def fglob(ps, exts):
     return [p for p in ps if p.suffix.lower() in exts]
 
 
-class Etype:
-    Any = Et("Any", lambda ps: ps)
-    Image = Et("Image", lambda ps: fglob(ps, [".bmp", ".jpg", ".jpeg", ".png"]))
-    Video = Et("Video", lambda ps: fglob(ps, [".mp4", ".mov"]))
-    Audio = Et("Audio", lambda ps: fglob(ps, [".mp3", ".wav"]))
-    Json = Et("Json", lambda ps: fglob(ps, [".json"]))
-
-
-Union = UnionEt
-Array = lambda x: x.as_array()
-Index = LocalElementsIndex
-
-# TODO: import all custom etypes and add to EType via `class_as_et`
-
-
 def all_etypes():
-    all_etypes = [x for x in dir(Etype) if not x.startswith("_")]
-    for t in all_etypes:
+    base = [x for x in dir(Etype) if not x.startswith("_") and x != "cast"]
+    custom = get_custom_etypes()
+
+    for t in base:
         yield getattr(Etype, t)
+    for t in custom:
+        yield t(t.__name__, t.filter)
 
 
 def cast(el_id, paths: _Union[List[Pth], Pth], to: Et = None) -> LocalElement:
@@ -177,7 +175,7 @@ def cast(el_id, paths: _Union[List[Pth], Pth], to: Et = None) -> LocalElement:
         raise EtypeCastError("Paths cannot be empty.")
 
     for et in all_etypes():
-        if et.id == 'Any':
+        if et.id == "Any":
             continue
         try:
             # if both array and singular casts are valid, precedence given to singular
@@ -198,9 +196,23 @@ def cast(el_id, paths: _Union[List[Pth], Pth], to: Et = None) -> LocalElement:
         return valid[0](el_id, paths)
     else:
         # multiple valid types, return a union
-        etyped_paths = reduce(lambda a,b: a+b(el_id, paths).paths ,valid, [])
+        etyped_paths = reduce(lambda a, b: a + b(el_id, paths).paths, valid, [])
         if len(etyped_paths) != len(paths):
             return Etype.Any(el_id, paths)
         return Union(*valid)(el_id, paths)
 
 
+class Etype:
+    Any = Et("Any", lambda ps: ps)
+    Image = Et("Image", lambda ps: fglob(ps, [".bmp", ".jpg", ".jpeg", ".png"]))
+    Video = Et("Video", lambda ps: fglob(ps, [".mp4", ".mov"]))
+    Audio = Et("Audio", lambda ps: fglob(ps, [".mp3", ".wav"]))
+    Json = Et("Json", lambda ps: fglob(ps, [".json"]))
+
+
+Etype.cast = cast
+# TODO: import all custom etypes and add as attributes on EType
+
+Union = UnionEt
+Array = lambda x: x.as_array()
+Index = LocalElementsIndex

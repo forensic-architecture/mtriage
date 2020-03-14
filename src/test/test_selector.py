@@ -10,7 +10,7 @@ from lib.common.exceptions import (
     SelectorIndexError,
     EtypeCastError,
 )
-from lib.common.etypes import cast, Etype, LocalElementsIndex
+from lib.common.etypes import Etype, LocalElementsIndex
 from lib.common.storage import LocalStorage
 from test.utils import scaffold_elementmap, STUB_PATHS, list_files
 
@@ -23,19 +23,25 @@ class EmptySelector(Selector):
     def index(self, config):
         if not os.path.exists(self.disk.read_query(self.name)):
             df = scaffold_elementmap(["el1", "el2", "el3"])
-            df = [x+[STUB_PATHS.imagejpg] if idx > 0 else (x+['path']) for idx, x in enumerate(df)]
+
+            df = [
+                x + [STUB_PATHS.imagejpg] if idx > 0 else (x + ["path"])
+                for idx, x in enumerate(df)
+            ]
             return LocalElementsIndex(rows=df)
         else:
             return None
 
     def retrieve_element(self, row, config):
-        return cast([row.path], row.id, to=Etype.Image)
+        return Etype.cast(row.id, row.path)
 
 
 @pytest.fixture
 def additionals(utils):
     obj = lambda: None
-    obj.emptySelector = EmptySelector({"dev": True}, "empty", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
+    obj.emptySelector = EmptySelector(
+        {"dev": True}, "empty", LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
+    )
     yield obj
     utils.cleanup()
 
@@ -60,17 +66,16 @@ def test_index(additionals):
     eidx = additionals.emptySelector.disk.read_elements_index("empty")
     emap = scaffold_elementmap(["el1", "el2", "el3"])
     for idx, row in enumerate(eidx.rows):
-        assert row.id == emap[idx+1][0]
-
+        assert row.id == emap[idx + 1][0]
 
 
 def test_retrieve(additionals, utils):
     additionals.emptySelector.start_indexing()
     additionals.emptySelector.start_retrieving(in_parallel=False)
     pth = additionals.emptySelector.disk.read_query("empty")
-    images = [pth/f"{x}/image.jpeg" for x in ["el1", "el2", "el3"]]
+    images = [pth / f"{x}/image.jpeg" for x in ["el1", "el2", "el3"]]
     for img in images:
-        assert(os.path.isfile(img))
+        assert os.path.isfile(img)
 
 
 # the values that are returned from retrieve need to be managed in Python differently according to what kind of data

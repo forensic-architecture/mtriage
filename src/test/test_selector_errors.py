@@ -12,6 +12,7 @@ from lib.common.exceptions import (
 from test.utils import scaffold_elementmap
 import pdb
 
+
 class BasicErrorSelector(Selector):
     def __init__(self, *args):
         super().__init__(*args)

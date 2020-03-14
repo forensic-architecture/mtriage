@@ -24,9 +24,12 @@ def test_class_variables(additionals):
     assert additionals.mod.name == "empty"
     assert additionals.mod.disk.base_dir == Path(additionals.BASE_DIR)
     assert additionals.mod._MTModule__LOGS == []
-    assert additionals.mod.disk._LocalStorage__LOGS_DIR == f"{additionals.BASE_DIR}/logs"
     assert (
-        additionals.mod.disk._LocalStorage__LOGS_FILE == f"{additionals.BASE_DIR}/logs/logs.txt"
+        additionals.mod.disk._LocalStorage__LOGS_DIR == f"{additionals.BASE_DIR}/logs"
+    )
+    assert (
+        additionals.mod.disk._LocalStorage__LOGS_FILE
+        == f"{additionals.BASE_DIR}/logs/logs.txt"
     )
     assert os.path.exists(f"{additionals.BASE_DIR}/logs")
 
