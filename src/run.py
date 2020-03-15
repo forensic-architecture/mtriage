@@ -57,6 +57,7 @@ def _run_yaml():
     base_cfg = {}
     if "select" not in cfg and "elements_in" in cfg:
         base_cfg["elements_in"] = cfg["elements_in"]
+        sel = None
     else:
         # run select
         sel = cfg["select"]
@@ -70,7 +71,6 @@ def _run_yaml():
         selector.start_retrieving()
         base_cfg["elements_in"] = [sel["name"]]
 
-    # then analyse if specified
     if "analyse" not in cfg:
         return
 
@@ -82,6 +82,10 @@ def _run_yaml():
     else:
         for ana in analyse_phase:
             _run_analyser(ana, base_cfg, cfg)
+            if sel is None:
+                # take the selector from elements in
+                fst = cfg["elements_in"][0]
+                sel = { 'name': fst.split("/")[0] }
             base_cfg["elements_in"] = [f"{sel['name']}/{ana['name']}"]
 
 

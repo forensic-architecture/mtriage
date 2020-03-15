@@ -63,7 +63,7 @@ class Analyser(MTModule):
     def post_analyse(self, config):
         """option to perform any clear up"""
 
-    def start_analysing(self, in_parallel=False):
+    def start_analysing(self, in_parallel=True):
         """ Primary entrypoint in the mtriage lifecycle.
 
             1. Call user-defined `pre_analyse` if it exists.
@@ -74,8 +74,8 @@ class Analyser(MTModule):
             5. Save logs, and clear the buffer. """
         if self.config.get("dev"):
             in_parallel = False
+        self.logger(f"Running {'in parallel' if in_parallel else 'serially'}")
         self.__pre_analyse()
-        # all_media = self.disk.read_all_media()
         self.__analyse(in_parallel)
         self.__post_analyse()
         self.flush_logs()

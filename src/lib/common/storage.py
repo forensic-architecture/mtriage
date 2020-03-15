@@ -227,8 +227,9 @@ class LocalStorage(Storage):
         for q in qs:
             element_pth = self.read_query(q)
             el_paths = subdirs(element_pth)
-            # TODO: cast elements properly, to throw error if they don't conform
-            els.extend(
-                [LocalElement(id=el.name, paths=files(el), query=q) for el in el_paths]
-            )
+            # TODO: cast elements properly and throw error if they don't conform
+            for el in el_paths:
+                lel = Etype.cast(el.name, files(el))
+                lel.query = q
+                els.append(lel)
         return els

@@ -83,6 +83,7 @@ def test_analyse(utils, additionals):
     with pytest.raises(Exception, match="is the user-defined func!"):
         checkUserExceptionAnalyser.start_analysing(in_parallel=False)
     # try again with a text el mocking selection completed
+    # TODO: fix these tests- adding casting throws errors in some cases, as well as extra log.
     for el in additionals.sel1_elements:
         with open(
             f"{dummyAnalyser.disk.base_dir}/sel1/{dummyAnalyser.disk.RETRIEVED_EXT}/{el}/anitem.txt",

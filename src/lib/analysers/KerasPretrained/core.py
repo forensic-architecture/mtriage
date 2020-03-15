@@ -1,7 +1,7 @@
 from lib.common.exceptions import InvalidAnalyserConfigError
 from lib.common.analyser import Analyser
 from lib.common.util import vuevis_from_preds
-from lib.common.etypes import Etype
+from lib.common.etypes import Etype, Union, Array
 from keras.preprocessing.image import load_img, img_to_array
 import numpy as np
 import json
@@ -15,13 +15,7 @@ SUPPORTED_MODELS = {
 }
 
 
-class Resnet50Analyser(Analyser):
-    def get_in_etype(self):
-        return Etype.Union(Etype.Image.array(), Etype.Json)
-
-    def get_out_etype(self):
-        return Etype.Json
-
+class KerasPretrained(Analyser):
     def pre_analyse(self, config):
         self.logger(config["model"])
         MOD = SUPPORTED_MODELS.get(config["model"])
@@ -59,5 +53,11 @@ class Resnet50Analyser(Analyser):
 
         self.get_preds = get_preds
 
-    def analyse_element(self, element, config):
+    def analyse_element(
+        self, element: Union(Array(Etype.Image), Etype.Json), _
+    ) -> Etype.Json:
+        import pdb; pdb.set_trace()
         vuevis_from_preds(element, get_preds=self.get_preds, logger=self.logger)
+
+
+module = KerasPretrained
