@@ -62,6 +62,8 @@ class Selector(MTModule):
             self.disk.write_elements_index(self.name, element_map)
 
     def start_retrieving(self, in_parallel=True):
+        if self.config.get("dev"):
+            in_parallel = False
         self.__pre_retrieve()
         elements = self.disk.read_elements_index(self.name).rows
         if not in_parallel:

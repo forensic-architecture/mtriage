@@ -72,6 +72,8 @@ class Analyser(MTModule):
                 to bypass parallelisation is for testing.
             4. Call user-defined `post_analyse` if it exists.
             5. Save logs, and clear the buffer. """
+        if self.config.get("dev"):
+            in_parallel = False
         self.__pre_analyse()
         # all_media = self.disk.read_all_media()
         self.__analyse(in_parallel)

@@ -1,0 +1,7 @@
+folder: media/demo_official/5
+select:
+  name: Twitter
+  config:
+    search_term: al-Khamis
+    uploaded_before: "2016-03-17"
+    uploaded_after: "2016-03-16"
