@@ -56,7 +56,7 @@ class TestBuild(unittest.TestCase):
         self.SELECTOR_WL = "selector_whitelist.txt"
         with open(self.SELECTOR_WL, "w") as f:
             writer = csv.writer(f)
-            writer.writerows([["youtube"], ["twitter"]])
+            writer.writerows([["Youtube"], ["Local"]])
 
         self.BLANK_WL = "blank_whitelist.txt"
         with open(self.BLANK_WL, "w") as f:

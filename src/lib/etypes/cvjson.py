@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Union
+from pathlib import Path
 from lib.common.etypes import Et, Pth
 from lib.common.exceptions import EtypeCastError
 
@@ -7,7 +8,10 @@ class CvJson(Et):
     """ A custom Etype for computer vision (CV) json files, representing
         predictions on a set of frames. """
 
-    def filter(self, paths: List[Pth]) -> List[Pth]:
+    def filter(self, paths: Union[Pth, List[Pth]]) -> List[Pth]:
+        if isinstance(paths, (str, Path)):
+            paths = [paths]
+
         pths = []
         json_count = 0
         for p in paths:

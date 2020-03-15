@@ -4,112 +4,92 @@ import re
 import argparse, os, sys
 import math
 from subprocess import call, STDOUT
+from pathlib import Path
 from lib.common.selector import Selector
-from lib.common.etypes import Etype
+from lib.common.etypes import Etype, Union, LocalElementsIndex
+from lib.common.util import files
+from lib.common.exceptions import ElementShouldSkipError
 
-# from .select import selector_run
-# from .retrieve import id_from_url, vid_exists, get_meta_path
 from datetime import datetime, timedelta
 
 import googleapiclient.discovery
 from googleapiclient.errors import HttpError
-from google.oauth2 import service_account
 
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
-CREDENTIALS_FILE = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-BASE_DIR = os.environ.get("BASE_DIR")
-GOOGLE_CREDS = service_account.Credentials.from_service_account_file(
-    f"{BASE_DIR}/{CREDENTIALS_FILE}"
-)
+API_KEY = os.environ.get("GOOGLE_API_KEY")
+TMP = Path("/tmp")
 
 
-class YoutubeSelector(Selector):
-    def get_out_etype(self):
-        return Etype.Union(Etype.Video, Etype.Json)
-
-    def index(self, config):
-        results = self._run(config)
+class Youtube(Selector):
+    def index(self, _) -> LocalElementsIndex:
+        results = self._run()
         if len(results) > 0:
             out = []
             out.append(list(results[0].keys()))
             out.extend([x.values() for x in results])
-            return out
+            return LocalElementsIndex(out)
         return None
 
-    def pre_retrieve(self, config, element_dir):
+    def pre_retrieve(self, _):
         self.ydl = youtube_dl.YoutubeDL(
             {
-                "outtmpl": f"{element_dir}/%(id)s/%(id)s.mp4",
+                "outtmpl": f"{TMP}/%(id)s/%(id)s.mp4",
                 "format": "worstvideo[ext=mp4]",
             }
         )
 
-    def retrieve_element(self, element, config):
-        dest = element["base"]
-        url = element["url"]
-        ydl = self.ydl
-        with ydl:
-            vid_id = self._id_from_url(url)
-            vid_does_exist = self._vid_exists(dest)
-
-            if vid_does_exist:
-                self.logger(f"{vid_id} has already been downloaded.")
+    def retrieve_element(self, element, _) -> Union(Etype.Video, Etype.Json):
+        with self.ydl:
             try:
-                result = ydl.extract_info(url)
-                with open(self._get_meta_path(dest), "w+") as fp:
+                result = self.ydl.extract_info(element.url)
+                meta = TMP/element.id/"meta.json"
+                with open(meta, "w+") as fp:
                     json.dump(result, fp)
-                self.logger(f"{vid_id}: video and meta downloaded successfully.")
+                self.logger(f"{element.id}: video and meta downloaded successfully.")
+                self.disk.delete_local_on_write = True
+                return Etype.cast(element.id, files(TMP/element.id))
             except youtube_dl.utils.DownloadError:
-                self.logger(
-                    f"Something went wrong downloading {vid_id}. It may have been deleted."
-                )
+                raise ElementShouldSkipError(f"Something went wrong downloading {element.id}. It may have been deleted.")
 
-    def _run(self, config):
-        results = []
+    def _run(self):
+        self.logger(f"Query: {self.config['search_term']}")
+        if "uploaded_after" in self.config:
+            self.logger(f"Start: {self.config['uploaded_after']}")
 
-        self.logger(f"Query: {config['search_term']}")
-        if "uploaded_after" in config:
-            self.logger(f"Start: {config['uploaded_after']}")
+        if "uploaded_before" in self.config:
+            self.logger(f"End: {self.config['uploaded_before']}")
 
-        if "uploaded_before" in config:
-            self.logger(f"End: {config['uploaded_before']}")
-
-        if "daily" in config.keys() and config["daily"]:
+        if self.config.get("daily"):
+            results = []
             self.logger(
-                f"Scraping daily, from {config['uploaded_after']} -- {config['uploaded_before']}"
+                f"Scraping daily, from {self.config['uploaded_after']} -- {self.config['uploaded_before']}"
             )
             self.logger("-----------------")
             for after, before in self._days_between(
-                config["uploaded_after"], config["uploaded_before"]
+                self.config["uploaded_after"], self.config["uploaded_before"]
             ):
-                self.logger("-------------")
-                args_obj = {}
-                args_obj["q"] = config["search_term"]
-                args_obj["before"] = before
-                args_obj["after"] = after
-                new_results = self._add_search_to_obj(args_obj, results)
-                results = results + new_results
+                results = results + self.get_results(before, after)
 
         else:
-            args_obj = {}
-            args_obj["q"] = config["search_term"]
-
-            if "uploaded_before" in config.keys():
-                args_obj["before"] = config["uploaded_before"]
-            if "uploaded_after" in config.keys():
-                args_obj["after"] = config["uploaded_after"]
-
-            new_results = self._add_search_to_obj(args_obj, results)
-            results = results + new_results
+            results = self.get_results(self.config.get("uploaded_before"), self.config.get("uploaded_after"))
 
         self.logger("\n\n----------------")
         self.logger(f"Scrape successful, {len(results) - 1} results.")
 
         return results
 
-    def _add_search_to_obj(self, args, results):
-        new_results = self._youtube_search_all_pages(args)
+    def get_results(self, before, after):
+        args_obj = { "q": self.config["search_term"] }
+
+        if before is not None:
+            args_obj["before"] = self.config["uploaded_before"]
+        if "uploaded_after" in self.config.keys():
+            args_obj["after"] = self.config["uploaded_after"]
+
+        new_results = self._youtube_search_all_pages(args_obj)
+        if new_results is None:
+            raise Exception("Something went wrong")
         return new_results
 
     def _add_to_csv_obj(self, csv_obj, s_res):
@@ -153,14 +133,15 @@ class YoutubeSelector(Selector):
         except HttpError as e:
             self.logger(f"An HTTP error {e.resp.status} occured.")
             print(e.content)
-            return csv_obj
+            return None
 
     def _youtube_search(self, options, pageToken=None):
+        # modified from https://github.com/youtube/api-samples/blob/master/python/search.py
         youtube = googleapiclient.discovery.build(
-            YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, credentials=GOOGLE_CREDS
+            YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=API_KEY
         )
 
-        args = {
+        theargs = {
             "pageToken": pageToken,
             "q": options["q"],
             "part": "id,snippet",
@@ -170,11 +151,11 @@ class YoutubeSelector(Selector):
         }
 
         if "before" in options:
-            args["publishedBefore"] = options["before"]
+            theargs["publishedBefore"] = options["before"]
         if "after" in options:
-            args["publishedAfter"] = options["after"]
+            theargs["publishedAfter"] = options["after"]
 
-        request = youtube.search().list(**args)
+        request = youtube.search().list(**theargs)
 
         return request.execute()
 
@@ -190,12 +171,6 @@ class YoutubeSelector(Selector):
             for dt in range(between)
         ]
 
-    def _get_meta_path(self, dest):
-        return f"{dest}/meta.json"
-
-    # def _get_folder_path(self, base_folder, vid_id):
-    #     return f"{base_folder}/{vid_id}"
-
     def _id_from_url(self, url):
         id_search = re.search(
             "https:\/\/www\.youtube\.com\/watch\?v\=(.*)", url, re.IGNORECASE
@@ -204,14 +179,5 @@ class YoutubeSelector(Selector):
             return id_search.group(1)
         return None
 
-    def _vid_exists(self, dest):
-        try:
-            m_vid_file = list(
-                filter(lambda x: re.match("(.*\.mp4)|(.*\.mkv)", x), os.listdir(dest))
-            )
-            # video has already been downloaded.
-            if len(m_vid_file) != 1:
-                return False
-            return True
-        except FileNotFoundError:
-            return False
+
+module = Youtube

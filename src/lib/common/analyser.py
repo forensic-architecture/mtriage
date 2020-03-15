@@ -127,7 +127,6 @@ class Analyser(MTModule):
 
         except ElementShouldSkipError as e:
             self.error_logger(str(e), element)
-            return False
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
@@ -136,10 +135,8 @@ class Analyser(MTModule):
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
                 )
-                return False
         except Exception as e:
             if self.is_dev():
                 raise e
             else:
                 self.error_logger(f"{str(e)}: skipping element", element)
-                return False

@@ -79,9 +79,8 @@ class Selector(MTModule):
     @MTModule.phase("retrieve")
     def __retrieve(self, element_indices: Union[List, Generator]):
         for element_index in element_indices:
-            success = self.__attempt_retrieve(5, element_index)
-            if not success:
-                self.disk.remove_element(self.name, element_index.id)
+            self.__attempt_retrieve(5, element_index)
+            self.disk.delete_local_on_write = False
 
     @MTModule.phase("post-retrieve")
     def __post_retrieve(self):
@@ -89,12 +88,15 @@ class Selector(MTModule):
 
     def __attempt_retrieve(self, attempts, element_index):
         try:
-            local_element = self.retrieve_element(element_index, self.config)
-            self.disk.write_element(self.name, local_element)
-            return True
+            new_element = self.retrieve_element(element_index, self.config)
+            if new_element is None:
+                return
+            success = self.disk.write_element(self.name, new_element)
+            if not success:
+                raise ElementShouldRetryError("Unsuccessful storage")
+
         except ElementShouldSkipError as e:
             self.error_logger(str(e), element_index)
-            return False
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element_index)
             if attempts > 1:
@@ -103,7 +105,6 @@ class Selector(MTModule):
                 self.error_logger(
                     "failed after maximum retries - skipping element", element_index
                 )
-                return False
         # TODO: flag to turn this off during development should be passed during run
         except Exception as e:
             if self.is_dev():
@@ -112,4 +113,3 @@ class Selector(MTModule):
                 self.error_logger(
                     "unknown exception raised - skipping element", element_index
                 )
-                return False

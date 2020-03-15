@@ -23,7 +23,6 @@ class Local(Selector):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.disk.delete_local_on_write = False
 
     def is_aggregate(self):
         return "aggregate" in self.config and self.config["aggregate"]
@@ -52,7 +51,7 @@ class Local(Selector):
             return Index([["id"], ["IS_AGGREGATE"]])
         return Index(results)
 
-    def retrieve_element(self, element, config):
+    def retrieve_element(self, element, config) -> Etype.Any:
         if self.is_aggregate():
             og_folder = Path(config["source"])
             return Etype.Any(og_folder.name, paths=[x[1] for x in self.results])
