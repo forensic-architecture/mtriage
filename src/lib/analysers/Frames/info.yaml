@@ -1,0 +1,6 @@
+desc: Extract a subset of representative frames from a video. A number of frames per second are extracted.
+args:
+  - name: fps
+    desc: Frames per second. Defaults to 1.
+    required: false
+    input: int
