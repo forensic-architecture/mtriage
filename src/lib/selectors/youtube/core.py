@@ -33,24 +33,23 @@ class Youtube(Selector):
 
     def pre_retrieve(self, _):
         self.ydl = youtube_dl.YoutubeDL(
-            {
-                "outtmpl": f"{TMP}/%(id)s/%(id)s.mp4",
-                "format": "worstvideo[ext=mp4]",
-            }
+            {"outtmpl": f"{TMP}/%(id)s/%(id)s.mp4", "format": "worstvideo[ext=mp4]",}
         )
 
     def retrieve_element(self, element, _) -> Union(Etype.Video, Etype.Json):
         with self.ydl:
             try:
                 result = self.ydl.extract_info(element.url)
-                meta = TMP/element.id/"meta.json"
+                meta = TMP / element.id / "meta.json"
                 with open(meta, "w+") as fp:
                     json.dump(result, fp)
                 self.logger(f"{element.id}: video and meta downloaded successfully.")
                 self.disk.delete_local_on_write = True
-                return Etype.cast(element.id, files(TMP/element.id))
+                return Etype.cast(element.id, files(TMP / element.id))
             except youtube_dl.utils.DownloadError:
-                raise ElementShouldSkipError(f"Something went wrong downloading {element.id}. It may have been deleted.")
+                raise ElementShouldSkipError(
+                    f"Something went wrong downloading {element.id}. It may have been deleted."
+                )
 
     def _run(self):
         self.logger(f"Query: {self.config['search_term']}")
@@ -72,7 +71,9 @@ class Youtube(Selector):
                 results = results + self.get_results(before, after)
 
         else:
-            results = self.get_results(self.config.get("uploaded_before"), self.config.get("uploaded_after"))
+            results = self.get_results(
+                self.config.get("uploaded_before"), self.config.get("uploaded_after")
+            )
 
         self.logger("\n\n----------------")
         self.logger(f"Scrape successful, {len(results) - 1} results.")
@@ -80,7 +81,7 @@ class Youtube(Selector):
         return results
 
     def get_results(self, before, after):
-        args_obj = { "q": self.config["search_term"] }
+        args_obj = {"q": self.config["search_term"]}
 
         if before is not None:
             args_obj["before"] = self.config["uploaded_before"]

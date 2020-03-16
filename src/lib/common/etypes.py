@@ -211,8 +211,9 @@ class Etype:
 
 
 Etype.cast = cast
-# TODO: import all custom etypes and add as attributes on EType
-
+# make custom etypes available on Etype
+for t in get_custom_etypes():
+    setattr(Etype, t.__name__, t(t.__name__, t.filter))
 Union = UnionEt
 Array = lambda x: x.as_array()
 Index = LocalElementsIndex

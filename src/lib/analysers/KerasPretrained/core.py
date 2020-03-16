@@ -1,6 +1,5 @@
 from lib.common.exceptions import InvalidAnalyserConfigError
 from lib.common.analyser import Analyser
-from lib.common.util import vuevis_from_preds
 from lib.common.etypes import Etype, Union, Array
 from keras.preprocessing.image import load_img, img_to_array
 import numpy as np
@@ -56,8 +55,11 @@ class KerasPretrained(Analyser):
     def analyse_element(
         self, element: Union(Array(Etype.Image), Etype.Json), _
     ) -> Etype.Json:
-        import pdb; pdb.set_trace()
-        vuevis_from_preds(element, get_preds=self.get_preds, logger=self.logger)
+        self.logger(f"Running inference on frames in {element.id}...")
+        val = Etype.CvJson.from_preds(element, self.get_preds)
+        self.logger(f"Wrote predictions JSON for {element.id}.")
+        self.disk.delete_local_on_write = True
+        return val
 
 
 module = KerasPretrained

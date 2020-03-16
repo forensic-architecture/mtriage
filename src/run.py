@@ -85,7 +85,7 @@ def _run_yaml():
             if sel is None:
                 # take the selector from elements in
                 fst = cfg["elements_in"][0]
-                sel = { 'name': fst.split("/")[0] }
+                sel = {"name": fst.split("/")[0]}
             base_cfg["elements_in"] = [f"{sel['name']}/{ana['name']}"]
 
 
