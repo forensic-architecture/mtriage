@@ -100,12 +100,14 @@ class TestBuild(unittest.TestCase):
             dockerimage_tag_matches(cmd, "forensicarchitecture/mtriage:CUSTOM_TAG")
         )
 
-        args = parse_args(["run", "demo/1a.yaml", "--tag", "CUSTOM_TAG", "--dry"])
+        args = parse_args(
+            ["run", "docs/tutorial/1/1a.yaml", "--tag", "CUSTOM_TAG", "--dry"]
+        )
         cmd = run(args)
         self.assertTrue(cmd[-1] == "forensicarchitecture/mtriage:CUSTOM_TAG")
 
     def test_dev_tag(self):
-        dev_args = parse_args(["run", "demo/1a.yaml", "--dev", "--dry"])
+        dev_args = parse_args(["run", "docs/tutorial/1/1a.yaml", "--dev", "--dry"])
         cmd = run(dev_args)
         vs = get_volumes(cmd)
         media_re = r".*/mtriage/src:/mtriage/src$"
@@ -116,7 +118,7 @@ class TestBuild(unittest.TestCase):
                 break
         self.assertTrue(has_src)
 
-        no_dev_args = parse_args(["run", "demo/1a.yaml", "--dry"])
+        no_dev_args = parse_args(["run", "docs/tutorial/1/1a.yaml", "--dry"])
         cmd = run(no_dev_args)
         vs = get_volumes(cmd)
         matched = False
