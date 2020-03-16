@@ -9,6 +9,7 @@ from lib.common.exceptions import ElementShouldSkipError
 
 WK_DIR = Path("/tmp/ranking")
 
+
 class Rank(Analyser):
     def pre_analyse(self, config):
         self.thresh = config["threshold"] if "threshold" in config else 0.5
@@ -44,7 +45,7 @@ class Rank(Analyser):
                     self.ranking_data[label] = {}
                 self.ranking_data[label][element.id] = rank
 
-            dpath = WK_DIR/f"{element.id}.json"
+            dpath = WK_DIR / f"{element.id}.json"
             self.logger(f"Rankings indexed for {element.id}.")
             # return Etype.CvJson(element.id, dpath)
             return None

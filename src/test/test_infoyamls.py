@@ -15,8 +15,8 @@ def is_valid_arg(arg):
 @pytest.fixture
 def additionals():
     obj = lambda: None
-    obj.ALL_ANALYSERS = [x for x in listdir("lib/analysers") if x != '__deprecated']
-    obj.ALL_SELECTORS = [x for x in listdir("lib/selectors") if x != '__deprecated']
+    obj.ALL_ANALYSERS = [x for x in listdir("lib/analysers") if x != "__deprecated"]
+    obj.ALL_SELECTORS = [x for x in listdir("lib/selectors") if x != "__deprecated"]
     return obj
 
 
