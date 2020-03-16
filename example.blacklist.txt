@@ -3,16 +3,12 @@
 ### ANALYSERS
 ConvertAudio
 ExtractAudio
-# fastai_model
 Frames
 ImageDedup
-# frames_opencv
-# keras_pretrained
-# ocr
-# ranking
-# yolov3
+KerasPretrained
+Rank
 
 ### SELECTORS
 Local
-# twitter
+Twitter
 Youtube

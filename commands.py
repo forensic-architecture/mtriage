@@ -259,8 +259,6 @@ def run(args):
         "-v",
         "{}/data:/mtriage/data".format(DIR_PATH),
         "-v",
-        "{}/credentials:/mtriage/credentials".format(DIR_PATH),
-        "-v",
         "{}:/run_args.yaml".format(yaml_path),
         "-v",
         "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
