@@ -9,31 +9,28 @@ from lib.common.exceptions import ElementShouldSkipError
 
 WK_DIR = Path("/tmp/ranking")
 
-
-class RankCvJson(Analyser):
+class Rank(Analyser):
     def pre_analyse(self, config):
         self.thresh = config["threshold"] if "threshold" in config else 0.5
         self.ranking_data = {}
 
         if WK_DIR.exists():
             rmtree(WK_DIR)
-        WK_DIR.mkdir()
+        WK_DIR.mkdir(parents=True, exist_ok=True)
 
-    def analyse_element(self, element: Etype.Any, config) -> Etype.Any:
-        id = element.id
-
+    def analyse_cvjson(self, element: Etype.CvJson):
         jsons = [f for f in element.paths if f.suffix in ".json"]
         if len(jsons) != 1:
             raise ElementShouldSkipError(f"Not exactly one json in {element.id}")
 
-        json = jsons[0]
-        with open(json, "r") as f:
+        jsonp = jsons[0]
+        with open(jsonp, "r") as f:
             data = json.load(f)
 
         try:
             # TODO: this logic should be a custom etype built from a core etype class...
             # the core class can then include associated methods.
-            labels, frames, scores = data["labels"]
+            labels = data["labels"]
             for label, preds in labels.items():
                 frames, scores = preds["frames"], preds["scores"]
                 valid_frames = [
@@ -41,27 +38,34 @@ class RankCvJson(Analyser):
                 ]
                 rank = len(valid_frames)
                 if rank > 4:
-                    self.logger(f"label '{label}': rank {count}")
+                    self.logger(f"label '{label}': rank {rank}")
                 # gather all ranks in `ranking_data`
                 if label not in self.ranking_data:
                     self.ranking_data[label] = {}
-                self.ranking_data[label][id] = rank
+                self.ranking_data[label][element.id] = rank
 
-            dpath = dest + "/" + element["id"] + ".json"
-            copyfile(epath, dpath)
-            self.logger(f"Rankings added for {element.id}.")
+            dpath = WK_DIR/f"{element.id}.json"
+            self.logger(f"Rankings indexed for {element.id}.")
+            # return Etype.CvJson(element.id, dpath)
+            return None
         except Exception as e:
             raise ElementShouldSkipError(str(e))
 
-    def post_analyse(self, config, derived_dirs):
+    def analyse_element(self, element: Etype.CvJson, _) -> Etype.Any:
+        if element.et == Etype.Json:
+            element.et = Etype.CvJson
+            return self.analyse_cvjson(element)
+
+    def post_analyse(self, _):
         ranking = self.data_to_ranking()
         path = WK_DIR / "all"
         if not os.path.exists(path):
             os.makedirs(path)
-        file = path + "/rankings.json"
+        file = path / "rankings.json"
         self.logger("All rankings aggregated, printed to all/rankings.json")
         with open(file, "w") as f:
             json.dump(ranking, f)
+        return Etype.Json("__RANKING", file)
 
     def data_to_ranking(self):
         sortedData = {}
@@ -73,4 +77,4 @@ class RankCvJson(Analyser):
         return sortedData
 
 
-module = RankCvJson
+module = Rank

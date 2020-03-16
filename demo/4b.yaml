@@ -1,0 +1,12 @@
+folder: media/demo_official/4
+elements_in:
+  - Youtube
+analyse:
+  - name: Frames
+  - name: KerasPretrained
+    config:
+      model: ResNet50
+      labels:
+        - tank
+        - rifle
+        - military uniform

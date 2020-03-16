@@ -62,6 +62,7 @@ class Analyser(MTModule):
 
     def post_analyse(self, config):
         """option to perform any clear up"""
+        return None
 
     def start_analysing(self, in_parallel=True):
         """ Primary entrypoint in the mtriage lifecycle.
@@ -106,8 +107,8 @@ class Analyser(MTModule):
         """ If `elements` is a Generator, the phase decorator will run in parallel.
             If `elements` is a List, then it will run serially (which is useful for testing). """
         for element in elements:
-            # NB: `super` infra is necessary in case a storage class overwrites the `read_query` method
-            # as LocalStorage does.
+            # NB: `super` infra is necessary in case a storage class overwrites
+            # the `read_query` method as LocalStorage does.
             og_query = super(type(self.disk), self.disk).read_query(element.query)
             dest_q = f"{og_query[0]}/{self.name}"
 
@@ -116,7 +117,20 @@ class Analyser(MTModule):
 
     @MTModule.phase("post-analyse")
     def __post_analyse(self):
-        self.post_analyse(self.config)
+        outel = self.post_analyse(self.config)
+        if outel is None:
+            return
+
+        successes = []
+        for q in self.config["elements_in"]:
+            selname, _ = super(type(self.disk), self.disk).read_query(q)
+            success = self.disk.write_element(f"{selname}/{self.name}", outel)
+            successes.append(success)
+
+        if not all(successes):
+            raise ElementShouldRetryError(
+                "Some instances of the final element produced via 'post_analyse' failed to save."
+            )
 
     def __attempt_analyse(self, attempts, element, dest_q):
         try:

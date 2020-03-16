@@ -79,6 +79,7 @@ def test_analyse(utils, additionals):
     dummyAnalyser = TxtCopyAnalyser(
         config, dummyName, LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
     )
+    # TODO: work out whether this test is needed with the new format
     # test it calls the user-defined `analyse_element`
     # with pytest.raises(Exception, match="is the user-defined func!"):
     #     checkUserExceptionAnalyser.start_analysing(in_parallel=False)

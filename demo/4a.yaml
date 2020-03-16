@@ -1,12 +1,15 @@
+# folder: media/demo_official/4
+# selector:
+#   name: Youtube
+#   config:
+#     search_term: Triple chaser
+#     uploaded_before: "2015-10-02T00:00:00Z"
+#     uploaded_after: "2015-10-01T00:00:00Z"
 folder: media/demo_official/4
 elements_in:
-  - Youtube
+  - Youtube/KerasPretrained
 analyse:
-  - name: Frames
-  - name: KerasPretrained
+  - name: Rank
     config:
-      model: ResNet50
-      labels:
-        - tank
-        - rifle
-        - military uniform
+      dev: true
+

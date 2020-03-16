@@ -1,0 +1,8 @@
+folder: media/demo_official/4
+elements_in:
+  - Youtube/KerasPretrained
+analyse:
+  - name: Rank
+    config:
+      dev: true
+
