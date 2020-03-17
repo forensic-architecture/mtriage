@@ -11,7 +11,7 @@ using the locally installed Python environment.
 
 To run all tests, use the following command:
 ```
-./mtriage run test
+./mtriage dev test
 ```
 
 See docs/custom-components.md for more information on how to write tests for

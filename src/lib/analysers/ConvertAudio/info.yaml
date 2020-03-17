@@ -1,0 +1,6 @@
+desc: Convert the media in an Audio element from one file extension to another.
+args:
+  - name: output_ext
+    desc: The file extension of the output media, to which the input files will be converted.
+    required: true
+    input: string

@@ -1,0 +1,13 @@
+folder: media/demo_official/2
+select:
+  name: Local
+  config:
+    source: data/demo/3video
+    aggregate: true
+analyse:
+  - name: Frames
+  - name: ImageDedup
+    config:
+      threshold: 3
+      method: dhash
+

@@ -12,6 +12,7 @@ HOME_PATH = os.path.expanduser("~")
 
 def __run(cmd, cli_args, *args):
     if cli_args.dry:
+        print(" ".join(cmd))
         return cmd
     try:
         returncode = sp.call(cmd)
@@ -184,6 +185,17 @@ def develop(args):
     CONT_NAME = "mtriage_developer"
     TAG_NAME = "{}-gpu".format(args.tag) if args.gpu else args.tag
 
+    volumes = [
+        "-v",
+        "{}:/mtriage".format(DIR_PATH),
+        "-v",
+        "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
+    ]
+
+    if args.yaml is not None:
+        yaml_path = os.path.abspath(args.yaml)
+        volumes += ["-v", "{}:/run_args.yaml".format(yaml_path)]
+
     # --runtime only exists on nvidia docker, so we pass a bubblegum flag when not available
     # so that the call arguments are well formed.
     return __run(
@@ -199,10 +211,7 @@ def develop(args):
             "BASE_DIR=/mtriage",
             get_env_config(),
             "--privileged",
-            "-v",
-            "{}:/mtriage".format(DIR_PATH),
-            "-v",
-            "{}/.config/gcloud:/root/.config/gcloud".format(HOME_PATH),
+            *volumes,
             "{}:{}".format(NAME, TAG_NAME),
             "/bin/bash",
         ],
@@ -248,7 +257,7 @@ def run(args):
         "-v",
         "{}/media:/mtriage/media".format(DIR_PATH),
         "-v",
-        "{}/credentials:/mtriage/credentials".format(DIR_PATH),
+        "{}/data:/mtriage/data".format(DIR_PATH),
         "-v",
         "{}:/run_args.yaml".format(yaml_path),
         "-v",
@@ -274,6 +283,9 @@ def run(args):
         args,
     )
 
+    if not args.persist:
+        clean(args)
+
 
 def parse_args(cli_args):
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
@@ -285,6 +297,7 @@ def parse_args(cli_args):
     run_p.add_argument("--gpu", action="store_true")
     run_p.add_argument("--dry", action="store_true")
     run_p.add_argument("--dev", action="store_true")
+    run_p.add_argument("--persist", action="store_true")
 
     dev_p = subparsers.add_parser("dev")
     dev_p.add_argument("--whitelist")
@@ -293,6 +306,7 @@ def parse_args(cli_args):
     dev_p.add_argument("--gpu", action="store_true")
     dev_p.add_argument("--dry", action="store_true")
     dev_p.add_argument("--verbose", action="store_true")
+    dev_p.add_argument("--yaml", type=str2yamlfile)
     dev_p.add_argument(
         "command",
         choices=["develop", "build", "test", "clean"],

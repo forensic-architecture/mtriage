@@ -1,7 +1,9 @@
 import pytest
 import os
+from pathlib import Path
 from lib.common.exceptions import ImproperLoggedPhaseError
 from lib.common.mtmodule import MTModule
+from lib.common.storage import LocalStorage
 from test.utils import scaffold_empty
 
 
@@ -13,18 +15,21 @@ class EmptyMTModule(MTModule):
 def additionals(utils):
     obj = lambda: None
     obj.BASE_DIR = utils.TEMP_ELEMENT_DIR
-    obj.mod = EmptyMTModule({}, "empty", obj.BASE_DIR)
+    obj.mod = EmptyMTModule({}, "empty", LocalStorage(folder=utils.TEMP_ELEMENT_DIR))
     yield obj
     utils.cleanup()
 
 
 def test_class_variables(additionals):
-    assert additionals.mod.NAME == "empty"
-    assert additionals.mod.BASE_DIR == additionals.BASE_DIR
+    assert additionals.mod.name == "empty"
+    assert additionals.mod.disk.base_dir == Path(additionals.BASE_DIR)
     assert additionals.mod._MTModule__LOGS == []
-    assert additionals.mod._MTModule__LOGS_DIR == f"{additionals.BASE_DIR}/logs"
     assert (
-        additionals.mod._MTModule__LOGS_FILE == f"{additionals.BASE_DIR}/logs/empty.txt"
+        additionals.mod.disk._LocalStorage__LOGS_DIR == f"{additionals.BASE_DIR}/logs"
+    )
+    assert (
+        additionals.mod.disk._LocalStorage__LOGS_FILE
+        == f"{additionals.BASE_DIR}/logs/logs.txt"
     )
     assert os.path.exists(f"{additionals.BASE_DIR}/logs")
 
@@ -42,13 +47,13 @@ def test_phase_decorator(additionals):
             return "no error"
 
     # test that a decorated method carries through its return value
-    gc = GoodClass({}, "my_good_mod", additionals.BASE_DIR)
+    gc = GoodClass({}, "my_good_mod", storage=LocalStorage(folder=additionals.BASE_DIR))
 
     # test that a decorated method carries through its return value
-    gc = GoodClass({}, "my_good_mod", additionals.BASE_DIR)
+    gc = GoodClass({}, "my_good_mod", storage=LocalStorage(folder=additionals.BASE_DIR))
     assert gc.proper_func() == "no error"
 
-    with open(f"{additionals.BASE_DIR}/logs/my_good_mod.txt", "r") as f:
+    with open(f"{additionals.BASE_DIR}/logs/logs.txt", "r") as f:
         lines = f.readlines()
         assert len(lines) == 1
         assert lines[0] == "my_good_mod: somekey: we did something.\n"
@@ -74,13 +79,13 @@ def test_parallel_phase_decorator(additionals):
             return "no error"
 
     # test that a decorated method carries through its return value
-    gc = GoodClass({}, "my_good_mod", additionals.BASE_DIR)
+    gc = GoodClass({}, "my_good_mod", storage=LocalStorage(folder=additionals.BASE_DIR))
 
     # test parallel logs
     eg_gen = (a for a in range(0, 100))
     assert gc.func(eg_gen) == "no error"
 
-    with open(f"{additionals.BASE_DIR}/logs/my_good_mod.txt", "r") as f:
+    with open(f"{additionals.BASE_DIR}/logs/logs.txt", "r") as f:
         lines = f.readlines()
         assert len(lines) == 100
 
@@ -88,7 +93,7 @@ def test_parallel_phase_decorator(additionals):
     eg_gen = (a for a in range(0, 100))
     assert gc.func_no_remove(eg_gen) == "no error"
 
-    dbfile = f"{gc.BASE_DIR}/{gc.UNIQUE_ID}.db"
+    dbfile = f"{gc.disk.base_dir}/{gc.UNIQUE_ID}.db"
     with open(dbfile, "rb") as f:
         _bytes = f.read()
         assert len(_bytes) == 800  # 2 4-byte entries per item for 100 items
@@ -102,7 +107,7 @@ def test_parallel_phase_decorator(additionals):
     eg_gen = (a for a in range(0, 100))
     assert gc.func(eg_gen) == "no error"
 
-    with open(f"{additionals.BASE_DIR}/logs/my_good_mod.txt", "r") as f:
+    with open(f"{additionals.BASE_DIR}/logs/logs.txt", "r") as f:
         lines = f.readlines()
         assert len(lines) == 150
 
