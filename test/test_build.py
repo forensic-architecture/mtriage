@@ -90,7 +90,7 @@ class TestBuild(unittest.TestCase):
         args = parse_args(["dev", "build", "--whitelist", self.SELECTOR_WL, "--dry"])
         cmd, dfile, pipfile = build(args)
         self.assertListEqual(
-            pipfile, core_deps + read_deps("youtube") + read_deps("twitter")
+            pipfile, core_deps + read_deps("Youtube") + read_deps("Twitter")
         )
 
     def test_custom_tags(self):
