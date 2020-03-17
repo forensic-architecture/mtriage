@@ -13,7 +13,9 @@ class ExtractTypes(Analyser):
         if len(element.paths) == 0:
             self.logger(f"No extracted media in element {element.id}.")
             return None
-        self.logger(f"Extracting element {element.id} with paths: {[x.name for x in element.paths]}")
+        self.logger(
+            f"Extracting element {element.id} with paths: {[x.name for x in element.paths]}"
+        )
         return element
 
 
