@@ -21,7 +21,7 @@ def get_module(_from, key):
 
 def get_custom_etypes():
     base_import = "lib.etypes"
-    module_folder = Path("lib/etypes")
+    module_folder = Path("/mtriage/src/lib/etypes")
     all_etypes = [t.stem for t in files(module_folder)]
     imports = [f"{base_import}.{p}" for p in all_etypes]
     return [import_module(mod).etype for mod in imports]
