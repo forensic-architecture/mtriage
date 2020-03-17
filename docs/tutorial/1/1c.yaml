@@ -1,6 +1,8 @@
 folder: media/demo_official/1
-elements_in:
-  - Local
+select:
+  name: Local
+  config:
+    source: data/demo/1local
 analyse:
   name: ExtractTypes
   config:
