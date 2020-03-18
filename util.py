@@ -29,7 +29,9 @@ def get_subdirs(d):
     return [
         o
         for o in os.listdir(d)
-        if os.path.isdir(os.path.join(d, o)) and o not in whitelist
+        if os.path.isdir(os.path.join(d, o))
+        and o not in whitelist
+        and o != "__deprecated"
     ]
 
 

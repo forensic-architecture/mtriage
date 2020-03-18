@@ -56,7 +56,7 @@ class TestBuild(unittest.TestCase):
         self.SELECTOR_WL = "selector_whitelist.txt"
         with open(self.SELECTOR_WL, "w") as f:
             writer = csv.writer(f)
-            writer.writerows([["youtube"], ["twitter"]])
+            writer.writerows([["Youtube"], ["Local"]])
 
         self.BLANK_WL = "blank_whitelist.txt"
         with open(self.BLANK_WL, "w") as f:
@@ -90,7 +90,7 @@ class TestBuild(unittest.TestCase):
         args = parse_args(["dev", "build", "--whitelist", self.SELECTOR_WL, "--dry"])
         cmd, dfile, pipfile = build(args)
         self.assertListEqual(
-            pipfile, core_deps + read_deps("youtube") + read_deps("twitter")
+            pipfile, core_deps + read_deps("Youtube") + read_deps("Twitter")
         )
 
     def test_custom_tags(self):
@@ -101,13 +101,13 @@ class TestBuild(unittest.TestCase):
         )
 
         args = parse_args(
-            ["run", "examples/youtube.yaml", "--tag", "CUSTOM_TAG", "--dry"]
+            ["run", "docs/tutorial/1/1a.yaml", "--tag", "CUSTOM_TAG", "--dry"]
         )
         cmd = run(args)
         self.assertTrue(cmd[-1] == "forensicarchitecture/mtriage:CUSTOM_TAG")
 
     def test_dev_tag(self):
-        dev_args = parse_args(["run", "examples/frames.yaml", "--dev", "--dry"])
+        dev_args = parse_args(["run", "docs/tutorial/1/1a.yaml", "--dev", "--dry"])
         cmd = run(dev_args)
         vs = get_volumes(cmd)
         media_re = r".*/mtriage/src:/mtriage/src$"
@@ -118,7 +118,7 @@ class TestBuild(unittest.TestCase):
                 break
         self.assertTrue(has_src)
 
-        no_dev_args = parse_args(["run", "examples/frames.yaml", "--dry"])
+        no_dev_args = parse_args(["run", "docs/tutorial/1/1a.yaml", "--dry"])
         cmd = run(no_dev_args)
         vs = get_volumes(cmd)
         matched = False
