@@ -6,7 +6,9 @@ select:
 analyse:
   - name: ConvertAudio
     config:
-      output_ext: mp4
+      # in_parallel: no
+      output_ext: mp3
   - name: ConvertAudio
     config:
+      # in_parallel: no
       output_ext: aac

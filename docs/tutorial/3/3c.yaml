@@ -1,10 +1,10 @@
-folder: media/demo_official/3
+folder: media/demo_official/3c
 select:
   name: Youtube
   config:
-    search_term: Triple chaser
-    uploaded_before: "2015-10-02T00:00:00Z"
-    uploaded_after: "2015-10-01T00:00:00Z"
+    search_term: tear gas + mexico
+    uploaded_before: "2018-11-30T00:00:00Z"
+    uploaded_after: "2018-11-15T00:00:00Z"
 analyse:
   - name: Frames
   - name: ImageDedup
@@ -19,4 +19,3 @@ analyse:
         - rifle
         - military uniform
   - name: Rank
-

@@ -7,7 +7,8 @@ from lib.common.etypes import Etype, Union
 from lib.common.util import files
 
 VID_SUFFIXES = [".mp4", ".mov"]
-GLOSSED_FRAMES = Union(Etype.Image.array(), Etype.Json)
+# GLOSSED_FRAMES = Union(Etype.Image.array(), Etype.Json)
+GLOSSED_FRAMES = Etype.Any  # hack for the time being
 
 
 def ffmpeg_frames(out_folder, fp, rate):
@@ -25,16 +26,18 @@ class Frames(Analyser):
         self, element: Union(Etype.Json, Etype.Video), config
     ) -> GLOSSED_FRAMES:
         fps = int(config["fps"]) if "fps" in config else 1
-        json = [x for x in element.paths if x.suffix in ".json"][0]
-        video = [x for x in element.paths if x.suffix in VID_SUFFIXES][0]
-
+        jsons = [x for x in element.paths if x.suffix in ".json"]
         dest = Path("/tmp") / element.id
         if dest.exists():
             rmtree(dest)
         dest.mkdir()
 
+        if len(jsons) is 1:
+            json = jsons[0]
+            copyfile(json, dest / "meta.json")
+
+        video = [x for x in element.paths if x.suffix in VID_SUFFIXES][0]
         ffmpeg_frames(dest, video, fps)
-        copyfile(json, dest / "meta.json")
 
         self.logger(f"Frames successfully created for element {element.id}.")
         self.disk.delete_local_on_write = True
