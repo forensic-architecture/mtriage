@@ -1,6 +1,0 @@
-folder: media/demo_official
-phase: analyse
-module: yolov3
-config:
-  elements_in:
-    - youtube/frames

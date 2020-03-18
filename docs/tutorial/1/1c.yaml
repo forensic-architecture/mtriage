@@ -1,0 +1,11 @@
+folder: media/demo_official/1
+select:
+  name: Local
+  config:
+    source: data/demo/1local
+analyse:
+  name: ExtractTypes
+  config:
+    exts:
+      - txt
+      - md

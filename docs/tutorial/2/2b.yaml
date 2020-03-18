@@ -1,0 +1,14 @@
+folder: media/demo_official/2
+select:
+  name: Local
+  config:
+    source: data/demo/2audio
+analyse:
+  - name: ConvertAudio
+    config:
+      # in_parallel: no
+      output_ext: mp3
+  - name: ConvertAudio
+    config:
+      # in_parallel: no
+      output_ext: aac
