@@ -8,7 +8,7 @@ from lib.common.util import files
 
 VID_SUFFIXES = [".mp4", ".mov"]
 # GLOSSED_FRAMES = Union(Etype.Image.array(), Etype.Json)
-GLOSSED_FRAMES = Etype.Any # hack for the time being
+GLOSSED_FRAMES = Etype.Any  # hack for the time being
 
 
 def ffmpeg_frames(out_folder, fp, rate):
