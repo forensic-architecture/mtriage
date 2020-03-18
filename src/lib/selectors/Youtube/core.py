@@ -138,6 +138,8 @@ class Youtube(Selector):
 
     def _youtube_search(self, options, pageToken=None):
         # modified from https://github.com/youtube/api-samples/blob/master/python/search.py
+        if API_KEY is None:
+            raise ElementShouldSkipError("No GOOGLE_API_KEY specified in .env")
         youtube = googleapiclient.discovery.build(
             YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=API_KEY
         )

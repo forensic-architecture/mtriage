@@ -206,7 +206,7 @@ class Etype:
     Any = Et("Any", lambda ps: ps)
     Image = Et("Image", lambda ps: fglob(ps, [".bmp", ".jpg", ".jpeg", ".png"]))
     Video = Et("Video", lambda ps: fglob(ps, [".mp4", ".mov"]))
-    Audio = Et("Audio", lambda ps: fglob(ps, [".mp3", ".wav"]))
+    Audio = Et("Audio", lambda ps: fglob(ps, [".mp3", ".wav", ".m4a", ".aac"]))
     Json = Et("Json", lambda ps: fglob(ps, [".json"]))
 
 

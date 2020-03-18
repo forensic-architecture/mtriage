@@ -270,6 +270,7 @@ def run(args):
         [
             "docker",
             "run",
+            "--rm",
             "--name",
             CONT_NAME,
             "--runtime=nvidia" if args.gpu else "--ipc=host",
