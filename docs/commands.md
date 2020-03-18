@@ -14,7 +14,7 @@ You can also pass the following flags to the run command:
 | `--gpu` | Run using the mtriage GPU image. This will speed up certain analysers that depend on it |
 | `--tag` | Allows you to run mtriage with a custom build by passing the name of the Docker image tag you used during the custom build (see below) |
 | `--dry` | Primarily for testing. Will not run any command, but instead return the command that will be run. |
-| `--dev` | Run using local code, to see changes in development. |
+| `--dev` | Run using local code, to see changes in development. This will also bypass internal mtriage error handling, allowing you to see the origin of errors |
 
 ### `./mtriage dev build`
 
@@ -55,5 +55,6 @@ Open a bash shell inside mtriage's Docker container. For debugging.
 | `--gpu` | Run the GPU image. Will run the CPU image otherwise |
 | `--tag` | Run with a custom tag. Will default to 'dev' or 'dev-gpu' |
 | `--dry` | Primarily for testing. Will not run any command, but instead return the command that will be run. |
+| `--yaml` | Pass a path to an mtriage YAML config to saturate the shell environment with its runtime parameters. (I.e. if you run `python run.py` from inside the src folder, it will use this YAML). |
 
 
