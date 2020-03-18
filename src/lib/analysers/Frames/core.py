@@ -27,16 +27,16 @@ class Frames(Analyser):
     ) -> GLOSSED_FRAMES:
         fps = int(config["fps"]) if "fps" in config else 1
         jsons = [x for x in element.paths if x.suffix in ".json"]
-        if len(jsons) is 1:
-            json = jsons[0]
-            copyfile(json, dest / "meta.json")
-        video = [x for x in element.paths if x.suffix in VID_SUFFIXES][0]
-
         dest = Path("/tmp") / element.id
         if dest.exists():
             rmtree(dest)
         dest.mkdir()
 
+        if len(jsons) is 1:
+            json = jsons[0]
+            copyfile(json, dest / "meta.json")
+
+        video = [x for x in element.paths if x.suffix in VID_SUFFIXES][0]
         ffmpeg_frames(dest, video, fps)
 
         self.logger(f"Frames successfully created for element {element.id}.")

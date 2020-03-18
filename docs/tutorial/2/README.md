@@ -111,6 +111,10 @@ analyse:
       output_ext: aac
 ```
 
+Try uncommenting the relevant lines with `in_parallel` in
+docs/tutorial/2/2b.yaml, and running the config again. You should see
+a different line logging that indicates mtriage is running analysis serially.
+
 In the next tutorial, we'll work with the Youtube selector to analyse videos
 that are selected using youtube's search API, showing the full power  and
 extensibility of mtriage.

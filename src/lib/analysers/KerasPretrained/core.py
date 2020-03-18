@@ -1,11 +1,16 @@
+import numpy as np
+import json
+import os
+from importlib import import_module
 from lib.common.exceptions import InvalidAnalyserConfigError
 from lib.common.analyser import Analyser
 from lib.common.etypes import Etype, Union, Array
-from keras.preprocessing.image import load_img, img_to_array
-import numpy as np
-import json
 
-from importlib import import_module
+KERAS_HOME = "/mtriage/data/.keras"
+os.environ["KERAS_HOME"] = KERAS_HOME
+
+from keras.preprocessing.image import load_img, img_to_array
+
 
 SUPPORTED_MODELS = {
     "ResNet50": {"module": "resnet50"},
@@ -17,6 +22,7 @@ SUPPORTED_MODELS = {
 class KerasPretrained(Analyser):
     def pre_analyse(self, config):
         self.logger(config["model"])
+        self.logger(f"Storing models in {KERAS_HOME}")
         MOD = SUPPORTED_MODELS.get(config["model"])
         if MOD is None:
             raise InvalidAnalyserConfigError(
