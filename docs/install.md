@@ -24,7 +24,7 @@ pip3 install -r requirements.txt
 ### additional setup
 Run the test suite to ensure that everython is working. This command may take
 a while, as the first time you run mtriage it will download the [latest Docker
-image](https://cloud.docker.com/u/forensicarchitecture/repository/docker/forensicarchitecture/mtriage). Mtriage commands will run much faster after this first one:
+image](https://hub.docker.com/r/forensicarchitecture/mtriage). Mtriage commands will run much faster after this first one:
 
 ```bash
 ./mtriage dev test
