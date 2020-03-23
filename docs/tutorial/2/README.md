@@ -2,7 +2,8 @@
 
 Now that we're familiar with selectors and analysers in principle, let's run
 a couple of workflows to get a sense for mtriage's flexibility. Here's a config
-that converts video elements to audio:
+that selects a generic audio file using Local, and then converts it to a
+specific extension, mp4:
 
 ```yaml
 folder: media/demo_official/2
