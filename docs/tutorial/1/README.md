@@ -131,5 +131,6 @@ And run it with:
 Of course, this particular workflow isn't very useful at all, but hopefully you
 are already beginning to see how we can use mtriage to orchestrate much more
 meaningful and powerful media workflows. In the next tutorial, we'll use
-mtriage to split a video into frames, and deduplicate similar frames from the
-batch.
+mtriage to reformat audio files.
+
+[Go to tutorial 2](docs/tutorial/2/README.md)
