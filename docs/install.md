@@ -31,7 +31,7 @@ image](https://cloud.docker.com/u/forensicarchitecture/repository/docker/forensi
 ```
 
 Depending on what components you intend to use, there may be additional setup
-required. Check the [component docs folder](./docs/components) before using an 
+required. Check the [component docs folder](/docs/components) before using an 
 analyser or if you run into an authentication or setup issue.
 
 Assuming this command completed and all the tests passed, you are now ready to
