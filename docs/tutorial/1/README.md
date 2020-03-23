@@ -133,4 +133,4 @@ are already beginning to see how we can use mtriage to orchestrate much more
 meaningful and powerful media workflows. In the next tutorial, we'll use
 mtriage to reformat audio files.
 
-[Go to tutorial 2](docs/tutorial/2/README.md)
+[Go to tutorial 2](/docs/tutorial/2/README.md)
