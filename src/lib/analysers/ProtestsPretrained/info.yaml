@@ -1,0 +1,7 @@
+desc: Classify the presence of protests and violence in images. This is based on the work of https://github.com/wondonghyeon/protest-detection-violence-estimation.
+args:
+   - name: labels
+    desc: Filter results to a limited array of labels, from "protest", "violence", "sign", "photo",
+                "fire", "police", "children", "group_20", "group_100","flag", "night", "shouting".
+    required: true
+    input: whitelist
