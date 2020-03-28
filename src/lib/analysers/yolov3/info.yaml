@@ -1,0 +1,6 @@
+desc: Classify objects in images using a the Yolov3 model trained on COCO, as made available through the repository https://github.com/eriklindernoren/PyTorch-YOLOv3. The labels for the top 10 predictions will be retained in an output JSON of ImageFrameJson format.
+args:
+  - name: labels
+    desc: Filter results to a limited array of COCO labels, if you are only interested in some of them. If not provided, the analyser will return predictions for all labels.
+    required: true
+    input: whitelist
