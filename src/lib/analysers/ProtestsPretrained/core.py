@@ -6,8 +6,6 @@ from torch.autograd import Variable
 from PIL import Image
 from utils import transform, modified_resnet50, decode
 
-from importlib import import_module
-from lib.common.exceptions import InvalidAnalyserConfigError
 from lib.common.analyser import Analyser
 from lib.common.etypes import Etype, Union, Array
 
