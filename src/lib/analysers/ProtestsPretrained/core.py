@@ -4,8 +4,9 @@ import os
 import torch
 from torch.autograd import Variable
 from PIL import Image
-#import sys
-#from utils import transform, modified_resnet50, decode
+
+# import sys
+# from utils import transform, modified_resnet50, decode
 
 from lib.common.analyser import Analyser
 from lib.common.etypes import Etype, Union, Array
@@ -78,7 +79,10 @@ class ProtestsPretrained(Analyser):
         t = transform()
         model = modified_resnet50()
         model.load_state_dict(
-            torch.load("model.pth.tar", map_location=torch.device("cpu"))["state_dict"]
+            torch.load(
+                "/mtriage/src/lib/analysers/ProtestsPretrained/model.pth.tar",
+                map_location=torch.device("cpu"),
+            )["state_dict"]
         )
         model.eval()
 
@@ -87,6 +91,7 @@ class ProtestsPretrained(Analyser):
             Gives labelds and probabilities for a single image
             This is were we preprocess the image, using a function defined in the model class
             """
+            print(img_path)
             # load image
             img = Image.open(img_path).convert("RGB")
             # process it
