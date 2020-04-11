@@ -1,11 +1,16 @@
-import json, requests, re, os
+import json
+import requests
+import os
 import html2text
 from urllib.request import urlretrieve
 from lib.common.selector import Selector
-from lib.common.etypes import Etype
+from lib.common.etypes import Etype, LocalElementsIndex
+from lib.common.util import files
+
+TMP = Path("/tmp")
 
 
-class FourChanSelector(Selector):
+class FourChan(Selector):
     """ A selector that leverages the native 4chan API.
 
     https://github.com/4chan/4chan-API
@@ -154,17 +159,24 @@ class FourChanSelector(Selector):
         results.insert(
             0, ["id", "thread_id", "datetime", "comment", "filename", "ext", "url"]
         )
-        return results
+        return LocalElementsIndex(results)
 
-    def retrieve_element(self, element, config):
+    def retrieve_element(self, element, _):
+        base = TMP / element.id
+        base.mkdir(parents=True, exist_ok=True)
+
         fn = element["filename"]
         identifier = element["id"]
         comment = element["comment"]
         dest = element["base"]
         url = element["url"]
 
-        with open(os.path.join(dest, f"{identifier}_comment.txt"), "w+") as f:
+        with open(base / f"{identifier}_comment.txt"), "w+") as f:
             f.write(comment)
 
         if url != "":
-            urlretrieve(url, os.path.join(dest, fn))
+            urlretrieve(url, base / fn)
+
+        return Etype.cast(element.id, files(base))
+
+module = FourChan

@@ -1,6 +1,6 @@
 folder: media/fcs
-phase: select
-module: fourchan
-config:
-  board: "g"
-  max_posts: 1
+select:
+  name: FourChan
+  config:
+    board: "g"
+    max_posts: 1
