@@ -111,9 +111,9 @@ class Analyser(MTModule):
             # NB: `super` infra is necessary in case a storage class overwrites
             # the `read_query` method as LocalStorage does.
             og_query = super(type(self.disk), self.disk).read_query(element.query)
-            dest_q = f"{og_query[0]}/{self.name}"
+            self.dest_q = f"{og_query[0]}/{self.name}"
 
-            self.__attempt_analyse(5, element, dest_q)
+            self.__attempt_analyse(5, element)
             self.disk.delete_local_on_write = False
 
     @MTModule.phase("post-analyse")
@@ -133,12 +133,12 @@ class Analyser(MTModule):
                 "Some instances of the final element produced via 'post_analyse' failed to save."
             )
 
-    def __attempt_analyse(self, attempts, element, dest_q):
+    def __attempt_analyse(self, attempts, element):
         try:
             new_element = self.analyse_element(element, self.config)
             if new_element is None:
                 return
-            success = self.disk.write_element(dest_q, new_element)
+            success = self.disk.write_element(self.dest_q, new_element)
             if not success:
                 raise ElementShouldRetryError("Unsuccessful storage")
 

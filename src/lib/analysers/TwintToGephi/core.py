@@ -16,6 +16,8 @@ class TwintToGephi(Analyser):
         # keeps a record of which user ids have been indexed so that there's no
         # repeated work.
         self.indexed_ids = []
+        self.csv_nodes = ["Vertex", "Followed", "Followers", "Tweets", "Favorites", "Description", "Location", "Web", "Time Zone", "Joined Twitter Date (UTC)"]
+        self.csv_edges = ["Vertex 1", "Vertex 2", "Relationship", "Tweet", "URLs in Tweet", "Domains in Tweet", "Hashtags in Tweet", "Tweet Date (UTC)", "Twitter Page for Tweet", "Imported ID", "In-Reply-To Tweet ID"]
 
     def analyse_element(self, element: Etype.Json, _) -> Etype.Any:
         with open(element.paths[0], "r") as f:
@@ -32,7 +34,8 @@ class TwintToGephi(Analyser):
         #     retweets = self.get_all_retweets(usr)
 
         if reply_count > 0 and usr not in self.indexed_ids:
-            self.indexed_ids.append(usr)
+            # TODO: keep a record so that we don't need to rescrape
+            # self.indexed_ids.append(usr)
 
             all_tweets = self.get_all_tweets_sent_to(usr)
             conv_tweets = [
@@ -72,6 +75,23 @@ class TwintToGephi(Analyser):
         twint.output.tweets_list = []
 
         return to_serializable(results)
+
+    def add_to_graph(self, tweet):
+        """ Add the relevant rows (for `nodes` and `edges`) to a graph from
+            a Twint-formatted tweet (Python dictionary) """
+        self.logger(f"Adding {tweet['id'] to branches..}")
+        pass
+
+    def post_analyse(self, _):
+        import pdb; pdb.set_trace()
+        # NB: a kind of hack... should maybe make available as a func, i.e. `self.get_analysed()`
+        analysed_els = self.disk.read_elements([self.dest_q])
+        for el in analysed_els:
+            with open(el) as f:
+                tweets = json.load(f)
+            for tweet in tweets:
+                self.add_to_graph(tweet)
+
 
 
 module = TwintToGephi
