@@ -1,20 +1,16 @@
 import numpy as np
+import sys
 import json
 import os
 import torch
 from torch.autograd import Variable
 from PIL import Image
 
-import sys
-
-sys.path.append("/mtriage/src/lib/analysers/ProtestsPretrained")
-from utils import *
-
-# import sys
-# from utils import transform, modified_resnet50, decode
-
 from lib.common.analyser import Analyser
 from lib.common.etypes import Etype, Union, Array
+from lib.analysers.ProtestsPretrained.utils import transform, modified_resnet50, decode
+
+PTH_TAR = "/mtriage/model.pth.tar"
 
 # TODO cuda ?
 
@@ -26,15 +22,12 @@ class ProtestsPretrained(Analyser):
         Init the model
         """
         rLabels = config["labels"]
-        self.THRESH = 0.3
+        self.THRESH = 0.0
 
         t = transform()
         model = modified_resnet50()
         model.load_state_dict(
-            torch.load(
-                "/mtriage/src/lib/analysers/ProtestsPretrained/model.pth.tar",
-                map_location=torch.device("cpu"),
-            )["state_dict"]
+            torch.load(PTH_TAR, map_location=torch.device("cpu"),)["state_dict"]
         )
         model.eval()
 

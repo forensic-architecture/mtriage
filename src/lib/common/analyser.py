@@ -17,6 +17,7 @@ from lib.common.exceptions import (
 from lib.common.mtmodule import MTModule
 from lib.common.storage import Storage
 from lib.common.etypes import Etype, LocalElement
+import traceback
 
 
 class Analyser(MTModule):
@@ -157,3 +158,4 @@ class Analyser(MTModule):
                 raise e
             else:
                 self.error_logger(f"{str(e)}: skipping element", element)
+                print(traceback.format_exc())
