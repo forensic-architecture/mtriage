@@ -10,14 +10,56 @@ from lib.util.twint import to_serializable, pythonize
 
 TMP = Path("/tmp")
 
+from collections import namedtuple
+TweetEdge = namedtuple("TweetEdge", "date tweet urls domains hashtags tweeet_id inreplyto_id" )
+
+class CsvGraph:
+    node_labels = ["Vertex", "Followed", "Followers", "Tweets", "Favorites", "Description", "Location", "Web", "Time Zone", "Joined Twitter Date (UTC)"]
+    edge_labels= ["Vertex 1", "Vertex 2", "Width", "Relationship", "Relationship Date (UTC)", "Tweet", "URLs in Tweet", "Domains in Tweet", "Hashtags in Tweet", "Tweet Date (UTC)", "Twitter Page for Tweet", "Imported ID", "In-Reply-To Tweet ID"]
+
+    def __init__(self):
+        self.nodes = []
+        self.edges = []
+
+    def has_node(self, name: str):
+        return name in self.nodes
+
+    def add_node(self, name: str):
+        if name not in self.nodes:
+            self.nodes.append(name)
+
+    def add_edge(self, _from: str, _to: str, edge: TweetEdge):
+        self.add_node(_from)
+        self.add_node(_to)
+        is_reply = _from != _to
+        self.edges.append([
+            _from, _to,
+            1, # width defaults to 1
+            "Tweet" if not is_reply else "Replies To", # relationship
+            edge.date, # relationship date
+            edge.tweet,
+            edge.urls,
+            edge.domains,
+            edge.hastags,
+            edge.date, # tweet date
+            f"https://twitter.com/${_from}/status/${edge.id}",
+            edge.tweet_id, # the tweet's id
+            "" if not is_reply else edge.inreplyto_id, # the id of the tweet to which this replies.
+        ])
+
+from datetime import datetime
+def fmt_timestmap(dstamp, tstamp, tzone):
+    ds = datetime.strptime(dstamp, "%Y-%m-%d")
+    fmtted_ds = ds.strftime("%m/%d/%y")
+    return f"${fmtted_ds} ${tstamp}"
 
 class TwintToGephi(Analyser):
     def pre_analyse(self, _):
         # keeps a record of which user ids have been indexed so that there's no
         # repeated work.
         self.indexed_ids = []
-        self.csv_nodes = ["Vertex", "Followed", "Followers", "Tweets", "Favorites", "Description", "Location", "Web", "Time Zone", "Joined Twitter Date (UTC)"]
-        self.csv_edges = ["Vertex 1", "Vertex 2", "Relationship", "Tweet", "URLs in Tweet", "Domains in Tweet", "Hashtags in Tweet", "Tweet Date (UTC)", "Twitter Page for Tweet", "Imported ID", "In-Reply-To Tweet ID"]
+        # usernames (to easily check whether a user exists in the graph or not)
+        self.graph = CsvGraph()
 
     def analyse_element(self, element: Etype.Json, _) -> Etype.Any:
         with open(element.paths[0], "r") as f:
@@ -76,21 +118,35 @@ class TwintToGephi(Analyser):
 
         return to_serializable(results)
 
-    def add_to_graph(self, tweet):
+    def add_to_graph(self, t, inreplyto=None):
         """ Add the relevant rows (for `nodes` and `edges`) to a graph from
             a Twint-formatted tweet (Python dictionary) """
-        self.logger(f"Adding {tweet['id'] to branches..}")
-        pass
+        self.logger(f"Adding {t['id']} to graph...")
+        self.graph.add_node(t["username"])
+        attrs = TweetEdge(
+            date=fmt_timestmap(t['datestamp'], t['timestamp'], t['timezone']),
+            tweet=t["tweet"],
+            urls=t["urls"],
+            domains=[], # NB: no domains provided in obj
+            hastags=t["hashtags"],
+            tweet_id=t["id"],
+            inreplyto_id=inreplyto["id"],
+        )
+        self.graph.add_edge(t["username"], inreplyto["username"], attrs)
 
     def post_analyse(self, _):
-        import pdb; pdb.set_trace()
-        # NB: a kind of hack... should maybe make available as a func, i.e. `self.get_analysed()`
+        # TODO: a kind of hack... should maybe make available as a func, i.e. `self.get_analysed()`
         analysed_els = self.disk.read_elements([self.dest_q])
         for el in analysed_els:
-            with open(el) as f:
+            el_json = el.paths[0]
+            with open(el_json) as f:
                 tweets = json.load(f)
-            for tweet in tweets:
-                self.add_to_graph(tweet)
+
+            initial_tweet = tweets[0]
+            import pdb; pdb.set_trace()
+            self.add_to_graph(initial_tweet)
+            for tweet in tweets[1:]:
+                self.add_to_graph(tweet, inreplyto=initial_tweet)
 
 
 
