@@ -1,21 +1,57 @@
 import os
 import json
 import twint
+import pandas as pd
 from pathlib import Path
 from lib.common.analyser import Analyser
-
-# from lib.common.exceptions import ElementShouldSkipError
 from lib.common.etypes import Etype
 from lib.util.twint import to_serializable, pythonize
 
-TMP = Path("/tmp")
 
 from collections import namedtuple
-TweetEdge = namedtuple("TweetEdge", "date tweet urls domains hashtags tweeet_id inreplyto_id" )
+from datetime import datetime
+
+
+def fmt_timestmap(dstamp, tstamp, tzone):
+    ds = datetime.strptime(dstamp, "%Y-%m-%d")
+    fmtted_ds = ds.strftime("%m/%d/%y")
+    return f"{fmtted_ds} {tstamp}"
+
+
+TMP = Path("/tmp")
+TweetEdge = namedtuple(
+    "TweetEdge", "date tweet urls domains hashtags tweet_id inreplyto_id"
+)
+
 
 class CsvGraph:
-    node_labels = ["Vertex", "Followed", "Followers", "Tweets", "Favorites", "Description", "Location", "Web", "Time Zone", "Joined Twitter Date (UTC)"]
-    edge_labels= ["Vertex 1", "Vertex 2", "Width", "Relationship", "Relationship Date (UTC)", "Tweet", "URLs in Tweet", "Domains in Tweet", "Hashtags in Tweet", "Tweet Date (UTC)", "Twitter Page for Tweet", "Imported ID", "In-Reply-To Tweet ID"]
+    node_labels = [
+        "Vertex",
+        "Followed",
+        "Followers",
+        "Tweets",
+        "Favorites",
+        "Description",
+        "Location",
+        "Web",
+        "Time Zone",
+        "Joined Twitter Date (UTC)",
+    ]
+    edge_labels = [
+        "Vertex 1",
+        "Vertex 2",
+        "Width",
+        "Relationship",
+        "Relationship Date (UTC)",
+        "Tweet",
+        "URLs in Tweet",
+        "Domains in Tweet",
+        "Hashtags in Tweet",
+        "Tweet Date (UTC)",
+        "Twitter Page for Tweet",
+        "Imported ID",
+        "In-Reply-To Tweet ID",
+    ]
 
     def __init__(self):
         self.nodes = []
@@ -28,30 +64,57 @@ class CsvGraph:
         if name not in self.nodes:
             self.nodes.append(name)
 
-    def add_edge(self, _from: str, _to: str, edge: TweetEdge):
-        self.add_node(_from)
-        self.add_node(_to)
-        is_reply = _from != _to
-        self.edges.append([
-            _from, _to,
-            1, # width defaults to 1
-            "Tweet" if not is_reply else "Replies To", # relationship
-            edge.date, # relationship date
-            edge.tweet,
-            edge.urls,
-            edge.domains,
-            edge.hastags,
-            edge.date, # tweet date
-            f"https://twitter.com/${_from}/status/${edge.id}",
-            edge.tweet_id, # the tweet's id
-            "" if not is_reply else edge.inreplyto_id, # the id of the tweet to which this replies.
-        ])
+    def add_edge(self, _from: dict, _to: dict):
+        is_reply = _to is not None
 
-from datetime import datetime
-def fmt_timestmap(dstamp, tstamp, tzone):
-    ds = datetime.strptime(dstamp, "%Y-%m-%d")
-    fmtted_ds = ds.strftime("%m/%d/%y")
-    return f"${fmtted_ds} ${tstamp}"
+        self.add_node(_from["username"])
+        if is_reply:
+            self.add_node(_to["username"])
+
+        edge = TweetEdge(
+            date=fmt_timestmap(
+                _from["datestamp"], _from["timestamp"], _from["timezone"]
+            ),
+            tweet=_from["tweet"],
+            urls=_from["urls"],
+            domains=[],  # NB: no domains provided in obj
+            hashtags=_from["hashtags"],
+            tweet_id=_from["id"],
+            inreplyto_id=_to["id"] if _to is not None else None,
+        )
+
+        self.edges.append(
+            [
+                _from["username"],
+                _to["username"] if is_reply else _from["username"],
+                1,  # width defaults to 1
+                "Tweet" if not is_reply else "Replies To",  # relationship
+                edge.date,  # relationship date
+                edge.tweet,
+                "- ".join(edge.urls),
+                "- ".join(edge.domains),
+                "- ".join(edge.hashtags),
+                edge.date,  # tweet date
+                f"https://twitter.com/${_from['username']}/status/${_from['id']}",
+                edge.tweet_id,  # the tweet's id
+                ""
+                if not is_reply
+                else edge.inreplyto_id,  # the id of the tweet to which this replies.
+            ]
+        )
+
+    def to_xlsx(self, path):
+        """ Save graph as XLSX file. The default tab will be edges, with an extra tab for nodes. """
+        edge_df = pd.DataFrame.from_records(self.edges)
+        edge_df.columns = CsvGraph.edge_labels
+        node_df = pd.DataFrame.from_records([[x] for x in self.nodes])
+        node_df.columns = ["Vertex"]
+
+        writer = pd.ExcelWriter(path, engine="xlsxwriter")
+        edge_df.to_excel(writer, sheet_name="Edges")
+        node_df.to_excel(writer, sheet_name="Vertices")
+        writer.save()
+
 
 class TwintToGephi(Analyser):
     def pre_analyse(self, _):
@@ -121,18 +184,9 @@ class TwintToGephi(Analyser):
     def add_to_graph(self, t, inreplyto=None):
         """ Add the relevant rows (for `nodes` and `edges`) to a graph from
             a Twint-formatted tweet (Python dictionary) """
-        self.logger(f"Adding {t['id']} to graph...")
         self.graph.add_node(t["username"])
-        attrs = TweetEdge(
-            date=fmt_timestmap(t['datestamp'], t['timestamp'], t['timezone']),
-            tweet=t["tweet"],
-            urls=t["urls"],
-            domains=[], # NB: no domains provided in obj
-            hastags=t["hashtags"],
-            tweet_id=t["id"],
-            inreplyto_id=inreplyto["id"],
-        )
-        self.graph.add_edge(t["username"], inreplyto["username"], attrs)
+
+        self.graph.add_edge(t, inreplyto)
 
     def post_analyse(self, _):
         # TODO: a kind of hack... should maybe make available as a func, i.e. `self.get_analysed()`
@@ -143,11 +197,15 @@ class TwintToGephi(Analyser):
                 tweets = json.load(f)
 
             initial_tweet = tweets[0]
-            import pdb; pdb.set_trace()
+            self.logger(f"Adding tweet {initial_tweet['id']} to graph...")
             self.add_to_graph(initial_tweet)
             for tweet in tweets[1:]:
+                self.logger(f"Adding reply {tweet['id']} to graph...")
                 self.add_to_graph(tweet, inreplyto=initial_tweet)
 
+        xlsx_path = TMP / "final.xlsx"
+        self.graph.to_xlsx(xlsx_path)
+        return Etype.Any("FINAL", xlsx_path)
 
 
 module = TwintToGephi
