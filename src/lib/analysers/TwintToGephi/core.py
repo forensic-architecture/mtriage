@@ -91,9 +91,13 @@ class CsvGraph:
                 "Tweet" if not is_reply else "Replies To",  # relationship
                 edge.date,  # relationship date
                 edge.tweet,
-                "- ".join(edge.urls),
-                "- ".join(edge.domains),
-                "- ".join(edge.hashtags),
+                "- ".join(edge.urls) if isinstance(edge.urls, list) else edge.urls,
+                "- ".join(edge.domains)
+                if isinstance(edge.domains, list)
+                else edge.domains,
+                "- ".join(edge.hashtags)
+                if isinstance(edge.hashtags, list)
+                else edge.hashtags,
                 edge.date,  # tweet date
                 f"https://twitter.com/${_from['username']}/status/${_from['id']}",
                 edge.tweet_id,  # the tweet's id
