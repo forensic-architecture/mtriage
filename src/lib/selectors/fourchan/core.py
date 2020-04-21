@@ -2,6 +2,7 @@ import json
 import requests
 import os
 import html2text
+from pathlib import Path
 from urllib.request import urlretrieve
 from lib.common.selector import Selector
 from lib.common.etypes import Etype, LocalElementsIndex
@@ -95,7 +96,7 @@ class FourChan(Selector):
         if board not in viable_boards:
             self.error_logger("Your chosen board does not exist on 4chan!")
             quit()
-        max_posts = config["max_posts"]
+        max_posts = int(config["max_posts"])
         # Create a HTML parser for parsing comments
         h = html2text.HTML2Text()
         h.ignore_links = False
@@ -165,13 +166,12 @@ class FourChan(Selector):
         base = TMP / element.id
         base.mkdir(parents=True, exist_ok=True)
 
-        fn = element["filename"]
-        identifier = element["id"]
-        comment = element["comment"]
-        dest = element["base"]
-        url = element["url"]
+        fn = element.filename
+        identifier = element.id
+        comment = element.comment
+        url = element.url
 
-        with open(base / f"{identifier}_comment.txt"), "w+") as f:
+        with open(base / f"{identifier}_comment.txt", "w+") as f:
             f.write(comment)
 
         if url != "":
