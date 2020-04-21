@@ -147,7 +147,7 @@ class Analyser(MTModule):
         except ElementShouldRetryError as e:
             self.error_logger(str(e), element)
             if attempts > 1:
-                return self.__attempt_analyse(attempts - 1, element, dest_q)
+                return self.__attempt_analyse(attempts - 1, element, self.dest_q)
             else:
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
