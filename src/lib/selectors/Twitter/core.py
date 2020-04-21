@@ -45,9 +45,15 @@ class Twitter(Selector):
 
             for url in photos:
                 fname = url.rsplit("/", 1)[-1]
-                urlretrieve(url, base / fname)
+                urlretrieve(url, base/fname)
 
             self.logger(f"{element.id} downloaded (with images).")
+
+        if "download_videos" in self.config and self.config.download_videos:
+            if hasattr(element, "video") and element.video != "":
+                fname = element.video.rsplit("/", 1)[-1]
+                urlretrieve(element.video, base/fname)
+
         self.disk.delete_local_on_write = True
         return Etype.cast(element.id, files(base))
 
