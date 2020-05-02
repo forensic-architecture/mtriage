@@ -3,4 +3,3 @@ select:
   name: FourChan
   config:
     board: "g"
-    max_posts: 1

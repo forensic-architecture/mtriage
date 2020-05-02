@@ -4,7 +4,3 @@ args:
     desc: Numeric identifier for a specific board to scrape. If not specified all boards are scraped.
     required: true
     input: string
-  - name: max_posts
-    desc: Number of total posts to scrape. Without a cap it would go forever.
-    required: true
-    input: integer
