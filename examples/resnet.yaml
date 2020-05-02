@@ -1,7 +1,0 @@
-folder: media/demo
-phase: "analyse"
-module: "keras_pretrained"
-config:
-  elements_in:
-    - "youtube/frames"
-  model: "ResNet50"

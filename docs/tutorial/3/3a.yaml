@@ -1,0 +1,7 @@
+folder: media/demo_official/3
+select:
+  name: Youtube
+  config:
+    search_term: Tear gas
+    uploaded_before: "2015-10-02T00:00:00Z"
+    uploaded_after: "2015-10-01T00:00:00Z"

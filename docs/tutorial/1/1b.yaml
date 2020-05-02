@@ -1,0 +1,9 @@
+folder: media/demo_official/1
+elements_in:
+  - Local
+analyse:
+  name: ExtractTypes
+  config:
+    exts:
+      - txt
+      - md
