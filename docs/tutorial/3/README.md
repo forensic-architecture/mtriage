@@ -99,8 +99,8 @@ In this config, we select videos uploaded between the 15th and 30th of November
 in 2018 that match both "tear gas" and "mexico" in Youtube's search API. Once
 downloaded, we split each video into frames, deduplicate similar images using
 [dhash](https://github.com/maccman/dhash), classify deduplicated frames using
-resnet, and then create an additional JSON that ranks the classified images
-according to the number of positive frames (using the `Rank` analyser).
+resnet, and then create an additional JSON that ranks the classified videos
+according to the number of positive frames they contain (using the `Rank` analyser).
 
 That's a fair bit of computational work. Go and grab a beverage while this
 command runs to completion, if you like:
