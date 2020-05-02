@@ -1,18 +1,4 @@
-## 1a. Working with selectors
-
-To get to know mtriage, we're going to run a workflow using four components:
-
-1. **Youtube**: a selector that takes a search term and time period, and the
-   downloads all videos returned from that search as mtriage elements.
-2. **Frames**: extracts images at a rate of one frame per second from video
-   elements. 
-3. **KerasPretrained**: makes predictions over one or more images using
-   [ResNet50](https://arxiv.org/abs/1512.03385) trained on ImageNet.
-   Predictions are saved in a JSON file.
-4. **Rank**: takes JSON predictions produced from KerasPretrained and ranks
-   them, scoring those with more positively predicted frames higher.
-
-### YAML configs 
+# 1a. Working with selectors
 
 Mtriage workflows are orchestrated using YAML files. These config files
 indicate components used to select and/or process media. Most mtriage YAML
@@ -66,7 +52,7 @@ be processed using an Analyser, which take elements as input and produce
 elements as output. The 'elements_map.csv' is a listing that mtriage uses
 internally.
 
-## 1b. Working with analysers
+# 1b. Working with analysers
 
 Now that we've selected some elements, let's get to analysing them. We're going
 to use the very straightforward 'ExtractTypes' analyser, which simply extracts
@@ -118,7 +104,7 @@ matching extensions, and skipped over element 3 (which contains '3.jpg'). The
 first logged line is an important aspect of mtriage's value add: it runs these
 operations in parallel, across as many CPUs are available on your computer.
 
-## 1c. Putting it all together
+# 1c. Putting it all together
 
 We can put both selection and analysis together in a single config, as follows:
 
@@ -145,5 +131,6 @@ And run it with:
 Of course, this particular workflow isn't very useful at all, but hopefully you
 are already beginning to see how we can use mtriage to orchestrate much more
 meaningful and powerful media workflows. In the next tutorial, we'll use
-mtriage to split a video into frames, and deduplicate similar frames from the
-batch.
+mtriage to reformat audio files.
+
+[Go to tutorial 2](/docs/tutorial/2/README.md)

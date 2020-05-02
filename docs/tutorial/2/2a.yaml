@@ -6,4 +6,4 @@ select:
 analyse:
   name: ConvertAudio
   config:
-    output_ext: mp4
+    output_ext: mp3

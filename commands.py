@@ -109,6 +109,7 @@ def build(args, is_testing=False):
             wl = csv.reader(f, delimiter=" ")
             for row in wl:
                 dep = extract_dep(row)
+                print(dep)
                 if dep is not "":
                     BLACKLIST.remove(dep)
 
@@ -270,6 +271,7 @@ def run(args):
         [
             "docker",
             "run",
+            "--rm",
             "--name",
             CONT_NAME,
             "--runtime=nvidia" if args.gpu else "--ipc=host",

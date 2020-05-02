@@ -63,7 +63,6 @@ RUN apt-get update --fix-missing
 RUN mkdir -p /mtriage
 COPY ./scripts /mtriage/scripts
 COPY ./src /mtriage/src
-COPY ./credentials /mtriage/credentials
 WORKDIR /mtriage
 
 # *********************
