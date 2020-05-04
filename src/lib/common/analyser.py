@@ -118,7 +118,9 @@ class Analyser(MTModule):
 
     @MTModule.phase("post-analyse")
     def __post_analyse(self):
-        outel = self.post_analyse(self.config)
+        # TODO: is there a way to only do this work if overridden?
+        analysed_els = self.disk.read_elements([self.dest_q])
+        outel = self.post_analyse(analysed_els)
         if outel is None:
             return
 
