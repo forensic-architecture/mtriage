@@ -1,0 +1,10 @@
+desc: Create a single element from Twitter elements, which contains two CSV files that specify a relational graph. As replies are determined by scraping all tweets in a user's timeline and then filtering by conversation ID, a requirement of twint, `uploaded_before` and `uploaded_after` should be provided so that only relevant tweets need to be scraped.
+args:
+  - name: uploaded_before
+    desc: Only return tweets before this date.
+    required: true
+    input: date
+  - name: uploaded_after
+    desc: Only return tweets after this date.
+    required: true
+    input: date
