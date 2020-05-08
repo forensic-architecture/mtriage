@@ -102,6 +102,18 @@ class Analyser(MTModule):
             # analysing elements as a list will bypass parallelisation
             self.analyse(elements)
 
+    # getter for dest_q. NOTE: abstraction leak from mtmodule parallelisation..
+    def get_dest_q(self):
+        return self.dest_q.value if self.in_parallel else self.dest_q
+
+    # setter for dest_q. NOTE: abstraction leak from mtmodule parallelisation..
+    def set_dest_q(self, value):
+        if self.in_parallel:
+            self.dest_q.value = value
+        else:
+            self.dest_q = value
+
+
     @MTModule.phase("analyse")
     def analyse(
         self, elements: Union[Generator[LocalElement, None, None], List[LocalElement]]
@@ -112,7 +124,7 @@ class Analyser(MTModule):
             # NB: `super` infra is necessary in case a storage class overwrites
             # the `read_query` method as LocalStorage does.
             og_query = super(type(self.disk), self.disk).read_query(element.query)
-            self.dest_q = f"{og_query[0]}/{self.name}"
+            self.set_dest_q(f"{og_query[0]}/{self.name}")
 
             self.__attempt_analyse(5, element)
             self.disk.delete_local_on_write = False
@@ -120,7 +132,7 @@ class Analyser(MTModule):
     @MTModule.phase("post-analyse")
     def __post_analyse(self):
         # TODO: is there a way to only do this work if overridden?
-        analysed_els = self.disk.read_elements([self.dest_q])
+        analysed_els = self.disk.read_elements([self.get_dest_q()])
         outel = self.post_analyse(analysed_els)
         if outel is None:
             return
@@ -141,7 +153,7 @@ class Analyser(MTModule):
             new_element = self.analyse_element(element, self.config)
             if new_element is None:
                 return
-            success = self.disk.write_element(self.dest_q, new_element)
+            success = self.disk.write_element(self.get_dest_q(), new_element)
             if not success:
                 raise ElementShouldRetryError("Unsuccessful storage")
 

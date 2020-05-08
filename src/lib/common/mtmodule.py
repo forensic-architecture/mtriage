@@ -80,6 +80,8 @@ class MTModule(ABC):
 
         # switch logs to multiprocess access list
         self.__LOGS = manager.list()
+        # NOTE: abstraction leak to getter/setter in analyser.py...
+        self.dest_q = manager.Value("i", None)
         done_queue = manager.Queue()
         batches_running = manager.Value("i", 1)
 
