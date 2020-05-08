@@ -74,11 +74,12 @@ class Analyser(MTModule):
             4. Call user-defined `post_analyse` if it exists.
             5. Save logs, and clear the buffer. """
         inp = self.config.get("in_parallel")
+        self.in_parallel = in_parallel
         if self.config.get("dev") or (inp is not None and not inp):
-            in_parallel = False
+            self.in_parallel = False
         self.logger(f"Running {'in parallel' if in_parallel else 'serially'}")
         self.__pre_analyse()
-        self.__analyse(in_parallel)
+        self.__analyse()
         self.__post_analyse()
         self.flush_logs()
 
@@ -87,7 +88,7 @@ class Analyser(MTModule):
     def __pre_analyse(self):
         self.pre_analyse(self.config)
 
-    def __analyse(self, in_parallel):
+    def __analyse(self):
         try:
             elements = self.disk.read_elements(self.config["elements_in"])
             # TODO: check elements from disk match types for what analyser expects
@@ -95,7 +96,7 @@ class Analyser(MTModule):
             raise InvalidAnalyserElements(
                 f"The 'elements_in' you specified does not exist on the storage specified."
             )
-        if in_parallel:
+        if self.in_parallel:
             self.analyse((e for e in elements))
         else:
             # analysing elements as a list will bypass parallelisation
