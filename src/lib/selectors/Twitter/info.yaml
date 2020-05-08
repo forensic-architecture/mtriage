@@ -12,3 +12,12 @@ args:
     desc: Only return tweets after this date.
     required: true
     input: date
+  - name: download_photos
+    required: false
+    desc: set to True if the selector should download photos in tweets. False by default.
+    input: boolean
+  - name: download_videos
+    required: false
+    desc: set to True if the selector should download videos in tweets. False by default.
+    input: boolean
+
