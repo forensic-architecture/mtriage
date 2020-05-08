@@ -8,6 +8,7 @@ from lib.common.etypes import Etype
 
 WK_DIR = Path("/tmp/ranking")
 
+
 def rank(elements: List, threshold=0.5, logger=print, element_id="__RANKING") -> Etype:
     ranking_data = {}
 
@@ -62,5 +63,3 @@ def rank(elements: List, threshold=0.5, logger=print, element_id="__RANKING") ->
         json.dump(ranking, f)
 
     return Etype.Json(element_id, file)
-
-

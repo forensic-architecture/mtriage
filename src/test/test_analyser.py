@@ -91,7 +91,8 @@ def test_analyse(utils, additionals):
             "w+",
         ) as f:
             f.write("Hello")
-    dummyAnalyser.start_analysing(in_parallel=False)
+    dummyAnalyser.in_parallel = False
+    dummyAnalyser.start_analysing()
     # confirm txt has carried
     for el in additionals.sel1_elements:
         with open(
