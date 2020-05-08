@@ -192,10 +192,8 @@ class TwintToGephi(Analyser):
 
         self.graph.add_edge(t, inreplyto)
 
-    def post_analyse(self, _):
-        # TODO: a kind of hack... should maybe make available as a func, i.e. `self.get_analysed()`
-        analysed_els = self.disk.read_elements([self.dest_q])
-        for el in analysed_els:
+    def post_analyse(self, elements):
+        for el in elements:
             el_json = el.paths[0]
             with open(el_json) as f:
                 tweets = json.load(f)

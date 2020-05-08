@@ -64,7 +64,7 @@ class Analyser(MTModule):
         """option to perform any clear up"""
         return None
 
-    def start_analysing(self, in_parallel=True):
+    def start_analysing(self):
         """ Primary entrypoint in the mtriage lifecycle.
 
             1. Call user-defined `pre_analyse` if it exists.
@@ -75,10 +75,10 @@ class Analyser(MTModule):
             5. Save logs, and clear the buffer. """
         inp = self.config.get("in_parallel")
         if self.config.get("dev") or (inp is not None and not inp):
-            in_parallel = False
-        self.logger(f"Running {'in parallel' if in_parallel else 'serially'}")
+            self.in_parallel = False
+        self.logger(f"Running {'in parallel' if self.in_parallel else 'serially'}")
         self.__pre_analyse()
-        self.__analyse(in_parallel)
+        self.__analyse()
         self.__post_analyse()
         self.flush_logs()
 
@@ -87,7 +87,7 @@ class Analyser(MTModule):
     def __pre_analyse(self):
         self.pre_analyse(self.config)
 
-    def __analyse(self, in_parallel):
+    def __analyse(self):
         try:
             elements = self.disk.read_elements(self.config["elements_in"])
             # TODO: check elements from disk match types for what analyser expects
@@ -95,11 +95,22 @@ class Analyser(MTModule):
             raise InvalidAnalyserElements(
                 f"The 'elements_in' you specified does not exist on the storage specified."
             )
-        if in_parallel:
+        if self.in_parallel:
             self.analyse((e for e in elements))
         else:
             # analysing elements as a list will bypass parallelisation
             self.analyse(elements)
+
+    # getter for dest_q. NOTE: abstraction leak from mtmodule parallelisation..
+    def get_dest_q(self):
+        return self.dest_q.value if self.in_parallel else self.dest_q
+
+    # setter for dest_q. NOTE: abstraction leak from mtmodule parallelisation..
+    def set_dest_q(self, value):
+        if self.in_parallel:
+            self.dest_q.value = value
+        else:
+            self.dest_q = value
 
     @MTModule.phase("analyse")
     def analyse(
@@ -111,14 +122,17 @@ class Analyser(MTModule):
             # NB: `super` infra is necessary in case a storage class overwrites
             # the `read_query` method as LocalStorage does.
             og_query = super(type(self.disk), self.disk).read_query(element.query)
-            self.dest_q = f"{og_query[0]}/{self.name}"
+            self.set_dest_q(f"{og_query[0]}/{self.name}")
 
             self.__attempt_analyse(5, element)
             self.disk.delete_local_on_write = False
 
     @MTModule.phase("post-analyse")
     def __post_analyse(self):
-        outel = self.post_analyse(self.config)
+        # TODO: is there a way to only do this work if overridden?
+
+        analysed_els = self.disk.read_elements([self.get_dest_q()])
+        outel = self.post_analyse(analysed_els)
         if outel is None:
             return
 
@@ -138,7 +152,7 @@ class Analyser(MTModule):
             new_element = self.analyse_element(element, self.config)
             if new_element is None:
                 return
-            success = self.disk.write_element(self.dest_q, new_element)
+            success = self.disk.write_element(self.get_dest_q(), new_element)
             if not success:
                 raise ElementShouldRetryError("Unsuccessful storage")
 

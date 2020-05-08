@@ -39,7 +39,10 @@ def hashdict(_dict):
 
 def subdirs(path: Path) -> List[Path]:
     """ Return a list of Paths for subdirectories in a directory """
-    return [f for f in path.iterdir() if f.is_dir()]
+    if path.is_dir():
+        return [f for f in path.iterdir() if f.is_dir()]
+    else:
+        return []
 
 
 def files(path: Path) -> List[Path]:

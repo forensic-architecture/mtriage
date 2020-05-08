@@ -5,11 +5,13 @@ from importlib import import_module
 from lib.common.exceptions import InvalidAnalyserConfigError
 from lib.common.analyser import Analyser
 from lib.common.etypes import Etype, Union, Array
+from lib.util.rank_cvjson import rank
 
 KERAS_HOME = "/mtriage/data/.keras"
 os.environ["KERAS_HOME"] = KERAS_HOME
 
 from keras.preprocessing.image import load_img, img_to_array
+import tensorflow as tf
 
 
 SUPPORTED_MODELS = {
@@ -31,11 +33,17 @@ class KerasPretrained(Analyser):
 
         rLabels = config["labels"]
 
+        # TODO: make it so that this doesn't redownload every run.
+        # i.e. refactor it into partial.Dockerfile
         self.model_module = import_module(f"keras.applications.{MOD['module']}")
         impmodel = getattr(self.model_module, config["model"])
         # NB: this downloads the weights if they don't exist
         self.model = impmodel(weights="imagenet")
         self.THRESH = 0.1
+
+        # revert to serial if CPU (TODO: debug why parallel CPU doesn't work)
+        if not tf.test.is_gpu_available():
+            self.in_parallel = False
 
         def get_preds(img_path):
             img = load_img(img_path, target_size=(224, 224))
@@ -66,6 +74,9 @@ class KerasPretrained(Analyser):
         self.logger(f"Wrote predictions JSON for {element.id}.")
         self.disk.delete_local_on_write = True
         return val
+
+    def post_analyse(self, elements) -> Etype.Json:
+        return rank(elements, logger=self.logger)
 
 
 module = KerasPretrained
