@@ -106,9 +106,7 @@ class FourChan(Selector):
         for page_index, page in enumerate(content):
             self.logger(f"Scraping page number: {page_index+1}")
             for thread_index, threads in enumerate(page["threads"]):
-                self.logger(
-                    f"Extracting posts from thread number: {thread_index+1}"
-                )
+                self.logger(f"Extracting posts from thread number: {thread_index+1}")
                 thread_id = threads["no"]
                 req = f"https://a.4cdn.org/{board}/thread/{thread_id}.json"
                 thread_content = json.loads(requests.get(req).content)[
@@ -141,9 +139,7 @@ class FourChan(Selector):
                         time_id = post["tim"]
                         extension = post["ext"]
                         full_file = f"{filename}{extension}"
-                        file_url = (
-                            f"https://i.4cdn.org/{board}/{time_id}{extension}"
-                        )
+                        file_url = f"https://i.4cdn.org/{board}/{time_id}{extension}"
                         post_row.append(full_file)
                         post_row.append(extension)
                         post_row.append(file_url)
@@ -174,5 +170,6 @@ class FourChan(Selector):
             urlretrieve(url, base / fn)
 
         return Etype.cast(element.id, files(base))
+
 
 module = FourChan
