@@ -44,6 +44,7 @@ class MTModule(ABC):
         self.UNIQUE_ID = hashdict(config)
         self.PHASE_KEY = None
         self.__LOGS = []
+        self.in_parallel = True
 
     def get_in_etype(self):
         """ Note that only analysers implement this method, as selectors do not need to know their input type"""
@@ -80,6 +81,8 @@ class MTModule(ABC):
 
         # switch logs to multiprocess access list
         self.__LOGS = manager.list()
+        # NOTE: abstraction leak to getter/setter in analyser.py...
+        self.dest_q = manager.Value("i", None)
         done_queue = manager.Queue()
         batches_running = manager.Value("i", 1)
 
@@ -151,7 +154,7 @@ class MTModule(ABC):
                     raise ImproperLoggedPhaseError(function.__name__)
 
                 if (
-                    kwargs.get("in_parallel", True)
+                    self.in_parallel
                     and (len(args) >= 1)
                     and isinstance(args[0], GeneratorType)
                 ):
