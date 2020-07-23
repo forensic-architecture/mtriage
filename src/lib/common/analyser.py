@@ -17,6 +17,7 @@ from lib.common.exceptions import (
 from lib.common.mtmodule import MTModule
 from lib.common.storage import Storage
 from lib.common.etypes import Etype, LocalElement
+from lib.common.util import MAX_CPUS
 
 
 class Analyser(MTModule):
@@ -74,12 +75,14 @@ class Analyser(MTModule):
             4. Call user-defined `post_analyse` if it exists.
             5. Save logs, and clear the buffer. """
         inp = self.config.get("in_parallel")
-        if self.config.get("dev") or (inp is not None and not inp):
+        if self.config.get("dev") or (inp is not None and not inp) or MAX_CPUS <= 1:
             self.in_parallel = False
-        self.logger(f"Running {'in parallel' if self.in_parallel else 'serially'}")
+        self.logger(f"Running analysis {'in parallel' if self.in_parallel else 'serially'}")
+
         self.__pre_analyse()
         self.__analyse()
         self.__post_analyse()
+
         self.flush_logs()
 
     # INTERNAL METHODS
@@ -119,6 +122,7 @@ class Analyser(MTModule):
         """ If `elements` is a Generator, the phase decorator will run in parallel.
             If `elements` is a List, then it will run serially (which is useful for testing). """
         for element in elements:
+            print(element)
             # NB: `super` infra is necessary in case a storage class overwrites
             # the `read_query` method as LocalStorage does.
             og_query = super(type(self.disk), self.disk).read_query(element.query)
@@ -130,7 +134,6 @@ class Analyser(MTModule):
     @MTModule.phase("post-analyse")
     def __post_analyse(self):
         # TODO: is there a way to only do this work if overridden?
-
         analysed_els = self.disk.read_elements([self.get_dest_q()])
         outel = self.post_analyse(analysed_els)
         if outel is None:

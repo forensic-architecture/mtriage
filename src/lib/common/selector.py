@@ -1,5 +1,6 @@
 import os
 import csv
+import shutil
 from abc import abstractmethod
 from typing import Dict, Generator, Union, List
 from types import SimpleNamespace
@@ -12,7 +13,7 @@ from lib.common.exceptions import (
 )
 from lib.common.etypes import LocalElement, LocalElementsIndex
 from lib.common.storage import Storage, LocalStorage
-import shutil
+from lib.common.util import MAX_CPUS
 
 
 class Selector(MTModule):
@@ -62,8 +63,11 @@ class Selector(MTModule):
             self.disk.write_elements_index(self.name, element_map)
 
     def start_retrieving(self, in_parallel=True):
-        if self.config.get("dev"):
+        inp = self.config.get("in_parallel")
+        if self.config.get("dev") or (inp is not None and not inp) or MAX_CPUS <= 1:
             in_parallel = False
+        self.logger(f"Running selection {'in parallel' if self.in_parallel else 'serially'}")
+
         self.__pre_retrieve()
         elements = self.disk.read_elements_index(self.name).rows
         if not in_parallel:
