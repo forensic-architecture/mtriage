@@ -40,14 +40,17 @@ class Local(Selector):
         self.logger("Indexing local folder...")
         results = [["id", "path"]]
         for root, _, files in os.walk(abs_src):
+            main = Path(abs_src)
+            root = Path(root)
             for file in files:
-                fp = Path(root) / file
-                results.append([fp.stem, fp])
-                self.logger(f"indexed file: {fp.name}")
+                fp = root / file
+                elid = root.name if (root.name != main.name) else fp.stem
+                results.append([elid, fp])
+                self.logger(f"indexed file {fp} as: {elid}")
         if self.is_aggregate():
             # `self.results` used in `retrieve_element` for paths.
             self.results = results[1:]
-            # NB: hacky way to just make `retrieve_element` run just once.
+            # NB: hacky way to just make `retrieve_element` run just once.:
             return Index([["id"], ["IS_AGGREGATE"]])
         return Index(results)
 
