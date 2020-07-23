@@ -122,7 +122,6 @@ class Analyser(MTModule):
         """ If `elements` is a Generator, the phase decorator will run in parallel.
             If `elements` is a List, then it will run serially (which is useful for testing). """
         for element in elements:
-            print(element)
             # NB: `super` infra is necessary in case a storage class overwrites
             # the `read_query` method as LocalStorage does.
             og_query = super(type(self.disk), self.disk).read_query(element.query)
