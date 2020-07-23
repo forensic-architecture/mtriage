@@ -40,8 +40,6 @@ def rank(elements: List, threshold=0.5, logger=print, element_id="__RANKING") ->
 
             # dpath = WK_DIR / f"{element.id}.json"
             logger(f"Rankings indexed for {element.id}.")
-            # return Etype.CvJson(element.id, dpath)
-            return None
 
         except Exception as e:
             logger(f"Could not analyse {element.id}: {e}")
