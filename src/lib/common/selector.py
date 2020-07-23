@@ -66,7 +66,9 @@ class Selector(MTModule):
         inp = self.config.get("in_parallel")
         if self.config.get("dev") or (inp is not None and not inp) or MAX_CPUS <= 1:
             in_parallel = False
-        self.logger(f"Running selection {'in parallel' if self.in_parallel else 'serially'}")
+        self.logger(
+            f"Running selection {'in parallel' if self.in_parallel else 'serially'}"
+        )
 
         self.__pre_retrieve()
         elements = self.disk.read_elements_index(self.name).rows

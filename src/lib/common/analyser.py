@@ -77,7 +77,9 @@ class Analyser(MTModule):
         inp = self.config.get("in_parallel")
         if self.config.get("dev") or (inp is not None and not inp) or MAX_CPUS <= 1:
             self.in_parallel = False
-        self.logger(f"Running analysis {'in parallel' if self.in_parallel else 'serially'}")
+        self.logger(
+            f"Running analysis {'in parallel' if self.in_parallel else 'serially'}"
+        )
 
         self.__pre_analyse()
         self.__analyse()
