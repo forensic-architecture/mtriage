@@ -9,7 +9,6 @@ from itertools import islice, chain
 
 from lib.common.util import hashdict, get_batch_size, batch
 from lib.common.exceptions import ImproperLoggedPhaseError
-from lib.common.etypes import Etype
 
 TWO_INTS = "II"
 RET_VAL_TESTS_ONLY = "no error"
@@ -45,13 +44,6 @@ class MTModule(ABC):
         self.PHASE_KEY = None
         self.__LOGS = []
         self.in_parallel = True
-
-    def get_in_etype(self):
-        """ Note that only analysers implement this method, as selectors do not need to know their input type"""
-        return Etype.Any
-
-    def get_out_etype(self):
-        return Etype.Any
 
     def process_batch(self, innards, done_dict, done_queue, batch_num, c, other_args):
         for idx, i in enumerate(c):

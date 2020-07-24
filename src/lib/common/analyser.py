@@ -11,12 +11,10 @@ from lib.common.exceptions import (
     MTriageStorageCorruptedError,
     InvalidElementsIn,
     InvalidAnalyserElements,
-    EtypeCastError,
-    InvalidCarry,
 )
 from lib.common.mtmodule import MTModule
 from lib.common.storage import Storage
-from lib.common.etypes import Etype, LocalElement
+from lib.common.etypes import LocalElement
 from lib.common.util import MAX_CPUS
 
 
