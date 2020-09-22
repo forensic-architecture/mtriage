@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 import struct
+import yaml
 import multiprocessing
 from functools import partial, wraps
 from types import GeneratorType
@@ -12,6 +13,7 @@ from lib.common.exceptions import ImproperLoggedPhaseError
 
 TWO_INTS = "II"
 RET_VAL_TESTS_ONLY = "no error"
+CONFIG_PATH = "/run_args.yaml"
 
 
 def db_run(dbfile, q, batches_running):
@@ -44,6 +46,11 @@ class MTModule(ABC):
         self.PHASE_KEY = None
         self.__LOGS = []
         self.in_parallel = True
+
+    def get_full_config(self):
+        with open(CONFIG_PATH, "r") as c:
+            cfg = yaml.safe_load(c)
+        return cfg
 
     def process_batch(self, innards, done_dict, done_queue, batch_num, c, other_args):
         for idx, i in enumerate(c):

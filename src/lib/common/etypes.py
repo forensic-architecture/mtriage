@@ -44,7 +44,7 @@ class Et:
     def __repr__(self):
         ia = self.is_array
         return (
-            f"{'Array(' if ia else ''}EType.{self.id.capitalize()}{')' if ia else ''}"
+            f"{'Array(' if ia else ''}{self.id.capitalize()}{')' if ia else ''}"
         )
 
     def __str__(self):

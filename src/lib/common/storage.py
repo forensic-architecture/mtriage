@@ -1,6 +1,7 @@
 import os
 import csv
 import shutil
+import json
 from pathlib import Path
 from types import GeneratorType, SimpleNamespace as Ns
 from typing import Tuple, Union, List, Iterable, Dict
@@ -47,6 +48,14 @@ class Storage(ABC):
         """ Setter for the list of pointers to the URLs where elements should be retrieved. """
         pass
 
+    @abstractmethod
+    def write_element(self, q: str, element: LocalElement) -> bool:
+        pass
+
+    @abstractmethod
+    def write_meta(self, q: str, meta: dict):
+        pass
+
 
 class LocalStorage(Storage):
     """
@@ -69,6 +78,7 @@ class LocalStorage(Storage):
         # logging
         self.__LOGS_DIR = f"{self.base_dir}/logs"
         self.__LOGS_FILE = f"{self.__LOGS_DIR}/logs.txt"
+        self.__META_FILE = ".mtbatch"
 
         if not os.path.exists(self.__LOGS_DIR):
             os.makedirs(self.__LOGS_DIR)
@@ -149,6 +159,12 @@ class LocalStorage(Storage):
                 if l is not None:
                     f.write(l)
                     f.write("\n")
+
+    def write_meta(self, q: str, meta: dict):
+        dest = self.read_query(q) / self.__META_FILE
+        import pdb; pdb.set_trace()
+        with open(dest, "w") as f:
+            json.dump(meta, f)
 
     def read_all_media(self):
         """Get all available media by indexing the dir system from self.BASE_DIR.
@@ -233,3 +249,4 @@ class LocalStorage(Storage):
                 lel.query = q
                 els.append(lel)
         return els
+

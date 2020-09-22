@@ -82,7 +82,15 @@ class Analyser(MTModule):
         self.__pre_analyse()
         self.__analyse()
         self.__post_analyse()
-
+        cfg = self.get_full_config()
+        self.disk.write_meta(f"{self.get_selector()}/{self.name}", {
+            "etype": self.out_etype.__repr__(),
+            "config": cfg,
+            "stage": {
+                "name": self.name,
+                "module": "analyser"
+            }
+        })
         self.flush_logs()
 
     # INTERNAL METHODS
@@ -130,6 +138,14 @@ class Analyser(MTModule):
             self.__attempt_analyse(5, element)
             self.disk.delete_local_on_write = False
 
+    def get_selector(self):
+        sel = ""
+        for q in self.config["elements_in"]:
+            selname, _ = super(type(self.disk), self.disk).read_query(q)
+            sel += selname
+        return sel
+
+
     @MTModule.phase("post-analyse")
     def __post_analyse(self):
         # TODO: is there a way to only do this work if overridden?
@@ -139,6 +155,10 @@ class Analyser(MTModule):
             return
 
         successes = []
+        # NOTE: this is duplicated code from `get_selector` in this same class,
+        # as it supports `elements_in` as a list. We perhaps need to just
+        # enforce `elements_in` as a single query, rather than a list of
+        # queries.
         for q in self.config["elements_in"]:
             selname, _ = super(type(self.disk), self.disk).read_query(q)
             success = self.disk.write_element(f"{selname}/{self.name}", outel)
