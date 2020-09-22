@@ -15,6 +15,7 @@ from lib.common.exceptions import (
 
 class ErrorThrowingAnalyser(Analyser):
     out_etype = Etype.Any
+
     def __init__(self, *args):
         super().__init__(*args)
         self.retryCount = 0

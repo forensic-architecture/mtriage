@@ -9,6 +9,7 @@ import os
 class ConvertAudio(Analyser):
     in_etype = Etype.Audio
     out_etype = Etype.Audio
+
     def analyse_element(self, element, config):
         output_ext = config["output_ext"]
 

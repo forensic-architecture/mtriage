@@ -24,6 +24,7 @@ def ffmpeg_frames(out_folder, fp, rate):
 class Frames(Analyser):
     in_etype = Union(Etype.Json, Etype.Video)
     out_etype = GLOSSED_FRAMES
+
     def analyse_element(self, element, config):
         fps = int(config["fps"]) if "fps" in config else 1
         jsons = [x for x in element.paths if x.suffix in ".json"]

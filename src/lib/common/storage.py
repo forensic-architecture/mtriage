@@ -125,8 +125,8 @@ class LocalStorage(Storage):
         pass
 
     def write_element(self, q: str, element: LocalElement) -> bool:
-        """ Write a LocalElement to persistent storage, deleting the LocalElement afterwards.
-            Returns True if successful, false if otherwise. """
+        """Write a LocalElement to persistent storage, deleting the LocalElement afterwards.
+        Returns True if successful, false if otherwise."""
         dest = self.read_query(q)
         if not os.path.exists(dest):
             os.makedirs(dest)
@@ -236,8 +236,8 @@ class LocalStorage(Storage):
         return all_media
 
     def read_elements(self, qs: List[str]) -> List[LocalElement]:
-        """ Take a list of queries, and returns a flattened list of LocalElements for the specified folders. The order
-            of the query is maintained in the return value. """
+        """Take a list of queries, and returns a flattened list of LocalElements for the specified folders. The order
+        of the query is maintained in the return value."""
         els = []
         for q in qs:
             element_pth = self.read_query(q)
@@ -248,4 +248,3 @@ class LocalStorage(Storage):
                 lel.query = q
                 els.append(lel)
         return els
-

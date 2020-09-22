@@ -19,11 +19,12 @@ from lib.common.util import MAX_CPUS
 
 
 class Analyser(MTModule):
-    """ A Analyser is a pass that creates derived workables from retrieved data.
+    """A Analyser is a pass that creates derived workables from retrieved data.
 
-        The working directory of the selector is passed during class instantiation, and can be referenced in the
-        implementations of methods.
+    The working directory of the selector is passed during class instantiation, and can be referenced in the
+    implementations of methods.
     """
+
     errored = False
 
     def __init__(self, config, module, storage=None):
@@ -48,12 +49,12 @@ class Analyser(MTModule):
     def analyse_element(
         self, element: LocalElement, config
     ) -> Union[LocalElement, None]:
-        """ Method defined on each analyser that implements analysis element-wise.
+        """Method defined on each analyser that implements analysis element-wise.
 
-            An element is currently simply a path to the relevant media. TODO: elements should be a more structured
-            type.
+        An element is currently simply a path to the relevant media. TODO: elements should be a more structured
+        type.
 
-            Should create a new element in the appropriate element[]'base' dir.
+        Should create a new element in the appropriate element[]'base' dir.
         """
         return NotImplemented
 
@@ -67,12 +68,12 @@ class Analyser(MTModule):
     def start_analysing(self):
         """ Primary entrypoint in the mtriage lifecycle.
 
-            1. Call user-defined `pre_analyse` if it exists.
-            2. Read all media from disk.
-            3. Call user-defined `analyse_element` in parallel (done through @phase decorator in MTModule). The option
-                to bypass parallelisation is for testing.
-            4. Call user-defined `post_analyse` if it exists.
-            5. Save logs, and clear the buffer. """
+        1. Call user-defined `pre_analyse` if it exists.
+        2. Read all media from disk.
+        3. Call user-defined `analyse_element` in parallel (done through @phase decorator in MTModule). The option
+            to bypass parallelisation is for testing.
+        4. Call user-defined `post_analyse` if it exists.
+        5. Save logs, and clear the buffer."""
         inp = self.config.get("in_parallel")
         if self.config.get("dev") or (inp is not None and not inp) or MAX_CPUS <= 1:
             self.in_parallel = False
@@ -85,14 +86,14 @@ class Analyser(MTModule):
         self.__post_analyse()
         cfg = self.get_full_config()
         if not self.errored:
-            self.disk.write_meta(f"{self.get_selector()}/{self.name}", {
-                "etype": self.out_etype.__repr__(),
-                "config": cfg,
-                "stage": {
-                    "name": self.name,
-                    "module": "analyser"
-                }
-            })
+            self.disk.write_meta(
+                f"{self.get_selector()}/{self.name}",
+                {
+                    "etype": self.out_etype.__repr__(),
+                    "config": cfg,
+                    "stage": {"name": self.name, "module": "analyser"},
+                },
+            )
         self.flush_logs()
 
     # INTERNAL METHODS
@@ -129,8 +130,8 @@ class Analyser(MTModule):
     def analyse(
         self, elements: Union[Generator[LocalElement, None, None], List[LocalElement]]
     ):
-        """ If `elements` is a Generator, the phase decorator will run in parallel.
-            If `elements` is a List, then it will run serially (which is useful for testing). """
+        """If `elements` is a Generator, the phase decorator will run in parallel.
+        If `elements` is a List, then it will run serially (which is useful for testing)."""
         for element in elements:
             # NB: `super` infra is necessary in case a storage class overwrites
             # the `read_query` method as LocalStorage does.
@@ -146,7 +147,6 @@ class Analyser(MTModule):
             selname, _ = super(type(self.disk), self.disk).read_query(q)
             sel += selname
         return sel
-
 
     @MTModule.phase("post-analyse")
     def __post_analyse(self):

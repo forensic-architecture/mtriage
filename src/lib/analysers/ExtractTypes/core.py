@@ -7,6 +7,7 @@ from lib.common.etypes import Etype
 class ExtractTypes(Analyser):
     in_etype = Etype.Any
     out_etype = Etype.Any
+
     def analyse_element(self, element, config):
         exts = config["exts"] if "exts" in config else []
         element.paths = [

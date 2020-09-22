@@ -8,6 +8,7 @@ import os
 class ExtractAudio(Analyser):
     in_etype = Etype.Video
     out_etype = Etype.Audio
+
     def analyse_element(self, element, config):
         output_ext = config["output_ext"]
         output = f"/tmp/{element.id}.{output_ext}"

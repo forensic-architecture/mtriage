@@ -8,7 +8,9 @@ from lib.common.get import get_module
 
 TEMP_ELEMENT_DIR = "/mtriage/media/test_official"
 TMP_DIR = Path("/tmp")
-STUB_PATHS = Ns(imagejpg="/mtriage/src/test/etype_stubs/image.jpeg",)
+STUB_PATHS = Ns(
+    imagejpg="/mtriage/src/test/etype_stubs/image.jpeg",
+)
 
 
 def scaffold_empty(
@@ -53,6 +55,7 @@ def scaffold_elementmap(elements=[]):
     out = [[x] for x in elements]
     out.insert(0, ["id"])
     return out
+
 
 def setup():
     # to ensure that there isn't a read error

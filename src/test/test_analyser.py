@@ -11,12 +11,14 @@ from lib.common.storage import LocalStorage
 
 class EmptyAnalyser(Analyser):
     out_etype = Etype.Any
+
     def analyse_element(self, element, config):
         raise Exception("is the user-defined func!")
 
 
 class TxtCopyAnalyser(Analyser):
     out_etype = Etype.Any
+
     def analyse_element(self, element, config):
         """ just copy over all media in 'any' """
         for f in element.paths:

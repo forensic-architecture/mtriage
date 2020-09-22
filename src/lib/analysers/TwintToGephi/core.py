@@ -189,8 +189,8 @@ class TwintToGephi(Analyser):
         return to_serializable(results)
 
     def add_to_graph(self, t, inreplyto=None):
-        """ Add the relevant rows (for `nodes` and `edges`) to a graph from
-            a Twint-formatted tweet (Python dictionary) """
+        """Add the relevant rows (for `nodes` and `edges`) to a graph from
+        a Twint-formatted tweet (Python dictionary)"""
         self.graph.add_node(t["username"])
 
         self.graph.add_edge(t, inreplyto)

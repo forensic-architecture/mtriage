@@ -10,7 +10,7 @@ BASE = Path("/mtriage")
 
 
 class Local(Selector):
-    """ A simple selector for importing local files into mtriage.
+    """A simple selector for importing local files into mtriage.
 
     It recursively finds every file in a source_folder specified in the config
     (see example script 4.select_local.sh) and imports each file into its own
@@ -20,6 +20,7 @@ class Local(Selector):
     directory on the mtriage host to be accessible inside the docker container
     (the media folder is recommended).
     """
+
     out_etype = Etype.Any
 
     def __init__(self, *args):

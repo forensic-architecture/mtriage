@@ -15,6 +15,7 @@ import pdb
 
 class BasicErrorSelector(Selector):
     out_etype = Etype.Any
+
     def __init__(self, *args):
         super().__init__(*args)
         self.retryCount = 0
@@ -41,6 +42,7 @@ class BasicErrorSelector(Selector):
 
 class RetrieveErrorSelector(BasicErrorSelector):
     out_etype = Etype.Any
+
     def retrieve_element(self, element, config):
         super().retrieve_element(element, config)
         with open(f"{element['base']}/out.txt", "w") as f:
@@ -49,6 +51,7 @@ class RetrieveErrorSelector(BasicErrorSelector):
 
 class BadIndexSelector(Selector):
     out_etype = Etype.Any
+
     def index(self, config):
         # fails to return a dataframe
         pass

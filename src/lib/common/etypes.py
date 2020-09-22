@@ -11,8 +11,8 @@ from lib.common.get import get_custom_etypes
 
 
 class LocalElement:
-    """ Local as in not from storage, but on the same comp where mtriage is running.
-        Returned from Selector.retrieve_element, and also Analyser.analyse_element. """
+    """Local as in not from storage, but on the same comp where mtriage is running.
+    Returned from Selector.retrieve_element, and also Analyser.analyse_element."""
 
     def __init__(self, id=None, query=None, paths=None, et=None):
         self.id = id  # the element id
@@ -24,8 +24,8 @@ class LocalElement:
 
 
 class LocalElementsIndex:
-    """ Similar to LocalElement, on the same comp as mtriage is running.
-        Initialised with an array of arrays, where each inner array represents one element to be retrieved. """
+    """Similar to LocalElement, on the same comp as mtriage is running.
+    Initialised with an array of arrays, where each inner array represents one element to be retrieved."""
 
     def __init__(self, rows=[]):
         self.rows = rows
@@ -43,9 +43,7 @@ class Et:
 
     def __repr__(self):
         ia = self.is_array
-        return (
-            f"{'Array(' if ia else ''}{self.id.capitalize()}{')' if ia else ''}"
-        )
+        return f"{'Array(' if ia else ''}{self.id.capitalize()}{')' if ia else ''}"
 
     def __str__(self):
         return self.__repr__()

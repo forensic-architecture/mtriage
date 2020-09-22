@@ -35,7 +35,10 @@ class Youtube(Selector):
 
     def pre_retrieve(self, _):
         self.ydl = youtube_dl.YoutubeDL(
-            {"outtmpl": f"{TMP}/%(id)s/%(id)s.mp4", "format": "worstvideo[ext=mp4]",}
+            {
+                "outtmpl": f"{TMP}/%(id)s/%(id)s.mp4",
+                "format": "worstvideo[ext=mp4]",
+            }
         )
 
     def retrieve_element(self, element, _):
