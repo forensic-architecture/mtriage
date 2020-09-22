@@ -24,6 +24,7 @@ class Analyser(MTModule):
         The working directory of the selector is passed during class instantiation, and can be referenced in the
         implementations of methods.
     """
+    errored = False
 
     def __init__(self, config, module, storage=None):
         super().__init__(config, module, storage)
@@ -83,14 +84,15 @@ class Analyser(MTModule):
         self.__analyse()
         self.__post_analyse()
         cfg = self.get_full_config()
-        self.disk.write_meta(f"{self.get_selector()}/{self.name}", {
-            "etype": self.out_etype.__repr__(),
-            "config": cfg,
-            "stage": {
-                "name": self.name,
-                "module": "analyser"
-            }
-        })
+        if not self.errored:
+            self.disk.write_meta(f"{self.get_selector()}/{self.name}", {
+                "etype": self.out_etype.__repr__(),
+                "config": cfg,
+                "stage": {
+                    "name": self.name,
+                    "module": "analyser"
+                }
+            })
         self.flush_logs()
 
     # INTERNAL METHODS
@@ -188,6 +190,7 @@ class Analyser(MTModule):
                 self.error_logger(
                     "failed after maximum retries - skipping element", element
                 )
+                self.errored = True
         except Exception as e:
             if self.is_dev():
                 raise e

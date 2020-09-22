@@ -3,7 +3,7 @@ import os
 from lib.common.analyser import Analyser
 from test.test_analyser import EmptyAnalyser
 from lib.common.storage import LocalStorage
-from lib.common.etypes import LocalElement
+from lib.common.etypes import Etype, LocalElement
 from lib.common.exceptions import (
     ElementShouldRetryError,
     ElementShouldSkipError,
@@ -14,6 +14,7 @@ from lib.common.exceptions import (
 
 
 class ErrorThrowingAnalyser(Analyser):
+    out_etype = Etype.Any
     def __init__(self, *args):
         super().__init__(*args)
         self.retryCount = 0

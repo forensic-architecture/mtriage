@@ -79,6 +79,14 @@ class Selector(MTModule):
                 raise InvalidElementIndex()
         self.__retrieve(elements)
         self.__post_retrieve()
+        self.disk.write_meta(self.name, {
+            "etype": self.out_etype.__repr__(),
+            "config": self.get_full_config(),
+            "stage": {
+                "name": self.name,
+                "module": "selector"
+            }
+        })
 
     @MTModule.phase("pre-retrieve")
     def __pre_retrieve(self):

@@ -20,6 +20,7 @@ class Local(Selector):
     directory on the mtriage host to be accessible inside the docker container
     (the media folder is recommended).
     """
+    out_etype = Etype.Any
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -54,7 +55,7 @@ class Local(Selector):
             return Index([["id"], ["IS_AGGREGATE"]])
         return Index(results)
 
-    def retrieve_element(self, element, config) -> Etype.Any:
+    def retrieve_element(self, element, config):
         if self.is_aggregate():
             og_folder = Path(config["source"])
             return Etype.Any(og_folder.name, paths=[x[1] for x in self.results])

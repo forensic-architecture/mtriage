@@ -162,7 +162,6 @@ class LocalStorage(Storage):
 
     def write_meta(self, q: str, meta: dict):
         dest = self.read_query(q) / self.__META_FILE
-        import pdb; pdb.set_trace()
         with open(dest, "w") as f:
             json.dump(meta, f)
 

@@ -54,6 +54,11 @@ def scaffold_elementmap(elements=[]):
     out.insert(0, ["id"])
     return out
 
+def setup():
+    # to ensure that there isn't a read error
+    with open("/run_args.yaml", "w") as f:
+        json.dump({}, f)
+
 
 def cleanup():
     if Path(TEMP_ELEMENT_DIR).exists():

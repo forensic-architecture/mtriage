@@ -16,6 +16,7 @@ class Twitter(Selector):
     It leverages 'twint' - https://github.com/twintproject/twint - under
     the hood.
     """
+    out_etype = Etype.Json
 
     def index(self, config):
         c = twint.Config()
