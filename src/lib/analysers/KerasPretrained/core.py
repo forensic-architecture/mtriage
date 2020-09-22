@@ -22,6 +22,9 @@ SUPPORTED_MODELS = {
 
 
 class KerasPretrained(Analyser):
+    in_etype = Union(Array(Etype.Image), Etype.Json)
+    out_etype = Etype.Json
+
     def pre_analyse(self, config):
         self.logger(config["model"])
         self.logger(f"Storing models in {KERAS_HOME}")
@@ -66,9 +69,7 @@ class KerasPretrained(Analyser):
 
         self.get_preds = get_preds
 
-    def analyse_element(
-        self, element: Union(Array(Etype.Image), Etype.Json), _
-    ) -> Etype.Json:
+    def analyse_element(self, element, _):
         self.logger(f"Running inference on frames in {element.id}...")
         val = Etype.CvJson.from_preds(element, self.get_preds)
         self.logger(f"Wrote predictions JSON for {element.id}.")

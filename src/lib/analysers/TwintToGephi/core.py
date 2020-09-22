@@ -121,6 +121,9 @@ class CsvGraph:
 
 
 class TwintToGephi(Analyser):
+    in_etype = Etype.Json
+    out_etype = Etype.Any
+
     def pre_analyse(self, _):
         # keeps a record of which user ids have been indexed so that there's no
         # repeated work.
@@ -128,7 +131,7 @@ class TwintToGephi(Analyser):
         # usernames (to easily check whether a user exists in the graph or not)
         self.graph = CsvGraph()
 
-    def analyse_element(self, element: Etype.Json, _) -> Etype.Any:
+    def analyse_element(self, element, _):
         with open(element.paths[0], "r") as f:
             orig_tweet = json.load(f)
             orig_tweet = pythonize(orig_tweet)
