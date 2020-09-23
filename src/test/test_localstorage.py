@@ -1,28 +1,53 @@
-def get_all_media(utils, additionals):
+import pytest
+import json
+from pathlib import Path
+from lib.common.storage import LocalStorage
+
+
+@pytest.fixture
+def basic(utils):
+    global base
+    base = utils.TEMP_ELEMENT_DIR
+
+    utils.scaffold_empty("Youtube", elements=["el1"], analysers=["Me"])
+    utils.setup()
+    yield LocalStorage(folder=base)
+    utils.cleanup()
+
+
+def test_core(basic):
+    assert basic.base_dir == Path(base)
+
+
+def test_read_query(utils, basic):
+    assert isinstance(basic.read_query("Youtube"), Path)
+    assert basic.read_query("Youtube") == Path(f"{base}/Youtube/{basic.RETRIEVED_EXT}")
+    assert basic.read_query("Youtube/Me") == Path(
+        f"{base}/Youtube/{basic.ANALYSED_EXT}/Me"
+    )
+
+
+def test_read_all_media(utils, basic):
     cmpDict = {
-        "sel1": {
-            f"{Analyser.DATA_EXT}": {
-                "el1": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DATA_EXT}/el1",
-                "el2": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DATA_EXT}/el2",
+        "Youtube": {
+            f"{basic.RETRIEVED_EXT}": {
+                "el1": f"{base}/Youtube/{basic.RETRIEVED_EXT}/el1",
             },
-            f"{Analyser.DERIVED_EXT}": {
-                "an1": {
-                    "el1": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el1",
-                    "el2": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an1/el2",
-                },
-                "an2": {
-                    "el2": f"{utils.TEMP_ELEMENT_DIR}/sel1/{Analyser.DERIVED_EXT}/an2/el2"
+            f"{basic.ANALYSED_EXT}": {
+                "Me": {
+                    "el1": f"{base}/Youtube/{basic.ANALYSED_EXT}/Me/el1",
                 },
             },
-        },
-        "sel2": {
-            f"{Analyser.DATA_EXT}": {
-                "el4": f"{utils.TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el4",
-                "el5": f"{utils.TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el5",
-                "el6": f"{utils.TEMP_ELEMENT_DIR}/sel2/{Analyser.DATA_EXT}/el6",
-            },
-            f"{Analyser.DERIVED_EXT}": {},
         },
     }
-    mediaDict = additionals.emptyAnalyser._Analyser__get_all_media()
+    mediaDict = basic.read_all_media()
     assert utils.dictsEqual(cmpDict, mediaDict)
+
+
+def test_write_meta(basic):
+    q = "Youtube/Me"
+    og_data = {"some": "data"}
+    basic.write_meta(q, og_data)
+    with open(f"{basic.read_query(q)}/{basic._LocalStorage__META_FILE}", "r") as f:
+        data = json.load(f)
+    assert data == og_data
