@@ -66,7 +66,7 @@ class Analyser(MTModule):
         return None
 
     def start_analysing(self):
-        """ Primary entrypoint in the mtriage lifecycle.
+        """Primary entrypoint in the mtriage lifecycle.
 
         1. Call user-defined `pre_analyse` if it exists.
         2. Read all media from disk.
