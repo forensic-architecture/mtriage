@@ -1,6 +1,7 @@
 import os
 import csv
 import shutil
+import json
 from pathlib import Path
 from types import GeneratorType, SimpleNamespace as Ns
 from typing import Tuple, Union, List, Iterable, Dict
@@ -47,6 +48,14 @@ class Storage(ABC):
         """ Setter for the list of pointers to the URLs where elements should be retrieved. """
         pass
 
+    @abstractmethod
+    def write_element(self, q: str, element: LocalElement) -> bool:
+        pass
+
+    @abstractmethod
+    def write_meta(self, q: str, meta: dict):
+        pass
+
 
 class LocalStorage(Storage):
     """
@@ -69,6 +78,7 @@ class LocalStorage(Storage):
         # logging
         self.__LOGS_DIR = f"{self.base_dir}/logs"
         self.__LOGS_FILE = f"{self.__LOGS_DIR}/logs.txt"
+        self.__META_FILE = ".mtbatch"
 
         if not os.path.exists(self.__LOGS_DIR):
             os.makedirs(self.__LOGS_DIR)
@@ -115,8 +125,8 @@ class LocalStorage(Storage):
         pass
 
     def write_element(self, q: str, element: LocalElement) -> bool:
-        """ Write a LocalElement to persistent storage, deleting the LocalElement afterwards.
-            Returns True if successful, false if otherwise. """
+        """Write a LocalElement to persistent storage, deleting the LocalElement afterwards.
+        Returns True if successful, false if otherwise."""
         dest = self.read_query(q)
         if not os.path.exists(dest):
             os.makedirs(dest)
@@ -149,6 +159,11 @@ class LocalStorage(Storage):
                 if l is not None:
                     f.write(l)
                     f.write("\n")
+
+    def write_meta(self, q: str, meta: dict):
+        dest = self.read_query(q) / self.__META_FILE
+        with open(dest, "w") as f:
+            json.dump(meta, f)
 
     def read_all_media(self):
         """Get all available media by indexing the dir system from self.BASE_DIR.
@@ -221,8 +236,8 @@ class LocalStorage(Storage):
         return all_media
 
     def read_elements(self, qs: List[str]) -> List[LocalElement]:
-        """ Take a list of queries, and returns a flattened list of LocalElements for the specified folders. The order
-            of the query is maintained in the return value. """
+        """Take a list of queries, and returns a flattened list of LocalElements for the specified folders. The order
+        of the query is maintained in the return value."""
         els = []
         for q in qs:
             element_pth = self.read_query(q)

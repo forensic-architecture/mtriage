@@ -11,11 +11,13 @@ TMP = Path("/tmp")
 
 
 class Twitter(Selector):
-    """ A selector for scraping tweets.
+    """A selector for scraping tweets.
 
     It leverages 'twint' - https://github.com/twintproject/twint - under
     the hood.
     """
+
+    out_etype = Etype.Json
 
     def index(self, config):
         c = twint.Config()

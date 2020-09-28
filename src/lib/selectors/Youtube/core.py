@@ -22,6 +22,8 @@ TMP = Path("/tmp")
 
 
 class Youtube(Selector):
+    out_etype = Union(Etype.Json, Etype.Video)
+
     def index(self, _) -> LocalElementsIndex:
         results = self._run()
         if len(results) > 0:
@@ -33,10 +35,13 @@ class Youtube(Selector):
 
     def pre_retrieve(self, _):
         self.ydl = youtube_dl.YoutubeDL(
-            {"outtmpl": f"{TMP}/%(id)s/%(id)s.mp4", "format": "worstvideo[ext=mp4]",}
+            {
+                "outtmpl": f"{TMP}/%(id)s/%(id)s.mp4",
+                "format": "worstvideo[ext=mp4]",
+            }
         )
 
-    def retrieve_element(self, element, _) -> Union(Etype.Video, Etype.Json):
+    def retrieve_element(self, element, _):
         with self.ydl:
             try:
                 result = self.ydl.extract_info(element.url)

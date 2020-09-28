@@ -10,7 +10,7 @@ from lib.common.etypes import Etype
 
 
 def frame_changed(frame_a, frame_b, threshold):
-    """ Return True if frame_b is sufficiently different from frame_a.
+    """Return True if frame_b is sufficiently different from frame_a.
     Currently, this uses a pretty naive subtract-and-L2-norm method.
     But! Could be pretty easily swapped out for something more advanced.
     Expects grayscale frames with float pixels (0.0 - 1.0 intensities)

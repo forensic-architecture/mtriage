@@ -18,8 +18,8 @@ from lib.common.util import vuevis_prepare_el, deduce_frame_no
 
 
 class YoloV3Analyser(Analyser):
-    """ Adapted from eriklindernoren/PyTorch-YOLOv3. See https://github.com/breezykermo/PyTorch-YOLOv3
-        for reference implementation.
+    """Adapted from eriklindernoren/PyTorch-YOLOv3. See https://github.com/breezykermo/PyTorch-YOLOv3
+    for reference implementation.
     """
 
     def get_in_etype(self):
