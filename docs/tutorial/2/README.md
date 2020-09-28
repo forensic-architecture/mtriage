@@ -120,4 +120,4 @@ In the next tutorial, we'll work with the Youtube selector to analyse videos
 that are selected using youtube's search API, showing the full power  and
 extensibility of mtriage.
 
-[Go to tutorial 3](/docs/tutorials/3/README.md)
+[Go to tutorial 3](/docs/tutorial/3/README.md)

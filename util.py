@@ -36,8 +36,8 @@ def get_subdirs(d):
 
 
 def name_and_ver(pipdep):
-    """ Return the name and version from a string that expresses a pip dependency.
-        Raises an InvalidPipDep exception if the string is an invalid dependency.
+    """Return the name and version from a string that expresses a pip dependency.
+    Raises an InvalidPipDep exception if the string is an invalid dependency.
     """
     pipdep = pipdep.split("==")
     dep_name = pipdep[0]
@@ -56,8 +56,7 @@ def name_and_ver(pipdep):
 
 
 def should_add_pipdep(dep, pipdeps):
-    """Check whether pipdep should be added.
-    """
+    """Check whether pipdep should be added."""
     dep_name, dep_ver = name_and_ver(dep)
     for _dep in pipdeps:
         _dep_name, _dep_ver = name_and_ver(_dep)
@@ -74,14 +73,12 @@ def should_add_pipdep(dep, pipdeps):
 
 
 def should_add_dockerline(line, dockerfile):
-    """Check whether line should be added to array representing Dockerfile.
-    """
+    """Check whether line should be added to array representing Dockerfile."""
     return line not in dockerfile
 
 
 def add_deps(dep_path, deps, should_add):
-    """ Add dependences at {folder_path} to {deps}, excluding if {should_add} is True for any given dependency.
-    """
+    """Add dependences at {folder_path} to {deps}, excluding if {should_add} is True for any given dependency."""
     if not os.path.isfile(dep_path):
         return
 

@@ -10,7 +10,7 @@ BASE = Path("/mtriage")
 
 
 class Local(Selector):
-    """ A simple selector for importing local files into mtriage.
+    """A simple selector for importing local files into mtriage.
 
     It recursively finds every file in a source_folder specified in the config
     (see example script 4.select_local.sh) and imports each file into its own
@@ -20,6 +20,8 @@ class Local(Selector):
     directory on the mtriage host to be accessible inside the docker container
     (the media folder is recommended).
     """
+
+    out_etype = Etype.Any
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -40,18 +42,21 @@ class Local(Selector):
         self.logger("Indexing local folder...")
         results = [["id", "path"]]
         for root, _, files in os.walk(abs_src):
+            main = Path(abs_src)
+            root = Path(root)
             for file in files:
-                fp = Path(root) / file
-                results.append([fp.stem, fp])
-                self.logger(f"indexed file: {fp.name}")
+                fp = root / file
+                elid = root.name if (root.name != main.name) else fp.stem
+                results.append([elid, fp])
+                self.logger(f"indexed file {fp} as: {elid}")
         if self.is_aggregate():
             # `self.results` used in `retrieve_element` for paths.
             self.results = results[1:]
-            # NB: hacky way to just make `retrieve_element` run just once.
+            # NB: hacky way to just make `retrieve_element` run just once.:
             return Index([["id"], ["IS_AGGREGATE"]])
         return Index(results)
 
-    def retrieve_element(self, element, config) -> Etype.Any:
+    def retrieve_element(self, element, config):
         if self.is_aggregate():
             og_folder = Path(config["source"])
             return Etype.Any(og_folder.name, paths=[x[1] for x in self.results])

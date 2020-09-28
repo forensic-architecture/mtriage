@@ -14,7 +14,7 @@ MAX_REQUESTS = 15
 
 
 class OcrAnalyser(Analyser):
-    """ This module relies on `gcloud` installed in the Docker container,
+    """This module relies on `gcloud` installed in the Docker container,
     as well as a .config/gcloud with the following capabilities:
     ```
     gcloud services enable vision.googleapis.com

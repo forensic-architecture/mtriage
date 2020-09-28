@@ -8,6 +8,9 @@ from lib.common.etypes import Etype
 
 
 class ImageDedup(Analyser):
+    in_etype = Etype.Image.array()
+    out_etype = Etype.Image.array()
+
     def __create_hasher(self, config):
         hasher_key = config["method"] if "method" in config else "phash"
         self.logger(f"Compare method is {hasher_key}")
@@ -38,9 +41,7 @@ class ImageDedup(Analyser):
     def is_dry(self):
         return "dry" in self.config and self.config["dry"]
 
-    def analyse_element(
-        self, element: Etype.Image.array(), config
-    ) -> Etype.Image.array():
+    def analyse_element(self, element, config):
         # NOTE: only works if all images are in same file, should probably copy for robustness.
         basedir = element.paths[0].parent
         encodings = self.hasher.encode_images(image_dir=basedir)

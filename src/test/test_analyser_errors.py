@@ -3,7 +3,7 @@ import os
 from lib.common.analyser import Analyser
 from test.test_analyser import EmptyAnalyser
 from lib.common.storage import LocalStorage
-from lib.common.etypes import LocalElement
+from lib.common.etypes import Etype, LocalElement
 from lib.common.exceptions import (
     ElementShouldRetryError,
     ElementShouldSkipError,
@@ -14,6 +14,8 @@ from lib.common.exceptions import (
 
 
 class ErrorThrowingAnalyser(Analyser):
+    out_etype = Etype.Any
+
     def __init__(self, *args):
         super().__init__(*args)
         self.retryCount = 0
@@ -99,7 +101,9 @@ def test_bad_init_error(utils):
 
 def test_integration(utils, additionals):
     assert additionals.an.retryCount == 0
-    additionals.an.start_analysing(in_parallel=False)
+    additionals.an.in_parallel = False
+
+    additionals.an.start_analysing()
 
     skip_path = utils.get_element_path(
         additionals.selname, "skip", analyser=additionals.an.name

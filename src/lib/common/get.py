@@ -4,8 +4,8 @@ from lib.common.util import files
 
 
 def get_module(_from, key):
-    """ Dynamically loads in all analysers from the analysers folder, generating a dictionary in which the folder name
-        is the key, and the export from 'main' is the value.
+    """Dynamically loads in all analysers from the analysers folder, generating a dictionary in which the folder name
+    is the key, and the export from 'main' is the value.
     """
     if _from == "select":
         module_folder = f"lib.selectors"

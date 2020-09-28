@@ -16,6 +16,8 @@ from test.utils import scaffold_elementmap, STUB_PATHS, list_files
 
 
 class EmptySelector(Selector):
+    out_etype = Etype.Any
+
     def __init__(self, config, name, dr):
         super().__init__(config, name, dr)
         self.disk.delete_local_on_write = False
@@ -42,6 +44,7 @@ def additionals(utils):
     obj.emptySelector = EmptySelector(
         {"dev": True}, "empty", LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
     )
+    utils.setup()
     yield obj
     utils.cleanup()
 

@@ -9,7 +9,7 @@ MAX_CPUS = multiprocessing.cpu_count() - 1
 def get_batch_size(ls_len):
     """ Determine the batch size for multiprocessing. """
     if ls_len >= MAX_CPUS:
-        return ls_len // MAX_CPUS + 1
+        return ls_len // (MAX_CPUS + 1)
     # TODO: improve this heuristic for splitting up jobs
     return ls_len
 
@@ -39,7 +39,10 @@ def hashdict(_dict):
 
 def subdirs(path: Path) -> List[Path]:
     """ Return a list of Paths for subdirectories in a directory """
-    return [f for f in path.iterdir() if f.is_dir()]
+    if path.is_dir():
+        return [f for f in path.iterdir() if f.is_dir()]
+    else:
+        return []
 
 
 def files(path: Path) -> List[Path]:

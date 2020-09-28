@@ -48,8 +48,8 @@ def __run_core_tests(args):
 
 
 def __run_runpy_tests(args):
-    """ NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
-    using the LOCAL python 3. """
+    """NOTE: runpy tests are not run in a docker container, as they operate on the local machine-- so this test is run
+    using the LOCAL python 3."""
     cmd = (
         ["python3", "-m", "pytest", "-s", "test/"]
         if args.verbose
@@ -59,10 +59,10 @@ def __run_runpy_tests(args):
 
 
 def build(args, is_testing=False):
-    """ Collect all partial Pip and Docker files from selectors and analysers, and combine them with the core mtriage
-        dependencies in src/build in order to create an appropriate Dockerfile and requirements.txt.
-        NOTE: There is currently no way to include/exclude certain selector dependencies, but this build process is
-              the setup for that optionality.
+    """Collect all partial Pip and Docker files from selectors and analysers, and combine them with the core mtriage
+    dependencies in src/build in order to create an appropriate Dockerfile and requirements.txt.
+    NOTE: There is currently no way to include/exclude certain selector dependencies, but this build process is
+          the setup for that optionality.
     """
 
     # setup
