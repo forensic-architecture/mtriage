@@ -27,7 +27,10 @@ class ProtestsPretrained(Analyser):
         t = transform()
         model = modified_resnet50()
         model.load_state_dict(
-            torch.load(PTH_TAR, map_location=torch.device("cpu"),)["state_dict"]
+            torch.load(
+                PTH_TAR,
+                map_location=torch.device("cpu"),
+            )["state_dict"]
         )
         model.eval()
 
