@@ -1,0 +1,6 @@
+desc: Classify the presence of protests and violence in images.
+args:
+   - name: labels
+     desc: Filter results to a limited array of labels.
+     required: true
+     input: whitelist

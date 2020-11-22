@@ -1,6 +1,7 @@
 import glob
 import os
 import shutil
+import traceback
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Generator, List, Union, Tuple
@@ -196,3 +197,4 @@ class Analyser(MTModule):
                 raise e
             else:
                 self.error_logger(f"{str(e)}: skipping element", element)
+                print(traceback.format_exc())
