@@ -30,34 +30,9 @@ Tests coverage is not complete, but they can be run with the following:
 ```
 python ./mtriage dev test
 ```
+## New components
+If you are contributing a new component (i.e. an analyser or a selector),
+ensure that your component lists the correct dependencies. You can do so by
+ensuring that it works in a [standalone custom build](./docs/custom-builds.md).
 
-
-### Testing Components in a Standalone Build
-
-If you are contributing a new analyser or selector, you should confirm that it
-runs without issues in a standalone build. Mtriage uses whitelists to allow the
-creation of standalone builds. Work through the following steps to create
-a custom build with your component:
-
-1. Create a 'whitelist.txt' in the core mtriage directory, which contains
-   a single line with the name of your new component. For example, if your
-   component is called 'MyCustomComponent', your whitelist would look like
-   this:
-    ```
-    MyCustomComponent
-    ```
-2. Create the custom mtriage image with solely your component with the
-   following command:
-   ```
-   ./mtriage build --tag mycustomcomponent --whitelist whitelist.txt
-   ```
-3. Test the running of your component with the following command:
-    ```
-    ./mtriage run path/to/config.yml --tag mycustomcomponent --dev
-    ```
-
-Please note that mtriage is still in a very early stage of development, but we
-will keep updating this document as the code changes.
-
-Thanks again for your interest and for your future contributions!
 
