@@ -1,3 +1,2 @@
-tensorflow==1.15.2
-keras==2.2.4
+tensorflow==2.3.1
 pillow==6.2.0

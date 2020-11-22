@@ -13,6 +13,5 @@ To run all tests, use the following command:
 ```
 ./mtriage dev test
 ```
-
-See docs/custom-components.md for more information on how to write tests for
-a particular component.
+See [docs/custom-components.md](./custom-components.md) for more information on
+how to test a new component.
