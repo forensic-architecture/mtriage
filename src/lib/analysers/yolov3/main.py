@@ -18,8 +18,8 @@ from lib.common.util import vuevis_prepare_el, deduce_frame_no
 
 
 class YoloV3Analyser(Analyser):
-    """ Adapted from eriklindernoren/PyTorch-YOLOv3. See https://github.com/breezykermo/PyTorch-YOLOv3
-        for reference implementation.
+    """Adapted from eriklindernoren/PyTorch-YOLOv3. See https://github.com/breezykermo/PyTorch-YOLOv3
+    for reference implementation.
     """
 
     def pre_analyse(self, config):
@@ -28,7 +28,7 @@ class YoloV3Analyser(Analyser):
         self.MODEL_DEF = f"{RUN_DIR}/config/yolov3.cfg"
         self.WEIGHTS_PATH = f"{RUN_DIR}/config/yolov3.weights"
         self.CLASS_PATH = f"{RUN_DIR}/config/coco.names"
-        self.CONF_THRES = 0.5 # low threshold to get many predictions
+        self.CONF_THRES = 0.5  # low threshold to get many predictions
         self.NMS_THRES = 0.4
         self.BATCH_SIZE = 10
         self.N_CPU = 2
@@ -43,17 +43,19 @@ class YoloV3Analyser(Analyser):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = Darknet(self.MODEL_DEF, img_size=self.IMG_SIZE).to(self.device)
         self.model.load_darknet_weights(self.WEIGHTS_PATH)
-        self.model.eval() 
+        self.model.eval()
 
         t = transforms.Compose(
-                [
-                    transforms.Resize((self.IMG_SIZE,self.IMG_SIZE)),
-                    transforms.ToTensor(),
-                    ]
-                )
+            [
+                transforms.Resize((self.IMG_SIZE, self.IMG_SIZE)),
+                transforms.ToTensor(),
+            ]
+        )
         rLabels = config["labels"]
         classes = load_classes(class_path)  # Extracts class labels from file
-        Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+        Tensor = (
+            torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+        )
 
         def get_preds(img_path):
             """
@@ -66,7 +68,9 @@ class YoloV3Analyser(Analyser):
             # Get detections
             with torch.no_grad():
                 detections = model(input_img)
-                detections = non_max_suppression(detections, self.CONF_THRES, self.NMS_THRES)
+                detections = non_max_suppression(
+                    detections, self.CONF_THRES, self.NMS_THRES
+                )
 
             # squeeze
             detections = detections[0]
@@ -85,7 +89,7 @@ class YoloV3Analyser(Analyser):
                         predictions.append((pred_label, pred_conf))
 
             return predictions
-        
+
         self.get_preds = get_preds
 
         def analyse_element(
