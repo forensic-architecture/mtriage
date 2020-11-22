@@ -1,2 +1,0 @@
-desc: Run inference on an AnnotatedImageArray using a Pytorch implementation of YOLOv3, trained on the COCO dataset.
-args: []
