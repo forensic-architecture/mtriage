@@ -5,6 +5,7 @@ analyse:
   - name: Frames
   - name: KerasPretrained
     config:
+      in_parallel: false
       model: ResNet50
       labels:
         - tank
