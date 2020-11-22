@@ -71,4 +71,3 @@ viable_boards = [
     "x",
     "y",
 ]
-
