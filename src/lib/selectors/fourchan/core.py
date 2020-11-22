@@ -12,7 +12,7 @@ TMP = Path("/tmp")
 
 
 class FourChan(Selector):
-    """ A selector that leverages the native 4chan API.
+    """A selector that leverages the native 4chan API.
 
     https://github.com/4chan/4chan-API
     """
