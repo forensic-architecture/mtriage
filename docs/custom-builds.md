@@ -15,11 +15,9 @@ Hub image).
 
 To exclude the dependencies for certain modules, you can pass a blacklist.txt
 file via flag to the build command:
-
 ```
 ./mtriage dev build --blacklist example.blacklist.txt
 ```
-
 
 Modules specified in the blacklist will *not* be installed in the build. For
 example, if you wanted a build of mtriage with only dependencies for selectors
@@ -44,7 +42,7 @@ a custom build with your component:
 2. Create the custom mtriage image with solely your component with the
    following command:
    ```
-   ./mtriage build --tag mycustomcomponent --whitelist whitelist.txt
+   ./mtriage dev build --tag mycustomcomponent --whitelist whitelist.txt
    ```
 3. Test the running of your component with the following command:
     ```
