@@ -1,0 +1,5 @@
+folder: media/fcs
+select:
+  name: FourChan
+  config:
+    board: "g"
