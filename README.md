@@ -21,7 +21,9 @@ three tutorials:
 * [2. Chaining analysers](docs/tutorial/2/README.md)
 * [3. An end-to-end workflow](docs/tutorial/3/README.md)
 
----
+## latest update
+Updates are posted irregularly; but you can get a sense of what's going on here
+by reading [the latest update](docs/updates/2020.11.22.md).
 
 ## supported components
 
