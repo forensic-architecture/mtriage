@@ -10,9 +10,8 @@ from lib.util.rank_cvjson import rank
 KERAS_HOME = "/mtriage/data/.keras"
 os.environ["KERAS_HOME"] = KERAS_HOME
 
-from keras.preprocessing.image import load_img, img_to_array
 import tensorflow as tf
-
+from tensorflow.keras.preprocessing import image
 
 SUPPORTED_MODELS = {
     "ResNet50": {"module": "resnet50"},
@@ -49,8 +48,8 @@ class KerasPretrained(Analyser):
             self.in_parallel = False
 
         def get_preds(img_path):
-            img = load_img(img_path, target_size=(224, 224))
-            x = img_to_array(img)
+            img = image.load_img(img_path, target_size=(224, 224))
+            x = image.img_to_array(img)
             x = np.expand_dims(x, axis=0)
             x = self.model_module.preprocess_input(x)
             preds = self.model.predict(x)
@@ -62,7 +61,6 @@ class KerasPretrained(Analyser):
             # filter by labels provided in whitelist
             filteredPreds = [p for p in decoded[0] if p[1] in rLabels]
 
-            # return map(lambda x: (x[1], float(x[2])), filteredPreds)
             return [
                 (x[1], float(x[2])) for x in filteredPreds if float(x[2]) >= self.THRESH
             ]
