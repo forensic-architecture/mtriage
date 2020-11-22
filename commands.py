@@ -110,7 +110,7 @@ def build(args, is_testing=False):
             for row in wl:
                 dep = extract_dep(row)
                 print(dep)
-                if dep is not "":
+                if dep != "":
                     BLACKLIST.remove(dep)
 
     for selector in selectors:
