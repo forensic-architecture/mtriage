@@ -74,7 +74,7 @@ def test_index(additionals):
 
 def test_retrieve(additionals, utils):
     additionals.emptySelector.start_indexing()
-    additionals.emptySelector.start_retrieving(in_parallel=False)
+    additionals.emptySelector.start_retrieving()
     pth = additionals.emptySelector.disk.read_query("empty")
     images = [pth / f"{x}/image.jpeg" for x in ["el1", "el2", "el3"]]
     for img in images:

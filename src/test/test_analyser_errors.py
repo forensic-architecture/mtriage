@@ -42,7 +42,7 @@ def additionals(utils):
         with open(f"{utils.get_element_path(obj.selname, element)}/out.txt", "w") as f:
             f.write("something")
 
-    goodConfig = {"elements_in": [obj.selname]}
+    goodConfig = {"elements_in": [obj.selname], "dev": True}
 
     obj.an = ErrorThrowingAnalyser(
         goodConfig, "analyserErrorSelector", LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
@@ -101,7 +101,6 @@ def test_bad_init_error(utils):
 
 def test_integration(utils, additionals):
     assert additionals.an.retryCount == 0
-    additionals.an.in_parallel = False
 
     additionals.an.start_analysing()
 

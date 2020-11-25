@@ -64,19 +64,19 @@ class BadIndexSelector(Selector):
 def additionals(utils):
     obj = lambda: None
     indexModule = "indexErrorSelector"
-    indexConfig = {"error": "index"}
+    indexConfig = {"error": "index", "dev": True}
     obj.indexErrorSelector = BasicErrorSelector(
         indexConfig, indexModule, LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
     )
 
     castModule = "castErrorSelector"
-    castConfig = {}
+    castConfig = {"dev": True}
     obj.castErrorSelector = BasicErrorSelector(
         castConfig, castModule, LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
     )
 
     retrieveModule = "retrieveErrorSelector"
-    retrieveConfig = {}
+    retrieveConfig = {"dev": True}
     obj.retrieveErrorSelector = RetrieveErrorSelector(
         retrieveConfig, retrieveModule, LocalStorage(folder=utils.TEMP_ELEMENT_DIR)
     )
@@ -102,7 +102,7 @@ def test_retrieve_retry_error(additionals):
 def test_integration_1(utils, additionals):
     assert additionals.castErrorSelector.retryCount == 0
     additionals.castErrorSelector.start_indexing()
-    additionals.castErrorSelector.start_retrieving(in_parallel=False)
+    additionals.castErrorSelector.start_retrieving()
 
     skip_path = utils.get_element_path("castErrorSelector", "skip")
     assert not os.path.exists(skip_path)

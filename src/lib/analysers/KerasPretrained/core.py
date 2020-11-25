@@ -24,6 +24,11 @@ class KerasPretrained(Analyser):
     in_etype = Union(Array(Etype.Image), Etype.Json)
     out_etype = Etype.Json
 
+    """ Override to always run serially. Otherwise it hangs, presumably due to
+    some parallelisation that tensorflow does under the hood. """
+    @property
+    def in_parallel(self): return False
+
     def pre_analyse(self, config):
         self.logger(config["model"])
         self.logger(f"Storing models in {KERAS_HOME}")

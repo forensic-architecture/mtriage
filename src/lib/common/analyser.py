@@ -16,7 +16,6 @@ from lib.common.exceptions import (
 from lib.common.mtmodule import MTModule
 from lib.common.storage import Storage
 from lib.common.etypes import LocalElement
-from lib.common.util import MAX_CPUS
 
 
 class Analyser(MTModule):
@@ -75,9 +74,7 @@ class Analyser(MTModule):
             to bypass parallelisation is for testing.
         4. Call user-defined `post_analyse` if it exists.
         5. Save logs, and clear the buffer."""
-        inp = self.config.get("in_parallel")
-        if self.config.get("dev") or (inp is not None and not inp) or MAX_CPUS <= 1:
-            self.in_parallel = False
+
         self.logger(
             f"Running analysis {'in parallel' if self.in_parallel else 'serially'}"
         )

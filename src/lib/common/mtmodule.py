@@ -10,6 +10,7 @@ from itertools import islice, chain
 
 from lib.common.util import hashdict, get_batch_size, batch
 from lib.common.exceptions import ImproperLoggedPhaseError
+from lib.common.util import MAX_CPUS
 
 TWO_INTS = "II"
 RET_VAL_TESTS_ONLY = "no error"
@@ -45,12 +46,20 @@ class MTModule(ABC):
         self.UNIQUE_ID = hashdict(config)
         self.PHASE_KEY = None
         self.__LOGS = []
-        self.in_parallel = True
 
     def get_full_config(self):
         with open(CONFIG_PATH, "r") as c:
             cfg = yaml.safe_load(c)
         return cfg
+
+    @property
+    def in_parallel(self):
+        inp = self.config.get("in_parallel")
+        return not (self.config.get("dev") or (inp is not None and not inp) or MAX_CPUS <= 1)
+
+    @in_parallel.setter
+    def in_parallel(self, boolean):
+        return boolean
 
     def process_batch(self, innards, done_dict, done_queue, batch_num, c, other_args):
         for idx, i in enumerate(c):

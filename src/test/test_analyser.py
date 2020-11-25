@@ -51,7 +51,7 @@ def additionals(utils):
     utils.scaffold_empty(obj.sel2, elements=obj.sel2_elements)
     os.rmdir(utils.get_element_path(obj.sel1, "el1", analyser="an2"))
 
-    obj.config = {"elements_in": obj.WHITELIST}
+    obj.config = {"elements_in": obj.WHITELIST, "dev": True}
     obj.emptyAnalyser = EmptyAnalyser(
         obj.config,
         obj.emptyAnalyserName,
@@ -96,7 +96,6 @@ def test_analyse(utils, additionals):
             "w+",
         ) as f:
             f.write("Hello")
-    dummyAnalyser.in_parallel = False
     dummyAnalyser.start_analysing()
     # confirm txt has carried
     for el in additionals.sel1_elements:

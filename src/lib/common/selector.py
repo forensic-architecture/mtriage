@@ -62,17 +62,14 @@ class Selector(MTModule):
         if element_map is not None:
             self.disk.write_elements_index(self.name, element_map)
 
-    def start_retrieving(self, in_parallel=True):
-        inp = self.config.get("in_parallel")
-        if self.config.get("dev") or (inp is not None and not inp) or MAX_CPUS <= 1:
-            in_parallel = False
+    def start_retrieving(self):
         self.logger(
             f"Running selection {'in parallel' if self.in_parallel else 'serially'}"
         )
 
         self.__pre_retrieve()
         elements = self.disk.read_elements_index(self.name).rows
-        if not in_parallel:
+        if not self.in_parallel:
             try:
                 elements = [e for e in elements]
             except:
