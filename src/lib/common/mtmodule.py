@@ -55,7 +55,9 @@ class MTModule(ABC):
     @property
     def in_parallel(self):
         inp = self.config.get("in_parallel")
-        return not (self.config.get("dev") or (inp is not None and not inp) or MAX_CPUS <= 1)
+        return not (
+            self.config.get("dev") or (inp is not None and not inp) or MAX_CPUS <= 1
+        )
 
     @in_parallel.setter
     def in_parallel(self, boolean):

@@ -26,8 +26,10 @@ class KerasPretrained(Analyser):
 
     """ Override to always run serially. Otherwise it hangs, presumably due to
     some parallelisation that tensorflow does under the hood. """
+
     @property
-    def in_parallel(self): return False
+    def in_parallel(self):
+        return False
 
     def pre_analyse(self, config):
         self.logger(config["model"])
@@ -42,7 +44,9 @@ class KerasPretrained(Analyser):
 
         # TODO: make it so that this doesn't redownload every run.
         # i.e. refactor it into partial.Dockerfile
-        self.model_module = import_module(f"tensorflow.keras.applications.{MOD['module']}")
+        self.model_module = import_module(
+            f"tensorflow.keras.applications.{MOD['module']}"
+        )
         impmodel = getattr(self.model_module, config["model"])
         # NB: this downloads the weights if they don't exist
         self.model = impmodel(weights="imagenet")

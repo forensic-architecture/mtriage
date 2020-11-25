@@ -86,7 +86,7 @@ def add_deps(dep_path, deps, should_add):
         for line in f.readlines():
             if should_add(line, deps):
                 deps.append(line)
-        deps.append('\n') # for good measure
+        deps.append("\n")  # for good measure
 
 
 def extract_dep(csv_row):
