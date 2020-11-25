@@ -37,7 +37,7 @@ class KerasPretrained(Analyser):
 
         # TODO: make it so that this doesn't redownload every run.
         # i.e. refactor it into partial.Dockerfile
-        self.model_module = import_module(f"keras.applications.{MOD['module']}")
+        self.model_module = import_module(f"tensorflow.keras.applications.{MOD['module']}")
         impmodel = getattr(self.model_module, config["model"])
         # NB: this downloads the weights if they don't exist
         self.model = impmodel(weights="imagenet")
