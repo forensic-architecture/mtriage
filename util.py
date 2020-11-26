@@ -77,6 +77,15 @@ def should_add_dockerline(line, dockerfile):
     return line not in dockerfile
 
 
+def lines_from_files(files):
+    """ 'readlines' for a list of files, concatening them all together """
+    lines = []
+    for f in files:
+        with open(f, "r") as fp:
+            lines.extend(fp.readlines())
+    return lines
+
+
 def add_deps(dep_path, deps, should_add):
     """Add dependences at {folder_path} to {deps}, excluding if {should_add} is True for any given dependency."""
     if not os.path.isfile(dep_path):

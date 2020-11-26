@@ -57,7 +57,6 @@ def __run_runpy_tests(args):
     )
     return __run(cmd, args)
 
-
 def build(args, is_testing=False):
     """Collect all partial Pip and Docker files from selectors and analysers, and combine them with the core mtriage
     dependencies in src/build in order to create an appropriate Dockerfile and requirements.txt.
@@ -67,25 +66,23 @@ def build(args, is_testing=False):
 
     # setup
     TAG_NAME = "{}-gpu".format(args.tag) if args.gpu else args.tag
-    DOCKER_BASE = "core-gpu" if args.gpu else "core-cpu"
 
     DOCKERFILE_PARTIAL = "partial.Dockerfile"
     PIP_PARTIAL = "requirements.txt"
     BUILD_DOCKERFILE = "{}/build.Dockerfile".format(DIR_PATH)
     BUILD_PIPFILE = "{}/build.requirements.txt".format(DIR_PATH)
     CORE_PIPDEPS = "{}/src/build/core.requirements.txt".format(DIR_PATH)
-    CORE_START_DOCKER = "{}/src/build/{}.start.Dockerfile".format(DIR_PATH, DOCKER_BASE)
+    CORE_HEADER_DOCKER = "{}/src/build/{}-header.Dockerfile".format(DIR_PATH, 'gpu' if args.gpu else 'cpu')
+    CORE_START_DOCKER = "{}/src/build/core.start.Dockerfile".format(DIR_PATH)
     CORE_END_DOCKER = "{}/src/build/core.end.Dockerfile".format(DIR_PATH)
     ANALYSERS_PATH = "{}/src/lib/analysers".format(DIR_PATH)
     SELECTORS_PATH = "{}/src/lib/selectors".format(DIR_PATH)
     BLACKLIST = []
 
     print("Collecting partial dependencies from selector and analyser folders...")
-    with open(CORE_PIPDEPS) as cdeps:
-        pipdeps = cdeps.readlines()
+    pipdeps = lines_from_files([CORE_PIPDEPS])
 
-    with open(CORE_START_DOCKER) as dfile:
-        dockerlines = dfile.readlines()
+    dockerlines = lines_from_files([CORE_HEADER_DOCKER, CORE_START_DOCKER])
 
     # search all selectors/analysers for partials
     selectors = get_subdirs(SELECTORS_PATH)
