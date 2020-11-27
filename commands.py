@@ -57,6 +57,7 @@ def __run_runpy_tests(args):
     )
     return __run(cmd, args)
 
+
 def build(args, is_testing=False):
     """Collect all partial Pip and Docker files from selectors and analysers, and combine them with the core mtriage
     dependencies in src/build in order to create an appropriate Dockerfile and requirements.txt.
@@ -72,7 +73,9 @@ def build(args, is_testing=False):
     BUILD_DOCKERFILE = "{}/build.Dockerfile".format(DIR_PATH)
     BUILD_PIPFILE = "{}/build.requirements.txt".format(DIR_PATH)
     CORE_PIPDEPS = "{}/src/build/core.requirements.txt".format(DIR_PATH)
-    CORE_HEADER_DOCKER = "{}/src/build/{}-header.Dockerfile".format(DIR_PATH, 'gpu' if args.gpu else 'cpu')
+    CORE_HEADER_DOCKER = "{}/src/build/{}-header.Dockerfile".format(
+        DIR_PATH, "gpu" if args.gpu else "cpu"
+    )
     CORE_START_DOCKER = "{}/src/build/core.start.Dockerfile".format(DIR_PATH)
     CORE_END_DOCKER = "{}/src/build/core.end.Dockerfile".format(DIR_PATH)
     ANALYSERS_PATH = "{}/src/lib/analysers".format(DIR_PATH)
