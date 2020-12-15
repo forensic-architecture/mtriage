@@ -165,7 +165,7 @@ def build(args, is_testing=False):
     res = __run(
         cmd,
         args,
-        "Build successful, run with: \n\tpython run.py develop",
+        "Build successful, run with: \n\t./mtriage run path/to/config.yaml",
         "Something went wrong! EEK",
     )
 
