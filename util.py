@@ -90,7 +90,7 @@ def add_deps(dep_path, deps, should_add):
 
 
 def extract_dep(csv_row):
-    if len(csv_row) is 1:
+    if len(csv_row) == 1:
         return csv_row[0]
     return ""
 
