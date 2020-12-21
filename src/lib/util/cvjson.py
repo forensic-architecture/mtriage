@@ -100,3 +100,12 @@ def flatten(elements: List, logger=print) -> Etype:
         json.dump(frames, f)
 
     return Etype.Json("__FLATTENED", output)
+
+def extract_meta(elements: List, logger=print) -> Etype:
+    return Etype.Json('__META', [])
+
+def generate_meta(elements: List, logger=print) -> Etype:
+    a = flatten(elements, logger=logger)
+    b = extract_meta(elements, logger=logger)
+
+    return Etype.Any('__META', a.paths + b.paths)

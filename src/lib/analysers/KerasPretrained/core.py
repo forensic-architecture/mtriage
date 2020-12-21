@@ -5,7 +5,7 @@ from importlib import import_module
 from lib.common.exceptions import InvalidAnalyserConfigError
 from lib.common.analyser import Analyser
 from lib.common.etypes import Etype, Union, Array
-from lib.util.cvjson import rank
+from lib.util.cvjson import generate_meta
 
 KERAS_HOME = "/mtriage/data/.keras"
 os.environ["KERAS_HOME"] = KERAS_HOME
@@ -84,7 +84,7 @@ class KerasPretrained(Analyser):
         return val
 
     def post_analyse(self, elements) -> Etype.Json:
-        return rank(elements, logger=self.logger)
+        return generate_meta(elements, logger=self.logger)
 
 
 module = KerasPretrained
