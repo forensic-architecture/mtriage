@@ -5,7 +5,7 @@ from importlib import import_module
 from lib.common.exceptions import InvalidAnalyserConfigError
 from lib.common.analyser import Analyser
 from lib.common.etypes import Etype, Union, Array
-from lib.util.rank_cvjson import rank
+from lib.util.cvjson import rank
 
 KERAS_HOME = "/mtriage/data/.keras"
 os.environ["KERAS_HOME"] = KERAS_HOME

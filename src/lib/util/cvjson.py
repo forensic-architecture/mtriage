@@ -1,13 +1,14 @@
 import os
 import json
 import operator
+import re
 from typing import List
 from shutil import copyfile, rmtree
 from pathlib import Path
 from lib.common.etypes import Etype
+from functools import reduce
 
 WK_DIR = Path("/tmp/ranking")
-
 
 def rank(elements: List, threshold=0.5, logger=print, element_id="__RANKING") -> Etype:
     ranking_data = {}
@@ -51,13 +52,51 @@ def rank(elements: List, threshold=0.5, logger=print, element_id="__RANKING") ->
         s_els = [t[0] for t in s_vals]
         ranking[label] = s_els
 
-    path = WK_DIR / "all"
-    if not os.path.exists(path):
-        os.makedirs(path)
-    file = path / "rankings.json"
+    file = WK_DIR / "rankings.json"
     logger("All rankings aggregated, printed to all/rankings.json")
+
+    if not os.path.exists(WK_DIR):
+        os.makedirs(WK_DIR)
 
     with open(file, "w") as f:
         json.dump(ranking, f)
 
     return Etype.Json(element_id, file)
+
+def open_json(fp):
+    try:
+        with open(fp, 'r') as f:
+            return json.load(f)
+    except:
+        return {}
+
+def render_frame(element, label, frame, score):
+    return { "element": element, "frame": frame, "score": score, "label": label }
+
+def flatten(elements: List, logger=print) -> Etype:
+    """
+    Flatten all frames.
+[
+    { "element": "xxxx", "frame": 1, "score": 0.2, "label": "tank" },
+]
+    """
+    is_json = re.compile(r'.*\.json')
+    # NOTE: assumes there is always one .json in each element's `paths`
+    all_preds = [next(filter(is_json.match, [str(x) for x in x.paths])) for x in elements]
+    all_preds = [open_json(x) for x in all_preds]
+    preds = [x.get("labels") for x in all_preds if isinstance(x, dict) and x.get("labels") is not None]
+
+    vls = [[(label, el_preds[label]) for label in el_preds.keys()] for el_preds in preds]
+    vls = [(x[0].id, x[1]) for x in zip(elements, vls)]
+    label_in_els = [(x[0], y[0], y[1]["frames"], y[1]["scores"]) for x in vls for y in x[1]]
+    frames = [render_frame(x[0], x[1], y[0], y[1]) for x in label_in_els for y in zip(x[2], x[3])]
+
+    output = WK_DIR / "flattened.json"
+
+    if not os.path.exists(WK_DIR):
+        os.makedirs(WK_DIR)
+
+    with open(output, "w") as f:
+        json.dump(frames, f)
+
+    return Etype.Json("__FLATTENED", output)
