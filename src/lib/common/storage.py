@@ -1,6 +1,7 @@
 import os
 import csv
 import shutil
+import datetime
 import json
 from pathlib import Path
 from types import GeneratorType, SimpleNamespace as Ns
@@ -162,8 +163,9 @@ class LocalStorage(Storage):
 
     def write_meta(self, q: str, meta: dict):
         dest = self.read_query(q) / self.__META_FILE
+        meta["timestamp"] = datetime.datetime.now()
         with open(dest, "w") as f:
-            json.dump(meta, f)
+            json.dump(meta, f, indent=4, sort_keys=True, default=str)
 
     def read_all_media(self):
         """Get all available media by indexing the dir system from self.BASE_DIR.

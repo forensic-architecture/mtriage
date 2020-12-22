@@ -10,6 +10,18 @@ from functools import reduce
 
 WK_DIR = Path("/tmp/ranking")
 
+def open_json(fp):
+    try:
+        with open(fp, 'r') as f:
+            return json.load(f)
+    except:
+        return {}
+
+
+def render_frame(element, label, frame, score):
+    return { "element": element, "frame": frame, "score": score, "label": label }
+
+
 def rank(elements: List, threshold=0.5, logger=print, element_id="__RANKING") -> Etype:
     ranking_data = {}
 
@@ -53,7 +65,7 @@ def rank(elements: List, threshold=0.5, logger=print, element_id="__RANKING") ->
         ranking[label] = s_els
 
     file = WK_DIR / "rankings.json"
-    logger("All rankings aggregated, printed to all/rankings.json")
+    logger("All rankings aggregated, printed to rankings.json")
 
     if not os.path.exists(WK_DIR):
         os.makedirs(WK_DIR)
@@ -63,22 +75,12 @@ def rank(elements: List, threshold=0.5, logger=print, element_id="__RANKING") ->
 
     return Etype.Json(element_id, file)
 
-def open_json(fp):
-    try:
-        with open(fp, 'r') as f:
-            return json.load(f)
-    except:
-        return {}
-
-def render_frame(element, label, frame, score):
-    return { "element": element, "frame": frame, "score": score, "label": label }
-
 def flatten(elements: List, logger=print) -> Etype:
     """
-    Flatten all frames.
-[
-    { "element": "xxxx", "frame": 1, "score": 0.2, "label": "tank" },
-]
+    'Flatten' all predictions into a list, where each item is a positive frame:
+    [
+        { "element": "xxxx", "frame": 1, "score": 0.2, "label": "tank" },
+    ]
     """
     is_json = re.compile(r'.*\.json')
     # NOTE: assumes there is always one .json in each element's `paths`
@@ -99,13 +101,12 @@ def flatten(elements: List, logger=print) -> Etype:
     with open(output, "w") as f:
         json.dump(frames, f)
 
+    logger("All frames aggregated, printed to flattened.json")
     return Etype.Json("__FLATTENED", output)
 
-def extract_meta(elements: List, logger=print) -> Etype:
-    return Etype.Json('__META', [])
-
 def generate_meta(elements: List, logger=print) -> Etype:
+    """ Combine various metrics inside a single element """
     a = flatten(elements, logger=logger)
-    b = extract_meta(elements, logger=logger)
+    b = rank(elements, logger=logger)
 
     return Etype.Any('__META', a.paths + b.paths)

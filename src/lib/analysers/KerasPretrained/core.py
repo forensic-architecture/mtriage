@@ -22,10 +22,9 @@ SUPPORTED_MODELS = {
 
 class KerasPretrained(Analyser):
     in_etype = Union(Array(Etype.Image), Etype.Json)
-    out_etype = Etype.Json
-
+    out_etype = Etype.Json.as_array()
     """ Override to always run serially. Otherwise it hangs, presumably due to
-    some parallelisation that tensorflow does under the hood. """
+    the parallelisation that tensorflow does under the hood. """
 
     @property
     def in_parallel(self):
@@ -51,10 +50,6 @@ class KerasPretrained(Analyser):
         # NB: this downloads the weights if they don't exist
         self.model = impmodel(weights="imagenet")
         self.THRESH = 0.1
-
-        # revert to serial if CPU (TODO: debug why parallel CPU doesn't work)
-        if not tf.test.is_gpu_available():
-            self.in_parallel = False
 
         def get_preds(img_path):
             img = image.load_img(img_path, target_size=(224, 224))
@@ -83,7 +78,7 @@ class KerasPretrained(Analyser):
         self.disk.delete_local_on_write = True
         return val
 
-    def post_analyse(self, elements) -> Etype.Json:
+    def post_analyse(self, elements) -> Etype.Json.as_array():
         return generate_meta(elements, logger=self.logger)
 
 
