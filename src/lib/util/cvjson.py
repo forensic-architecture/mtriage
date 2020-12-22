@@ -10,16 +10,17 @@ from functools import reduce
 
 WK_DIR = Path("/tmp/ranking")
 
+
 def open_json(fp):
     try:
-        with open(fp, 'r') as f:
+        with open(fp, "r") as f:
             return json.load(f)
     except:
         return {}
 
 
 def render_frame(element, label, frame, score):
-    return { "element": element, "frame": frame, "score": score, "label": label }
+    return {"element": element, "frame": frame, "score": score, "label": label}
 
 
 def rank(elements: List, threshold=0.5, logger=print, element_id="__RANKING") -> Etype:
@@ -75,6 +76,7 @@ def rank(elements: List, threshold=0.5, logger=print, element_id="__RANKING") ->
 
     return Etype.Json(element_id, file)
 
+
 def flatten(elements: List, logger=print) -> Etype:
     """
     'Flatten' all predictions into a list, where each item is a positive frame:
@@ -82,16 +84,30 @@ def flatten(elements: List, logger=print) -> Etype:
         { "element": "xxxx", "frame": 1, "score": 0.2, "label": "tank" },
     ]
     """
-    is_json = re.compile(r'.*\.json')
+    is_json = re.compile(r".*\.json")
     # NOTE: assumes there is always one .json in each element's `paths`
-    all_preds = [next(filter(is_json.match, [str(x) for x in x.paths])) for x in elements]
+    all_preds = [
+        next(filter(is_json.match, [str(x) for x in x.paths])) for x in elements
+    ]
     all_preds = [open_json(x) for x in all_preds]
-    preds = [x.get("labels") for x in all_preds if isinstance(x, dict) and x.get("labels") is not None]
+    preds = [
+        x.get("labels")
+        for x in all_preds
+        if isinstance(x, dict) and x.get("labels") is not None
+    ]
 
-    vls = [[(label, el_preds[label]) for label in el_preds.keys()] for el_preds in preds]
+    vls = [
+        [(label, el_preds[label]) for label in el_preds.keys()] for el_preds in preds
+    ]
     vls = [(x[0].id, x[1]) for x in zip(elements, vls)]
-    label_in_els = [(x[0], y[0], y[1]["frames"], y[1]["scores"]) for x in vls for y in x[1]]
-    frames = [render_frame(x[0], x[1], y[0], y[1]) for x in label_in_els for y in zip(x[2], x[3])]
+    label_in_els = [
+        (x[0], y[0], y[1]["frames"], y[1]["scores"]) for x in vls for y in x[1]
+    ]
+    frames = [
+        render_frame(x[0], x[1], y[0], y[1])
+        for x in label_in_els
+        for y in zip(x[2], x[3])
+    ]
 
     output = WK_DIR / "flattened.json"
 
@@ -104,9 +120,10 @@ def flatten(elements: List, logger=print) -> Etype:
     logger("All frames aggregated, printed to flattened.json")
     return Etype.Json("__FLATTENED", output)
 
+
 def generate_meta(elements: List, logger=print) -> Etype:
     """ Combine various metrics inside a single element """
     a = flatten(elements, logger=logger)
     b = rank(elements, logger=logger)
 
-    return Etype.Any('__META', a.paths + b.paths)
+    return Etype.Any("__META", a.paths + b.paths)

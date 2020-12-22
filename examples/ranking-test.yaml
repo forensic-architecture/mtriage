@@ -1,0 +1,7 @@
+folder: media/example
+elements_in:
+  - Youtube
+analyse:
+  name: Flatten
+  config:
+    dev: true

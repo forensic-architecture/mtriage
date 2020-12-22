@@ -32,6 +32,7 @@ def prepare_json(path):
 class CvJson(Et):
     """A custom Etype for computer vision (CV) json files, representing
     predictions on a set of frames."""
+
     def __repr__(self):
         return "CvJson"
 

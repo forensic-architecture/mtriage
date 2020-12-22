@@ -50,4 +50,5 @@ def test_write_meta(basic):
     basic.write_meta(q, og_data)
     with open(f"{basic.read_query(q)}/{basic._LocalStorage__META_FILE}", "r") as f:
         data = json.load(f)
-    assert data == og_data
+    assert data.get("some") == "data"
+    assert data.get("timestamp") is not None
