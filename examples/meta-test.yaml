@@ -1,0 +1,7 @@
+folder: media/example
+elements_in:
+  - Youtube/KerasPretrained
+analyse:
+  name: AnalysedFramesMeta
+  config:
+    dev: true

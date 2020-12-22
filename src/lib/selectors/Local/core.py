@@ -41,10 +41,13 @@ class Local(Selector):
     def _index(self, abs_src):
         self.logger("Indexing local folder...")
         results = [["id", "path"]]
+        excluded = self.config.get("exclude", [])
         for root, _, files in os.walk(abs_src):
             main = Path(abs_src)
             root = Path(root)
             for file in files:
+                if file == ".mtbatch" or file in excluded:
+                    continue
                 fp = root / file
                 elid = root.name if (root.name != main.name) else fp.stem
                 results.append([elid, fp])

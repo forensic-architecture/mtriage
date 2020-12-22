@@ -8,3 +8,7 @@ args:
     desc: Put all inside one element. Otherwise will create one element per separate file.
     required: false
     input: bool
+  - name: exclude
+    desc: files to exclude
+    required: false
+    input: list

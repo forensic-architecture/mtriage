@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import sys
-from commands import parse_args, build, develop, clean, run_tests, run
+from commands import parse_args, build, develop, clean, run_tests, run, export
 
 DEV_COMMANDS = {"develop": develop, "build": build, "test": run_tests, "clean": clean}
 
@@ -10,5 +10,7 @@ if __name__ == "__main__":
 
     if ARGS.base == "dev":
         DEV_COMMANDS[ARGS.command](ARGS)
+    elif ARGS.base == "export":
+        export(ARGS)
     else:
         run(ARGS)

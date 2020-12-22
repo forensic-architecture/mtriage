@@ -289,6 +289,10 @@ def run(args):
         clean(args)
 
 
+def export(args):
+    print("TODO: export functionality not yet implemented.")
+
+
 def parse_args(cli_args):
     parser = argparse.ArgumentParser(description="mtriage dev scripts")
     subparsers = parser.add_subparsers(dest="base")
@@ -316,5 +320,9 @@ def parse_args(cli_args):
         const="develop",
         nargs="?",
     )
+
+    export_p = subparsers.add_parser("export")
+    export_p.add_argument("-q", default=None)
+    export_p.add_argument("-o", default=None)
 
     return parser.parse_args(cli_args)
