@@ -6,6 +6,7 @@ from lib.common.exceptions import InvalidAnalyserConfigError
 from lib.common.analyser import Analyser
 from lib.common.etypes import Etype, Union, Array
 from lib.util.cvjson import generate_meta
+from lib.etypes.cvjson import CvJson
 
 KERAS_HOME = "/mtriage/data/.keras"
 os.environ["KERAS_HOME"] = KERAS_HOME
@@ -22,7 +23,7 @@ SUPPORTED_MODELS = {
 
 class KerasPretrained(Analyser):
     in_etype = Union(Array(Etype.Image), Etype.Json)
-    out_etype = Etype.Json.as_array()
+    out_etype = CvJson
     """ Override to always run serially. Otherwise it hangs, presumably due to
     the parallelisation that tensorflow does under the hood. """
 
