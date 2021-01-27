@@ -7,6 +7,7 @@ from functools import partial, wraps
 from types import GeneratorType
 from typing import Generator
 from itertools import islice, chain
+from pathlib import Path
 
 from lib.common.util import hashdict, get_batch_size, batch
 from lib.common.exceptions import ImproperLoggedPhaseError
@@ -42,6 +43,7 @@ class MTModule(ABC):
         self.config = config
         self.name = name
         self.disk = storage
+        self.base_path = Path("/mtriage")
 
         self.UNIQUE_ID = hashdict(config)
         self.PHASE_KEY = None
