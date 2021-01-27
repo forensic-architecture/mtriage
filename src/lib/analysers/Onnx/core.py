@@ -1,11 +1,15 @@
 from lib.common.analyser import Analyser
 from lib.common.exceptions import ElementShouldSkipError
 from lib.common.etypes import Etype, Union, Array
+from pathlib import Path
 import json
 import onnx
-import cv2
-import onnxruntime as rt
-import numpy as np
+import onnxruntime
+from torchvision import transforms
+from PIL import Image
+
+def to_numpy(tensor):
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
 
 class Onnx(Analyser):
     """ Code adapted from https://thenewstack.io/tutorial-using-a-pre-trained-onnx-model-for-inferencing/ """
@@ -14,24 +18,30 @@ class Onnx(Analyser):
 
     def pre_analyse(self, config):
         print(f"pre-analysing with onnx...")
-        self.session = rt.InferenceSession(f"/mtriage/{self.config['model']}")
-        print(f"The model expects input shape: {self.session.get_inputs()[0].shape}")
+        self.model_path = self.base_path / self.config["model"]
+        onnx_model = onnx.load(str(self.model_path))
+        onnx.checker.check_model(onnx_model)
+        self.session = onnxruntime.InferenceSession(str(self.model_path))
+        self.input_layer_name = self.session.get_inputs()[0].name
+        # print(f"The model expects input shape: {self.session.get_inputs()[0].shape}")
+
+    def infer(self, input_tensor):
+        inputs = {self.input_layer_name: input_tensor}
+        outs = self.session.run(None, inputs)
+        return outs[0]
 
     def analyse_element(self, element, config):
-        p = element.paths[0] # assume one image for now
-        img = cv2.imread(str(p))
-        img = img[..., :3]
-        img = cv2.resize(img, dsize=(640,640), interpolation=cv2.INTER_AREA) # TODO: this size from onnx model
-        img.resize((1,3,640,640))
-
-        data = json.dumps({'data': img.tolist()})
-        data = np.array(json.loads(data)['data']).astype('float32')
-
-        input_name = self.session.get_inputs()[0].name
-        output_name = self.session.get_outputs()[0].name
-
-        result = session.run([output_name], {input_name: data})
-        # TODO: now what? how to extract the predictions?
+        # input needs to be a numpy array with the right shape
+        for pth in element.paths:
+            img = Image.open(pth)
+            resize = transforms.Resize([224, 224])
+            img = resize(img)
+            to_tensor = transforms.ToTensor()
+            img_y = to_tensor(img)
+            img_y.unsqueeze_(0)
+            input_tensor = to_numpy(img_y)
+            preds = self.infer(input_tensor)
+        # TODO: do something with `preds`
 
         return element
 

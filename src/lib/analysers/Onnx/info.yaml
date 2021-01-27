@@ -1,4 +1,4 @@
-desc: Classify objects in images using an ONNX model. Inference is run on each image using the specified model, and the labels for the top 10 predictions will be retained in an output JSON of ImageFrameJson format.
+desc: Classify objects in images using an ONNX model. Inference is run on each image using the specified model, and the labels for the top 10 predictions will be retained in an output JSON of ImageFrameJson format. The input size for the ONNX model _must_ be 224x224.
 args:
   - name: model
     desc: The path to the ONNX model you want to use to classify.
