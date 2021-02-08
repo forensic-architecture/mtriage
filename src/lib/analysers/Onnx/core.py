@@ -28,6 +28,7 @@ class Onnx(Analyser):
     def infer(self, input_tensor):
         inputs = {self.input_layer_name: input_tensor}
         outs = self.session.run(None, inputs)
+        import pdb; pdb.set_trace();
         return outs[0]
 
     def analyse_element(self, element, config):
@@ -45,8 +46,8 @@ class Onnx(Analyser):
             img_y.unsqueeze_(0)
             input_tensor = to_numpy(img_y)
             preds = self.infer(input_tensor)
-            self.logger(preds)
-        # TODO: do something with `preds`
+            self.logger(preds.shape)
+            # TODO: do something with `preds`
 
         return element
 
