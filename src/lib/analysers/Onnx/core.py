@@ -34,6 +34,10 @@ class Onnx(Analyser):
         # input needs to be a numpy array with the right shape
         for pth in element.paths:
             img = Image.open(pth)
+            # NB: default crop in torchvision.transforms in bilinear interpoloation
+            # TODO: experiment with other resizing heuristics such as croping the source
+            # image multiple times and average over the predictions.
+            # See https://docs.fast.ai/vision.augment.html
             resize = transforms.Resize([224, 224])
             img = resize(img)
             to_tensor = transforms.ToTensor()
@@ -41,6 +45,7 @@ class Onnx(Analyser):
             img_y.unsqueeze_(0)
             input_tensor = to_numpy(img_y)
             preds = self.infer(input_tensor)
+            self.logger(preds)
         # TODO: do something with `preds`
 
         return element
