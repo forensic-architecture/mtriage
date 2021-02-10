@@ -1,0 +1,14 @@
+desc: Run inference using weights trained with https://github.com/ultralytics/yolov5
+args:
+  - name: repo
+    desc: Github repository from which to load the Torch hub model, i.e. 'ultralytics/yolov5'
+    required: true
+    input: string
+  - name: args
+    desc: Arguments for `torch.hub.load()` function.
+    required: false
+    input: list
+  - name: kwargs
+    desc: Keyword arguments for `torch.hub.load()` function
+    required: false
+    input: dict

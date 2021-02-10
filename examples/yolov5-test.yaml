@@ -1,0 +1,15 @@
+folder: media/yolov5
+select:
+  name: Local
+  config:
+    source: data/images
+    aggregate: true
+analyse:
+  name: TorchHub
+  config:
+    dev: true
+    repo: ultralytics/yolov5
+    args:
+      - yolov5s
+    kwargs:
+      pretrained: true

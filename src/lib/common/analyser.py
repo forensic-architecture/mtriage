@@ -107,6 +107,10 @@ class Analyser(MTModule):
             raise InvalidAnalyserElements(
                 f"The 'elements_in' you specified does not exist on the storage specified."
             )
+
+        if len(elements) == 0:
+            raise InvalidAnalyserElements("No elements could be found at the location you tried to select or passed in.")
+
         if self.in_parallel:
             self.analyse((e for e in elements))
         else:
