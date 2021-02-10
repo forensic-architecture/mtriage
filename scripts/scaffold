@@ -48,7 +48,7 @@ os.mkdir(BASE_PATH / name)
 with open(base/"core.py", "w+") as f:
     f.write(core_base(name))
 
-with open(base/"requirements.txt") as f:
+with open(base/"info.yaml", "w+") as f:
     f.write(infoyaml_base(desc))
 
 
