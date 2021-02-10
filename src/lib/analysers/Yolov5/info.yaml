@@ -1,0 +1,6 @@
+desc: Run inference using weights trained with https://github.com/ultralytics/yolov5
+args:
+  - name: myarg
+    desc: Optional description
+    required: false
+    input: string
