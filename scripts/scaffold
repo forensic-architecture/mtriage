@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+import os
+import sys
+from pathlib import Path
+
+BASE_PATH = Path(os.path.dirname(os.path.abspath(__file__))) / "../src/lib/analysers"
+
+def is_camel_case(s):
+    return s != s.lower() and s != s.upper() and "_" not in s
+
+def core_base(name): return f'''
+from lib.common.analyser import Analyser
+from lib.common.etypes import Etype
+
+class {name}(Analyser):
+    in_etype = Etype.Any
+    out_etype = Etype.Any
+
+    def analyse_element(self, element, config):
+        return element
+
+module = {name}
+'''
+
+def infoyaml_base(desc): return f'''
+desc: {desc}
+args:
+  - name: myarg
+    desc: Optional description
+    required: false
+    input: string
+'''
+
+name = input("New analyser name: ")
+desc = input("Basic description for new analyser: ")
+
+if not is_camel_case(name):
+    print("An analyser must be CamelCase")
+    sys.exit()
+
+base = BASE_PATH / name
+if os.path.exists(base) and os.path.isdir(base):
+    print(f'An analyser named "{name}" already exists.')
+    sys.exit()
+
+os.mkdir(BASE_PATH / name)
+
+with open(base/"core.py", "w+") as f:
+    f.write(core_base(name))
+
+with open(base/"info.yaml", "w+") as f:
+    f.write(infoyaml_base(desc))
+
+
