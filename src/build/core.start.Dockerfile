@@ -5,7 +5,7 @@ RUN apt-get update && \
 # ==================================================================
 # tools
 # ------------------------------------------------------------------
-    apt-get install -y --no-install-recommends \
+    DEBIAN_FRONTEND=noninteractive apt-get update && $APT_INSTALL \
         build-essential \
         apt-utils \
         ca-certificates \
@@ -18,7 +18,12 @@ RUN apt-get update && \
 # ==================================================================
 # python
 # ------------------------------------------------------------------
+    DEBIAN_FRONTEND=noninteractive apt-get update && $APT_INSTALL \
         software-properties-common \
+        && \
+    # add-apt-repository ppa:deadsnakes/ppa && \
+    # apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get update && $APT_INSTALL \
         python3.7 \
         python3.7-dev \
         python3-distutils-extra \

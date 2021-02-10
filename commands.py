@@ -12,17 +12,8 @@ HOME_PATH = os.path.expanduser("~")
 
 def __run(cmd, cli_args, *args):
     if cli_args.dry:
-        print(" ".join(cmd))
         return cmd
-    try:
-        returncode = sp.call(cmd)
-        if len(args) >= 1:
-            print(args[0])
-        return returncode
-    except:
-        if len(args) >= 2:
-            print(args[1])
-
+    return sp.call(cmd)
 
 def __run_core_tests(args):
     return __run(
@@ -109,7 +100,6 @@ def build(args, is_testing=False):
             wl = csv.reader(f, delimiter=" ")
             for row in wl:
                 dep = extract_dep(row)
-                print(dep)
                 if dep != "":
                     BLACKLIST.remove(dep)
 
