@@ -1,6 +1,0 @@
-desc: Run inference using ultralytics/yolov5, either using the default weights or using weights further trained using the mechanisms in this repo.
-args:
-  - name: weights
-    desc: Path to weights
-    required: false
-    input: path
