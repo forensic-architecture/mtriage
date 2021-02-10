@@ -5,28 +5,19 @@ RUN apt-get update && \
 # ==================================================================
 # tools
 # ------------------------------------------------------------------
-    DEBIAN_FRONTEND=noninteractive apt-get update && $APT_INSTALL \
+    DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
+		# core
         build-essential \
         apt-utils \
         ca-certificates \
-        wget \
-        git \
-        vim \
-        curl \
-        unzip \
-        unrar \
-# ==================================================================
-# python
-# ------------------------------------------------------------------
-    DEBIAN_FRONTEND=noninteractive apt-get update && $APT_INSTALL \
+		wget \
+		# python
         software-properties-common \
-        && \
-    # add-apt-repository ppa:deadsnakes/ppa && \
-    # apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get update && $APT_INSTALL \
         python3.7 \
         python3.7-dev \
         python3-distutils-extra \
+		# dev
+		# git vim curl unzip unrar \
         && \
     wget -O ~/get-pip.py \
         https://bootstrap.pypa.io/get-pip.py && \
