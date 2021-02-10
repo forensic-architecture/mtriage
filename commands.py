@@ -15,6 +15,7 @@ def __run(cmd, cli_args, *args):
         return cmd
     return sp.call(cmd)
 
+
 def __run_core_tests(args):
     return __run(
         [
