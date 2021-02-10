@@ -19,13 +19,14 @@ def deduce_frame_no(path):
 
 def prepare_json(path):
     out = {}
-    with open(path, "r") as f:
-        f = json.load(f)
-        out["title"] = f["title"]
-        out["description"] = f["description"]
-        out["webpage_url"] = f["webpage_url"]
-        out["duration"] = f["duration"]
-        out["upload_date"] = f["upload_date"]
+    if path is not None:
+        with open(path, "r") as f:
+            f = json.load(f)
+            out["title"] = f["title"]
+            out["description"] = f["description"]
+            out["webpage_url"] = f["webpage_url"]
+            out["duration"] = f["duration"]
+            out["upload_date"] = f["upload_date"]
     return out
 
 
@@ -53,6 +54,18 @@ class CvJson(Et):
 
     @staticmethod
     def from_preds(element, get_preds):
+        """ Generate an element containing classifier predictions in a format
+        appropriate for CvJson, i.e. a single JSON file 'preds.json' that
+        contains an object representing which classes are predicted for each
+        frame.
+
+        This function assumes that `element.paths` represents an array of images
+        to be interpreted. The `get_preds` function operates on a single image,
+        accepting one argument that is a path to an image. It returns a list of
+        tuples `('classname', 0.8)`, where `'classname'` is a string
+        representing the class predicted, and `0.8` is the normalized prediction
+        probability between 0 and 1. See KerasPretrained/core.py in analysers
+        for an example. """
         imgs = [p for p in element.paths if p.suffix in IMG_SFXS]
         labels = {}
         for imp in imgs:
@@ -64,7 +77,8 @@ class CvJson(Et):
                 else:
                     labels[pred_label] = {"frames": [frame_no], "scores": [pred_conf]}
 
-        meta = [p for p in element.paths if p.suffix in ".json"][0]
+        meta = [p for p in element.paths if p.suffix in ".json"]
+        meta = meta[0] if len(meta) > 0 else None
         out = {**prepare_json(meta), "labels": labels}
         base = TMP / element.id
         base.mkdir(parents=True, exist_ok=True)

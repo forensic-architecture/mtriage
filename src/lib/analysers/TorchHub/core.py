@@ -4,6 +4,14 @@ from lib.common.etypes import Etype
 from PIL import Image
 import torch
 
+def cls_and_conf(pred, names):
+    # `pred` is an array with 6 values: x1, y1, x2, y2, confidence, class
+    _,_,_,_,conf,cl = pred
+    cl = names[int(cl)]
+    conf = float(conf)
+    return (cl, conf)
+
+
 class TorchHub(Analyser):
     in_etype = Etype.Any
     out_etype = Etype.Any
@@ -19,12 +27,14 @@ class TorchHub(Analyser):
 
     def analyse_element(self, element, config):
         imgs = [Image.open(x) for x in element.paths]
-        results = self.model(imgs)
-        # x1, y1, x2, y2, confidence, class
+        results = self.model(imgs).tolist()
+        self.logger(f"Batched inference successfully run for element {element.id}.")
 
-        import pdb; pdb.set_trace()
+        def get_preds(img_path):
+            idx = element.paths.index(img_path)
+            result = results[idx]
+            return [cls_and_conf(p, result.names) for p in result.pred]
 
-        # results =
-        return element
+        return Etype.CvJson.from_preds(element, get_preds)
 
 module = TorchHub
