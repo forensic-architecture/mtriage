@@ -123,7 +123,6 @@ class Analyser(MTModule):
 
     # setter for dest_q. NOTE: abstraction leak from mtmodule parallelisation..
     def set_dest_q(self, value):
-        print("Setting dest q")
         if self.in_parallel:
             self.dest_q.value = value
         else:
