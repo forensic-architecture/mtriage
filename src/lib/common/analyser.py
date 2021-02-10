@@ -107,6 +107,10 @@ class Analyser(MTModule):
             raise InvalidAnalyserElements(
                 f"The 'elements_in' you specified does not exist on the storage specified."
             )
+
+        if len(elements) == 0:
+            raise InvalidAnalyserElements("No elements could be found at the location you tried to select or passed in.")
+
         if self.in_parallel:
             self.analyse((e for e in elements))
         else:
@@ -119,6 +123,7 @@ class Analyser(MTModule):
 
     # setter for dest_q. NOTE: abstraction leak from mtmodule parallelisation..
     def set_dest_q(self, value):
+        print("Setting dest q")
         if self.in_parallel:
             self.dest_q.value = value
         else:
