@@ -1,0 +1,6 @@
+desc: Run inference with weights produced by training via icevision based on FasterRCNN.
+args:
+  - name: myarg
+    desc: Optional description
+    required: false
+    input: string
