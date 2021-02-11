@@ -1,11 +1,11 @@
-folder: media/icevision
+folder: media/pytorchfasterrcnn
 select:
   name: Local
   config:
     source: data/images
     aggregate: true
 analyse:
-  name: IcevisionFasterRcnn
+  name: PytorchFasterRcnn
   config:
     dev: true
     model: data/sean1.pth

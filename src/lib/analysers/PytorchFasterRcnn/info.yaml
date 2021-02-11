@@ -1,0 +1,14 @@
+desc: Run inference with weights produced by transfer learning from a FasterRCNN backbone.
+args:
+  - name: model
+    desc: Relative path to the 'model.pth' file that holds the weights of the transfer-learned model. Must use `fasterrcnn_resnet50_fpn` as a backbone for now.
+    required: true
+    input: path
+  - name: class_map
+    desc: A list of the class names that correspond to the indices returned (in `output['labels']`).
+    required: true
+    input: list
+  - name: threshold
+    desc: The cutoff for predictions, between 0 and 1. Defaults to 0.5.
+    required: false
+    input: number

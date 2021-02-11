@@ -7,11 +7,12 @@ from lib.common.analyser import Analyser
 from lib.common.etypes import Etype
 
 
-class IcevisionFasterRcnn(Analyser):
+class PytorchFasterRcnn(Analyser):
     in_etype = Etype.Any
     out_etype = Etype.Any
 
     def pre_analyse(self, config):
+        # NB: in future this could be configurable.
         model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False, num_classes=6)
         if torch.cuda.is_available():
             model.cuda()
@@ -39,4 +40,4 @@ class IcevisionFasterRcnn(Analyser):
         self.logger(f"Running inference for {element.id}...")
         return Etype.CvJson.from_preds(element, get_preds)
 
-module = IcevisionFasterRcnn
+module = PytorchFasterRcnn
