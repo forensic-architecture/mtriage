@@ -8,8 +8,7 @@ BASE_PATH = Path(os.path.dirname(os.path.abspath(__file__))) / "../src/lib/analy
 def is_camel_case(s):
     return s != s.lower() and s != s.upper() and "_" not in s
 
-def core_base(name): return f'''
-from lib.common.analyser import Analyser
+def core_base(name): return f'''from lib.common.analyser import Analyser
 from lib.common.etypes import Etype
 
 class {name}(Analyser):
@@ -19,11 +18,9 @@ class {name}(Analyser):
     def analyse_element(self, element, config):
         return element
 
-module = {name}
-'''
+module = {name}'''
 
-def infoyaml_base(desc): return f'''
-desc: {desc}
+def infoyaml_base(desc): return f'''desc: {desc}
 args:
   - name: myarg
     desc: Optional description
