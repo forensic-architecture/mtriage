@@ -1,0 +1,20 @@
+folder: media/icevision
+select:
+  name: Local
+  config:
+    source: data/images
+    aggregate: true
+analyse:
+  name: IcevisionFasterRcnn
+  config:
+    dev: true
+    model: data/sean1.pth
+    class_map:
+      - background
+      - canister
+      - cylinder
+      - can
+      - bottle
+      - bin
+
+

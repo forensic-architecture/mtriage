@@ -1,0 +1,4 @@
+# icevision
+Pillow
+torch
+torchvision
