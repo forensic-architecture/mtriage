@@ -1,0 +1,21 @@
+folder: media/pytorchfasterrcnn
+select:
+  name: Local
+  config:
+    source: data/images
+    aggregate: true
+analyse:
+  name: FewshotDetection
+  config:
+    dev: true
+    weights: data/chris1.weights
+    dynamic_weights: data/chris1.pkl
+    # class_map:
+    #   - background
+    #   - canister
+    #   - cylinder
+    #   - can
+    #   - bottle
+    #   - bin
+
+

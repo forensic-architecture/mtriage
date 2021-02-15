@@ -1,0 +1,18 @@
+desc: Run inference on an AnnotatedImageArray using the fewshot detector for triple chaser. Produces an ImageFrameJson file.
+args:
+  - name: weights
+    desc: The relative path to the weights for the fewshot detector.
+    required: true
+    input: string
+  - name: dynamic_weights
+    desc: The relative path to the dynamic weights for the fewshot detector.
+    required: true
+    input: string
+  - name: conf_thresh
+    desc: Confidence threshold for selecting detections.
+    required: false
+    input: integer
+  - name: nms_thresh
+    desc: NMS threshold for selecting detections.
+    required: false
+    input: integer
