@@ -125,16 +125,17 @@ class Youtube(Selector):
         )
         try:
             s_res = self._youtube_search(args)
-            count = 0
-            while ("nextPageToken" in s_res) and (len(s_res.get("items", [])) != 0):
+            count = 1
+            while True:
                 self.logger(f"\tScraping page {count}...")
                 count += 1
                 csv_obj = self._add_to_csv_obj(csv_obj, s_res.get("items", []))
+
+                if (not "nextPageToken" in s_res) or (len(s_res.get("items", [])) == 0):
+                    break
+
                 s_res = self._youtube_search(args, pageToken=s_res["nextPageToken"])
-            # add the last one
             self.logger("\tAll pages scraped.")
-            if count > 1:
-                csv_obj = self._add_to_csv_obj(csv_obj, s_res.get("items", []))
             return csv_obj
         except HttpError as e:
             self.logger(f"An HTTP error {e.resp.status} occured.")
@@ -165,7 +166,9 @@ class Youtube(Selector):
 
         request = youtube.search().list(**theargs)
 
-        return request.execute()
+        s = request.execute()
+
+        return s
 
     def _days_between(self, start, end):
         bef = datetime.strptime(end[:-1], "%Y-%m-%dT%H:%M:%S")
