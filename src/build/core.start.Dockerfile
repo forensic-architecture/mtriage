@@ -16,6 +16,7 @@ RUN apt-get update && \
         python3.7 \
         python3.7-dev \
         python3-distutils-extra \
+        git \
 		# dev
 		# git vim curl unzip unrar \
         && \
