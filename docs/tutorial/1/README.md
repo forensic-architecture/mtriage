@@ -34,8 +34,8 @@ You should see the following logs:
 ```
 Local: index: Indexing local folder...
 Local: index: indexed file: 1.txt
-Local: index: indexed file: 3.jpg
 Local: index: indexed file: 2.md
+Local: index: indexed file: 3.jpg
 ```
 
 If you look in media/demo_official/1/Local/data, you'll see the three folders,
@@ -95,8 +95,8 @@ We should see the following logs:
 ```
 ExtractTypes: None: Running in parallel
 ExtractTypes: analyse: Extracting element 1 with paths: ['1.txt']
-ExtractTypes: analyse: No extracted media in element 3.
 ExtractTypes: analyse: Extracting element 2 with paths: ['2.md']
+ExtractTypes: analyse: No extracted media in element 3.
 ```
 
 As we can see, the analyser has extracted the two elements with media that have
