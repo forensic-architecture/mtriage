@@ -3,5 +3,5 @@ select:
   name: Youtube
   config:
     search_term: Tear gas
-    uploaded_before: "2015-10-02T00:00:00Z"
-    uploaded_after: "2015-10-01T00:00:00Z"
+    uploaded_before: "2023-01-02T00:00:00Z"
+    uploaded_after: "2023-01-01T00:00:00Z"
