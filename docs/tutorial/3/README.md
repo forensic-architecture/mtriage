@@ -34,10 +34,10 @@ information.
 
 NOTE: This step currently doesn't work, and, until we get a better Docker image up, you'll need to use a workaround. The installation as-is uses an old version of youtube-dl and cannot properly fetch videos. To fix this, you need to:
 
-1. Run ``./mtriage dev`` to open a shell in the terminal
+1. Run ``./mtriage dev --yaml docs/tutorial/3/3a.yaml`` to open a shell in the terminal with this configuration.
 2. Run ``pip3 install yt-dlp``. It may give you an error message, but it's likely this is okay.
 3. Check that yt-dlp has installed correctly. Run ``pip3 show yt-dlp`` and you should see a version installed. (Also okay if this command fails).
-4. Run ``python3 src/run.py --yaml docs/tutorial/3/3a.yaml`` which should work properly.
+4. Run ``python3 src/run.py`` which should work properly.
 
 # 3b. Image classification with KerasPretrained 
 
