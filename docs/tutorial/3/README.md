@@ -31,6 +31,14 @@ available. By default, it downloads the videos at very low quality, and it also
 retrieves a 'meta.json' file regarding the video's provenance and other meta
 information.
 
+
+NOTE: This step currently doesn't work, and, until we get a better Docker image up, you'll need to use a workaround. The installation as-is uses an old version of youtube-dl and cannot properly fetch videos. To fix this, you need to:
+
+1. Run ``./mtriage dev`` to open a shell in the terminal
+2. Run ``pip3 install yt-dlp``. It may give you an error message, but it's likely this is okay.
+3. Check that yt-dlp has installed correctly. Run ``pip3 show yt-dlp`` and you should see a version installed. (Also okay if this command fails).
+4. Run ``python3 src/run.py --yaml docs/tutorial/3/3a.yaml`` which should work properly.
+
 # 3b. Image classification with KerasPretrained 
 
 Let's now classify the frames in the videos that we've downloaded using image
@@ -62,7 +70,7 @@ weights for Resnet, which is a file ~100mb in size (this download only happens
 once):
 
 ```
-./mtriage run docs/tutorials/3/3b.yaml
+./mtriage run docs/tutorial/3/3b.yaml
 ```
 
 # 3c. A complete mtriage workflow
