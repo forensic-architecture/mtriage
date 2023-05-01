@@ -1,4 +1,4 @@
-yt-dlp=2023.3.4
+yt-dlp==2023.3.4
 google-api-core==1.11.0
 google-api-python-client==1.7.8
 google-auth==1.6.3
