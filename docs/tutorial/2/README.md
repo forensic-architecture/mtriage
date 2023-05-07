@@ -64,7 +64,7 @@ do it by specifying an analysis chain with two ConvertAudio parts. Let's run
 this config:
 
 ```
-./mtriage run docs/tutorials/2/2b.yaml
+./mtriage run docs/tutorial/2/2b.yaml
 ```
 
 We'll get the following:
