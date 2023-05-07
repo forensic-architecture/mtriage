@@ -1,4 +1,0 @@
-Youtube
-Frames
-ImageDedup
-KerasPretrained
