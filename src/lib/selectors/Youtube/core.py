@@ -1,4 +1,4 @@
-import yt_dlp 
+import youtube_dl
 import json
 import re
 import argparse, os, sys
@@ -34,7 +34,7 @@ class Youtube(Selector):
         return None
 
     def pre_retrieve(self, _):
-        self.ydl = yt_dlp.YoutubeDL(
+        self.ydl = youtube_dl.YoutubeDL(
             {
                 "outtmpl": f"{TMP}/%(id)s/%(id)s.mp4",
                 "format": "worstvideo[ext=mp4]",
@@ -51,7 +51,7 @@ class Youtube(Selector):
                 self.logger(f"{element.id}: video and meta downloaded successfully.")
                 self.disk.delete_local_on_write = True
                 return Etype.cast(element.id, files(TMP / element.id))
-            except yt_dlp.utils.DownloadError:
+            except youtube_dl.utils.DownloadError:
                 raise ElementShouldSkipError(
                     f"Something went wrong downloading {element.id}. It may have been deleted."
                 )
