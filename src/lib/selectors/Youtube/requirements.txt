@@ -1,4 +1,4 @@
-youtube-dl
+yt-dlp==2023.3.4
 
 google-api-core==1.11.0
 google-api-python-client==1.7.8
