@@ -1,15 +1,15 @@
 folder: media/yolov5
-select:
-  name: Local
-  config:
-    source: data/images
-    aggregate: true
+# select:
+#   name: Youtube
+#   config:
+#     in_parallel: false
+#     search_term: Tear gas
+#     uploaded_before: "2015-10-02T00:00:00Z"
+#     uploaded_after: "2015-10-01T00:00:00Z"
+elements_in:
+  - Youtube
 analyse:
-  name: TorchHub
-  config:
-    dev: true
-    repo: ultralytics/yolov5
-    args:
-      - yolov5s
-    kwargs:
-      pretrained: true
+  - name: Frames
+  - name: Yolov5
+    config:
+      in_parallel: false
