@@ -26,10 +26,10 @@ class Storage(ABC):
     def read_query(self, query: str) -> Component:
         """ Turn a string query of the form "selector/analyser" into a Component type """
         parts = query.split("/")
-        if len(parts) is 1:
+        if len(parts) == 1:
             sel = parts[0]
             return (sel, None)
-        elif len(parts) is 2:
+        elif len(parts) == 2:
             if "" in parts:
                 raise InvalidStorageQuery(
                     comp,

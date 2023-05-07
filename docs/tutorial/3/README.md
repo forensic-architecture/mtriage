@@ -62,7 +62,7 @@ weights for Resnet, which is a file ~100mb in size (this download only happens
 once):
 
 ```
-./mtriage run docs/tutorials/3/3b.yaml
+./mtriage run docs/tutorial/3/3b.yaml
 ```
 
 # 3c. A complete mtriage workflow
