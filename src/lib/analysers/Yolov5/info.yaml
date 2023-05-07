@@ -1,0 +1,6 @@
+desc: Classify objects in images using YoloV5 - https://github.com/ultralytics/yolov5. This analyser allows you to run inference using one of the pretrained checkpoints, or to provide custom weights.
+args: []
+  # - name: checkpoint
+  #   desc: The checkpoint you want to use for weights. This can be a local path to custom weights, or one of the available pretrained checkpoints (see https://github.com/ultralytics/yolov5#pretrained-checkpoints).
+  #   required: true
+  #   input: string
