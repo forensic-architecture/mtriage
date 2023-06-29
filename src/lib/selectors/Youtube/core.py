@@ -1,4 +1,4 @@
-import yt_dlp 
+import yt_dlp
 import json
 import re
 import argparse, os, sys

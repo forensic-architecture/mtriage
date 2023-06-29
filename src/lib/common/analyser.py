@@ -87,7 +87,7 @@ class Analyser(MTModule):
             self.disk.write_meta(
                 f"{self.get_selector()}/{self.name}",
                 {
-                    "etype": self.out_etype.__repr__(),
+                    "etype": "CvJson",
                     "config": cfg,
                     "stage": {"name": self.name, "module": "analyser"},
                 },
