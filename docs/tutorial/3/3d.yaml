@@ -1,0 +1,19 @@
+folder: media/demo_official/3d
+select:
+  name: Local
+  config:
+    source: media/demo_official/3c/youtube/derived/Frames
+analyse:
+  - name: ImageDedup
+    config:
+      threshold: 3
+      method: dhash
+  - name: KerasPretrained
+    config:
+      model: ResNet50
+      labels:
+        - tear gas canister
+        - tear gas
+        - tank
+        - rifle
+        - military uniform

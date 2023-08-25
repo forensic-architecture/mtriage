@@ -1,0 +1,28 @@
+# Where on our computer do we want to store the media?
+folder: media/tanks_in_ukraine_july2014
+
+# Which media platforms do we want to search?
+select:
+  name: Youtube
+  config:
+    # What are our search parameters?
+    search_term: tanks + ukraine
+    uploaded_after: "2014-07-20T00:00:00Z"
+    uploaded_before: "2014-07-30T00:00:00Z"
+
+analyse:
+  # Once we have a video, we process it by splitting it into images, one for each frame. 
+  - name: Frames
+  # We don't want to analyze successive frames that are very similar, so we deduplicate these
+  - name: ImageDedup
+    config:
+      threshold: 3
+      method: dhash
+  # We're now ready to run the image classification algorithm over each frame.
+  # In this example, we'll use Resnet, a model pretrained on the publicly available Imagenet database.
+  - name: KerasPretrained
+    config:
+      model: ResNet50
+      # We're interested in detecting anything with the label "tank"
+      labels: 
+        - "tank"

@@ -1,0 +1,34 @@
+#Where on our computer do we want to store the media?
+folder: media/teargas_mexico_2018
+select:
+	#Which media platforms do we want to search?
+  name: Youtube
+	config:
+		#What are our search parameters?
+ 		search_term: tear gas + mexico
+		uploaded_after: "2018-11-25T00:00:00Z"
+		uploaded_before: "2018-11-26T12:00:00Z"
+analyse:
+#Once we have a video, we process it by splitting it into images, one for each frame
+	- name: Frames
+#We don't want to analyze successive frames that are very similar, so we deduplicate these
+	- name: ImageDedup
+	config:
+		threshold: 3
+		method: dhash
+#We're now ready to run the image classification process over each frame.
+#In this example, we'll use Resnet, an image classification model pretrained on the publicly available Imagenet database
+	- name: KerasPretrained
+	config:
+		model: ResNet50
+		labels:
+		# We're looking for tear gas and other indicators of police force
+			- tear gas
+			- rifle
+			- police
+			- smoke
+			- military uniform
+
+
+
+     

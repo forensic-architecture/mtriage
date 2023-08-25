@@ -1,10 +1,10 @@
-folder: media/demo_official/3c
+folder: media/tanks_in_ukraine_july2014
 select:
   name: Youtube
   config:
-    search_term: tear gas + mexico
-    uploaded_before: "2021-11-30T00:00:00Z"
-    uploaded_after: "2021-11-29T00:00:00Z"
+    search_term: "tanks + ukraine"
+    uploaded_before: "2014-7-25T00:00:00Z"
+    uploaded_after: "2014-7-20T00:00:00Z"
 analyse:
   - name: Frames
   - name: ImageDedup
@@ -16,5 +16,3 @@ analyse:
       model: ResNet50
       labels:
         - tank
-        - rifle
-        - military uniform

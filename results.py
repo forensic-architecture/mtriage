@@ -12,13 +12,13 @@ def get_video_meta(video_id, keras_pretrained_path):
     view_count = meta_data.get('view_count', 'N/A')
     return title, upload_date, view_count
 
-def main(derived_path, keras_pretrained_path):
+def main(keras_pretrained_path):
     # Dictionary to store the results
     labels_dict = {}
 
     # Iterate through the folders inside the 'derived' directory
-    for video_id in os.listdir(derived_path):
-        video_path = os.path.join(derived_path, video_id)
+    for video_id in os.listdir(keras_pretrained_path):
+        video_path = os.path.join(keras_pretrained_path, video_id)
 
         # Check if it's a directory (i.e., a video ID folder)
         if os.path.isdir(video_path):
@@ -72,9 +72,8 @@ def main(derived_path, keras_pretrained_path):
             print()
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Please provide the path to the derived directory and the KerasPretrained directory.")
+    if len(sys.argv) < 2:
+        print("Please provide the path to the Keras_Pretrained directory")
         sys.exit(1)
-    derived_path = sys.argv[1]
-    keras_pretrained_path = sys.argv[2]
-    main(derived_path, keras_pretrained_path)
+    keras_pretrained_path = sys.argv[1]
+    main(keras_pretrained_path)
