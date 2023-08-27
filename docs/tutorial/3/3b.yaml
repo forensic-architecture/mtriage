@@ -3,6 +3,8 @@ elements_in:
   - Youtube
 analyse:
   - name: Frames
+    config:
+      in_parallel: false
   - name: KerasPretrained
     config:
       in_parallel: false

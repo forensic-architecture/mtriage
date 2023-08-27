@@ -1,19 +1,9 @@
-#Where on our computer do we want to store the media?
 folder: media/teargas_mexico_2022
 select:
-  #Which media platforms do we want to search?
-  name: Youtube
+  name: Local
   config:
-    #What are our search parameters?
-    search_term: tear gas + mexico
-    uploaded_before: "2022-11-30T00:00:00Z"
-    uploaded_after: "2022-11-20T00:00:00Z"
+    source: media/teargas_mexico_2022/Youtube/derived/Frames
 analyse:
-  #Once we have a video, we process it by splitting it into images, 
-  #one for each frame
-  - name: Frames
-  #We don't want to analyze successive frames that are very similar,
-  # so we deduplicate these
   - name: ImageDedup
     config:
       threshold: 3

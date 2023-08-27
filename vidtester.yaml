@@ -1,0 +1,18 @@
+folder: media/tanks_in_ukraine_july2014
+select:
+  name: Youtube
+  config:
+    search_term: "tanks + ukraine"
+    uploaded_before: "2014-7-25T00:00:00Z"
+    uploaded_after: "2014-7-20T00:00:00Z"
+analyse:
+  - name: Frames
+  - name: ImageDedup
+    config:
+      threshold: 3
+      method: dhash
+  - name: KerasPretrained
+    config:
+      model: ResNet50
+      labels:
+        - tank
